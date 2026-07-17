@@ -136,6 +136,16 @@ const EN: Record<string, string> = {
   "Mở bài gốc trên vbpl.vn": "Open the original on vbpl.vn",
   "văn bản liên quan (căn cứ / thay thế / sửa đổi)":
     "related documents (basis / replacement / amendment)",
+  "Chương trình bạn quan tâm — trạng thái hiện tại":
+    "Programs you care about — current status",
+  "Quét kho — đối chiếu vbpl.vn phát hiện văn bản đã đổi trạng thái":
+    "Corpus scan — vbpl.vn check finds documents that changed status",
+  "đã hết hiệu lực": "expired",
+  "còn hiệu lực": "in effect",
+  "đã quét": "scanned",
+  "Nếu trợ lý trích các văn bản này mà không đối chiếu → doanh nghiệp nộp theo văn bản đã chết. Giám sát chặn đúng lỗi đó.":
+    "If the assistant cited these without checking → the business would file against a dead document. Monitoring blocks exactly that.",
+  "Danh sách văn bản đã hết hiệu lực": "List of expired documents",
   // loại chương trình (LOAI_NHAN)
   "Ưu đãi thuế": "Tax incentive",
   "Quỹ hỗ trợ": "Support fund",

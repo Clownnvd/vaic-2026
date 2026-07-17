@@ -311,11 +311,52 @@ def giam_sat() -> dict:
                 "lien_quan": lq[:10],
             }
         )
+
+    # ── QUÉT KHO: bằng chứng giám sát BẮT ĐƯỢC thay đổi, không chỉ 2 flagship ──
+    # scripts/quet_hieu_luc.py đối chiếu vbpl.vn N văn bản kho → lưu trạng thái.
+    # Giám sát mà văn bản nào cũng "Còn hiệu lực" thì chưa chứng minh gì; đây là
+    # phần bắt VĂN BẢN ĐÃ HẾT HIỆU LỰC (nếu matcher lỡ trích → DN nộp văn bản chết).
+    quet = _nap_quet()
+    het = [r for r in quet if r.get("con_hieu_luc") is False]
+    con = [r for r in quet if r.get("con_hieu_luc") is True]
+    quet_out = {
+        "n": len(quet),
+        "n_het": len(het),
+        "n_con": len(con),
+        "tong_kho": 2669,
+        "het": [
+            {
+                "so_hieu": r.get("so_hieu"),
+                "tieu_de": r.get("tieu_de"),
+                "nam": r.get("nam"),
+                "co_quan": r.get("co_quan"),
+                "url": r.get("url"),
+                "nhan": r.get("nhan"),
+            }
+            for r in sorted(het, key=lambda x: -(x.get("nam") or 0))[:40]
+        ],
+    }
+
     return {
         "chuong_trinh": ra,
+        "quet": quet_out,
         "nguon": "vbpl.vn (Bộ Tư pháp)",
-        "cap_nhat": "đối chiếu khi tải trang; cache đĩa để không đơ",
+        "cap_nhat": "đối chiếu trực tiếp vbpl.vn, cache đĩa",
     }
+
+
+def _nap_quet() -> list[dict]:
+    """Đọc bản quét hiệu lực kho (scripts/quet_hieu_luc.py). Thiếu file → rỗng."""
+    import json as _json
+    from pathlib import Path as _Path
+
+    f = _Path("./data/giam_sat_quet.json")
+    if not f.exists():
+        return []
+    try:
+        return _json.loads(f.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        return []
 
 
 @app.get("/chuong-trinh")

@@ -22,8 +22,26 @@ export type CtGiamSat = {
   lien_quan: LienQuan[];
 };
 
+export type VanBanHet = {
+  so_hieu: string | null;
+  tieu_de: string;
+  nam: number | null;
+  co_quan: string;
+  url?: string | null;
+  nhan: string;
+};
+
+export type QuetHieuLuc = {
+  n: number;
+  n_het: number;
+  n_con: number;
+  tong_kho: number;
+  het: VanBanHet[];
+};
+
 export type KetQuaGiamSat = {
   chuong_trinh: CtGiamSat[];
+  quet?: QuetHieuLuc;
   nguon: string;
   cap_nhat: string;
 };
