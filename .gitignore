@@ -55,3 +55,7 @@ data/ngoai/
 # token phien GPU/lab FPT - KHONG commit
 .fpt_lab.json
 .fpt_container.json
+
+# cron giám sát state (runtime)
+data/giam_sat_cursor.txt
+data/giam_sat_thay_doi.json

@@ -24,6 +24,16 @@ Hai service trên Railway từ cùng repo (monorepo).
 1. Deploy BFF trước → lấy URL public.
 2. Đặt `NEXT_PUBLIC_BFF_URL` = URL đó cho Frontend → deploy Frontend.
 
+## Service 3 (tuỳ chọn) — Cron cập nhật giám sát ②
+Để giám sát "sống" (cập nhật hiệu lực hằng ngày) thay vì snapshot tĩnh:
+- **Root Directory**: `.`
+- **Cron schedule**: `0 2 * * *` (02:00 mỗi ngày)
+- **Command**: `python scripts/cron_giam_sat.py --lo 300`
+- Mỗi lần: quét FRESH các VB đang theo dõi (bắt đổi trạng thái) + 300 VB xoay
+  vòng (rolling) → sau ~9 ngày phủ hết kho. Diff `còn→hết` = văn bản VỪA CHẾT,
+  ghi `data/giam_sat_thay_doi.json`. BFF đọc `giam_sat_quet.json` đã cập nhật.
+- KHÔNG cào real-time 24/7 (không cần + tốn); API vbpl.vn nhanh (~300 VB/12s).
+
 ## Kiểm nhanh sau deploy
 - `GET {BFF}/health` → `{"ok":true,"so_chuong_trinh":2}`
 - Mở Frontend → chat "công ty phần mềm Hà Nội 45 lao động doanh thu 50 tỷ..." → ra 2 chương trình.
