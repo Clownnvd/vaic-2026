@@ -15,8 +15,10 @@ Hai service trên Railway từ cùng repo (monorepo).
 
 ## Service 2 — Frontend (Next.js 16, Node)
 - **Root Directory**: `frontend`
-- **Build**: `npm ci && npm run build`
-- **Start**: `npm run start` (đã dùng `$PORT`)
+- **Package manager**: **pnpm** (có `pnpm-lock.yaml`, đã pin `packageManager: pnpm@9.15.9`).
+  ⚠️ pnpm ≥10 làm `sharp` fail build — Railway tự nhận pnpm, ĐỪNG ép npm.
+- **Build**: `pnpm install && pnpm build` (nixpacks tự chạy)
+- **Start**: `pnpm start` (đã dùng `$PORT`)
 - **Biến môi trường (BUILD-TIME)**:
   - `NEXT_PUBLIC_BFF_URL` = URL public của Service 1 (vd `https://policyradar-bff.up.railway.app`)
 
