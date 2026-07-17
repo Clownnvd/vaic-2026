@@ -110,6 +110,33 @@ Shard 03 báo có văn bản tới **2025** nhưng lọc ra **0 khớp**. Hai gi
 
 Kiểm phân bố: doc_type và năm trung vị đồng đều cả 3 phía (nghị định 6,9/6,6/6,3% · median 2023) → test không lệch chủ đề.
 
+### ~15:2x — 🔴 BA CÚ VỀ DATA (quan trọng nhất phiên này)
+
+Kho chuẩn bị ghi: *"dataset đã parse sẵn document→điều→khoản→điểm + NER"*. **Kiểm trên dump thật thì KHÔNG ĐÚNG.**
+
+**Cú 1 — `structure_json` vô dụng cho việc này.** Nó chỉ có `sections / paragraphs / sentences`, và `stats` ghi `num_sections=1, num_paragraphs=1` — tức **cả văn bản là MỘT section kind="header"**. Đây là parse tổng quát (meta còn có `court_level`, `precedent_number` — parser vốn cho án lệ), **không phải parse pháp lý**. Không có điều/khoản/điểm.
+
+**Cú 2 — markdown bị LÀM PHẲNG.** 500/500 văn bản có **0 ký tự xuống dòng**. Mọi regex neo `^` đều chết câm.
+→ Lần đo đầu ra "1/500 văn bản có Điều (0%)" — **suýt kết luận corpus không có cấu trúc**. Kiểm lại bỏ neo `^`: **499/500 văn bản, 13.668 lần "Điều N"**. Cấu trúc CÓ, chỉ là chưa ai parse. Nếu tin con số 0% đầu tiên thì đã bỏ cả hướng citation.
+
+**Cú 3 — không có field hiệu lực** (đã xác nhận, xem nợ #5).
+
+**Xử lý:** tự viết `corpus/parse_dieu.py`. Chỗ khó nhất là phân biệt `Điều 1.` (tiêu đề) với `tại Điều 5` (trích dẫn) — bắt nhầm thì cắt vụn văn bản, citation trỏ sai. Trị bằng: tiêu đề Điều luôn **đánh số tăng dần từ 1** → lấy dãy con tăng dần, chắc hơn đoán bằng từ đứng trước.
+
+### ~15:3x — Đo max_len bằng tokenizer THẬT (sửa phép đo ẩu của chính mình)
+Lần đo đầu mình **ước lượng "1 token ≈ 3 ký tự"** và đo trên **cả văn bản** (sai đơn vị) → ra 20,2% vượt 128. Người dùng ép "vừa đầy đủ vừa chuẩn xác" → đo lại bằng **tokenizer PhoBERT thật** trên **khoản thật**:
+
+| p50 | p75 | p90 | p95 | p99 | max |
+|---|---|---|---|---|---|
+| 72 | 132 | **261** | 390 | 946 | 10.616 |
+
+**Vượt 128: 25,9%** · vượt 256: 10,3% → **CHỐT max_len = 256**.
+Kho cảnh báo "'>20% truncate thì lên 256" — đo ra 25,9%, cảnh báo đúng. Tin số ước lượng (20,2%) thì đã suýt chốt nhầm 128.
+
+**Sản lượng:** 24.564 đơn vị trích dẫn / 600 văn bản ≈ 41 khoản/văn bản → ~300k khoản từ 7.484 văn bản train. Đủ xa để train.
+
+**Chất lượng parser — nói thẳng:** text khoản (dùng làm premise) đúng; nhưng **tiêu đề Điều đôi lúc nuốt nhầm số khoản** ("Phạm vi điều chỉnh 1") và có điều ra tiêu đề rỗng. Chưa chặn train → ghi nợ, không giấu.
+
 ---
 
 ## Nợ kỹ thuật đang mở
@@ -121,8 +148,10 @@ Kiểm phân bố: doc_type và năm trung vị đồng đều cả 3 phía (ngh
 | 2 | Thay seed bằng dữ liệu sinh từ corpus vbpl-vn | 🔴 bắt buộc trước demo |
 | 3 | Join API vbpl.vn lấy trạng thái hiệu lực | 🔴 chưa làm |
 | 4 | Wire frontend → BFF (hiện bóc hồ sơ bằng regex ở client) | 🔴 tạm |
-| 5 | **Corpus có field hiệu lực không?** Nếu không → bỏ phép nhiễu #7 | ❓ kiểm khi corpus xong |
-| 6 | Đo phân bố độ dài khoản → chốt `max_len` 128 hay 256 | ❓ chưa đo |
+| 5 | ~~Corpus có field hiệu lực không?~~ | ✅ đóng — **KHÔNG CÓ** → **phép nhiễu #7 BỊ LOẠI** |
+| 6 | ~~Chốt `max_len`~~ | ✅ đóng — **256** (đo thật: 25,9% khoản vượt 128) |
+| 7 | Parser: tiêu đề Điều nuốt nhầm số khoản, có điều tiêu đề rỗng | 🟡 chưa chặn train |
+| 8 | 10,3% khoản vượt 256 token (trần PhoBERT) → cần cửa sổ trượt | 🟡 chưa làm |
 
 ---
 
