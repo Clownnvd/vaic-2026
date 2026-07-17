@@ -1,0 +1,40 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# next
+.next/
+out/
+build/
+next-env.d.ts
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.uv/
+
+# env / secrets
+.env
+.env.*
+!.env.example
+*.key
+
+# model weights & data (luật E2: không publish weights/data)
+*.pt
+*.bin
+*.safetensors
+guard_phobert*/
+data/raw/
+data/vbpl/
+*.parquet
+
+# os / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# logs
+*.log
