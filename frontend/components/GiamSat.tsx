@@ -78,9 +78,24 @@ function CtCard({ c }: { c: CtGiamSat }) {
   return (
     <article className="overflow-hidden rounded-xl border border-border-subtle bg-surface">
       <div className="flex flex-wrap items-center gap-2 px-4 py-3">
-        <span className="rounded-md bg-brand-50 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-brand-700 dark:bg-brand-900/40 dark:text-brand-200">
-          {c.so_hieu}
-        </span>
+        {c.url ? (
+          <a
+            href={c.url}
+            target="_blank"
+            rel="noreferrer"
+            title="Mở bài gốc trên vbpl.vn"
+            className="inline-flex items-center gap-1 rounded-md bg-brand-50 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-brand-700 hover:bg-brand-100 dark:bg-brand-900/40 dark:text-brand-200"
+          >
+            {c.so_hieu}
+            <svg viewBox="0 0 16 16" className="size-2.5" fill="none">
+              <path d="M6 3h7v7M13 3l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </a>
+        ) : (
+          <span className="rounded-md bg-brand-50 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-brand-700 dark:bg-brand-900/40 dark:text-brand-200">
+            {c.so_hieu}
+          </span>
+        )}
         <h3 className="text-[14px] font-medium text-text">{c.ten}</h3>
         <div className="ml-auto">
           <BadgeHL c={c} />
@@ -98,16 +113,23 @@ function CtCard({ c }: { c: CtGiamSat }) {
           {c.so_lien_quan} văn bản liên quan (căn cứ / thay thế / sửa đổi)
         </button>
         {mo && (
-          <ul className="mt-2 space-y-1.5 border-t border-border-subtle pt-2">
+          <div className="mt-2 divide-y divide-border-subtle border-t border-border-subtle">
             {c.lien_quan.map((r, i) => (
-              <li key={i} className="flex items-start gap-2 text-[12px]">
-                <span className="mt-0.5 shrink-0 rounded bg-surface-2 px-1.5 py-0.5 text-[10px] text-text-muted">
+              <div key={i} className="grid grid-cols-[132px_1fr] items-start gap-3 py-1.5 text-[12px]">
+                <span
+                  className={
+                    "inline-flex w-full items-center justify-center rounded px-1.5 py-0.5 text-center text-[10px] font-medium " +
+                    (r.loai.startsWith("Căn cứ")
+                      ? "bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-200"
+                      : "bg-caution-50 text-caution-700 dark:bg-caution-500/10 dark:text-caution-300")
+                  }
+                >
                   {r.loai}
                 </span>
-                <span className="text-text">{r.title || r.so_vb || "—"}</span>
-              </li>
+                <span className="leading-snug text-text">{r.title || r.so_vb || "—"}</span>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </div>
     </article>

@@ -224,6 +224,7 @@ export default function Page() {
                 vanBan: k.citation.hien_thi,
                 trichDan: k.citation.trich,
                 docId: k.citation.doc_id ?? undefined,
+                url: k.citation.url ?? undefined,
               },
             })),
           })),

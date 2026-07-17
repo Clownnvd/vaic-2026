@@ -211,6 +211,18 @@ def _cho_dien_giai() -> bool:
     return Path(".env").exists() and "OPENAI_API_KEY=" in Path(".env").read_text(encoding="utf-8")
 
 
+def _url_van_ban(doc_id: str | None) -> str | None:
+    """source_url của văn bản (vbpl.vn) để mọi citation bấm mở bài gốc."""
+    if not doc_id:
+        return None
+    try:
+        from matcher.luat_index import get_index
+
+        return get_index().url_theo_id(doc_id)
+    except Exception:  # noqa: BLE001
+        return None
+
+
 @app.get("/health")
 def health() -> dict:
     """Landing tĩnh + curl-grep được — V1 là MÁY chấm, phải trả nhanh."""
@@ -286,6 +298,7 @@ def giam_sat() -> dict:
                 "ten": ct.ten,
                 "so_hieu": c.so_vb,
                 "co_quan": ct.co_quan,
+                "url": _url_van_ban(c.doc_id),  # bấm số hiệu mở bài gốc
                 "hieu_luc": {
                     "da_doi_chieu": hl.loi is None,
                     "con_hieu_luc": hl.con_hieu_luc,
@@ -460,6 +473,7 @@ def chat(r: YeuCau) -> dict:
                             "khoa": c.dieu_kien.citation.khoa,
                             "trich": c.dieu_kien.citation.trich,
                             "doc_id": c.dieu_kien.citation.doc_id,
+                            "url": _url_van_ban(c.dieu_kien.citation.doc_id),  # bấm mở bài gốc
                         },
                     }
                     for c in k.chi_tiet

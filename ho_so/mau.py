@@ -189,8 +189,10 @@ THUE = [
 TAT_CA: list[MauHoSo] = [*NAFOSTED, *DNNVV, *THUE]
 
 # tra nhanh: chương trình nào → mẫu nào
+# ⚠️ Khoá phải KHỚP id chương trình trong matcher/kho_mau.py.
+# Bug đã sửa: dùng "cnc-thue" trong khi kho_mau đổi thành "khcn-thue" → 0 biểu mẫu.
 THEO_CHUONG_TRINH: dict[str, list[str]] = {
-    "cnc-thue": ["03-3A/TNDN"],
+    "khcn-thue": ["03-3A/TNDN"],
     "dnnvv-tuvan": ["TK-DNNVV", "PL3.3-M1"],
     "nafosted": ["BM-03", "BM-04", "BM-07", "BM-09"],
 }

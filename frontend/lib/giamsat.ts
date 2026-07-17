@@ -16,6 +16,7 @@ export type CtGiamSat = {
   ten: string;
   so_hieu: string;
   co_quan: string;
+  url?: string | null;
   hieu_luc: HieuLucGS;
   so_lien_quan: number;
   lien_quan: LienQuan[];

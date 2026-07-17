@@ -18,6 +18,7 @@ export type ApiCitation = {
   khoa: string;
   trich: string;
   doc_id: string | null;
+  url?: string | null; // source_url vbpl.vn — bấm mở bài gốc
 };
 
 export type ApiDieuKien = {

@@ -51,10 +51,19 @@ export function CitationChip({ citation }: { citation: Citation }) {
               ⚠ Chưa đối chiếu corpus — dữ liệu seed dựng UI
             </span>
           )}
-          {citation.docId && (
-            <span className="mt-2 block font-mono text-[10px] text-text-muted">
-              {citation.docId}
-            </span>
+          {citation.url && (
+            <a
+              href={citation.url}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="mt-2 inline-flex items-center gap-1 rounded-md bg-brand-50 px-2 py-1 text-[11.5px] font-medium text-brand-700 hover:bg-brand-100 dark:bg-brand-900/40 dark:text-brand-200"
+            >
+              Xem bài gốc trên vbpl.vn
+              <svg viewBox="0 0 16 16" className="size-3" fill="none">
+                <path d="M6 3h7v7M13 3l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </a>
           )}
         </span>
       )}

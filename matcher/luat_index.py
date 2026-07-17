@@ -81,6 +81,14 @@ class LuatIndex:
         # sắp mới nhất lên đầu (năm giảm dần) — dễ theo dõi
         self.ds.sort(key=lambda v: (v.nam or 0), reverse=True)
 
+    def url_theo_id(self, item_id: str | None) -> str | None:
+        """source_url của văn bản theo item_id — để mọi citation bấm mở bài gốc."""
+        if not item_id:
+            return None
+        if not hasattr(self, "_url_map"):
+            self._url_map = {v.item_id: v.nguon_url for v in self.ds if v.nguon_url}
+        return self._url_map.get(str(item_id))
+
     def facets(self) -> dict:
         """Giá trị lọc + số lượng — trả bản đã tính sẵn (không tính lại mỗi request)."""
         return self._facets if self._facets is not None else self._tinh_facets()
