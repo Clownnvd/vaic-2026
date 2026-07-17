@@ -41,8 +41,18 @@ export function Sidebar({
   //    KHÔNG ẩn hẳn. Mượt hơn, vẫn bấm được nav. (CSS transition, khỏi framer-motion.)
   const Rail = (
     <div className="hidden h-full w-14 shrink-0 flex-col items-center border-r border-border-subtle bg-surface-2 py-3 md:flex">
-      <button onClick={onMo} title="Mở rộng" className="mb-2 rounded-lg p-1 hover:bg-surface">
-        <Logo size={28} />
+      <div className="mb-1"><Logo size={26} /></div>
+      {/* nút MỞ luôn hiện rõ (không giấu sau hover) — cùng chỗ với « lúc mở */}
+      <button
+        onClick={onMo}
+        title="Mở thanh bên"
+        aria-label="Mở thanh bên"
+        className="mb-2 flex size-9 items-center justify-center rounded-lg border border-border-strong text-text-muted hover:border-brand-400 hover:bg-surface hover:text-brand-600 dark:hover:text-brand-300"
+      >
+        <svg viewBox="0 0 20 20" className="size-[18px]" fill="none">
+          <path d="M8 5l5 5-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M16 4v12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+        </svg>
       </button>
       <RailBtn onClick={() => { onMoi(); onKhung("chat"); }} label="Cuộc trò chuyện mới">
         <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />

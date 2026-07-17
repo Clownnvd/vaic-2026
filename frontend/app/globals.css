@@ -145,3 +145,18 @@ body {
     animation: none;
   }
 }
+
+/* Con trỏ tay cho mọi phần tử bấm được — Tailwind reset không tự thêm.
+   :disabled giữ con trỏ mặc định (không mời bấm cái đang khoá). */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+select,
+summary,
+label[for] {
+  cursor: pointer;
+}
+
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
