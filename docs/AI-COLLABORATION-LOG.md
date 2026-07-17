@@ -89,6 +89,27 @@ Shard 03 báo có văn bản tới **2025** nhưng lọc ra **0 khớp**. Hai gi
 
 ⚠️ Số keyword từ API **thấp hơn** số kho (ưu đãi 6.366 vs 11.950) vì `LIKE` phân biệt hoa/thường. Pipeline dùng `utf8_lower` nên số thật cao hơn. **Ghi rõ chỗ vênh này thay vì chọn số đẹp hơn.**
 
+### ~15:02 — Corpus flagship XONG
+827 giây. **Tải 18/32 shard** (14 shard bị loại bằng footer, tiết kiệm ~770MB). Quét 90.000 văn bản → **9.299 khớp cả 3 tầng lọc** (10,3%). Parquet 153MB.
+
+**Phép thử chéo:** đếm `ưu đãi` = 6.798 trong 90k đã quét. Nhân theo tỷ lệ lên 158.822 ≈ 12.000, gần khít con số 11.950 đã đếm độc lập từ trước → hai lần đếm khác nhau, khớp nhau.
+⚠️ **Nhưng KHÔNG dùng phép nhân đó làm số báo cáo** — 14 shard bỏ qua toàn văn bản cũ nên phân bố không đều, ngoại suy không hợp lệ. Chỉ được nói: *"6.798 trong 90.000 văn bản đã quét"*.
+
+### ~15:0x — Chia train/calib/test
+| | văn bản | % |
+|---|---|---|
+| train | 7.484 | 80,5 |
+| calib | 938 | 10,1 |
+| test | 877 | 9,4 |
+
+**Hai quyết định thiết kế:**
+1. **Chia theo VĂN BẢN, không theo dòng.** Guard train trên cặp (điều-khoản, claim); một văn bản đẻ nhiều cặp. Chia theo cặp → cùng một nghị định nằm cả train lẫn test → model học thuộc văn bản → điểm ảo. Đây là bẫy riêng của domain luật. Đã viết `assert` kiểm thật: train∩calib = train∩test = calib∩test = ∅ ✓
+2. **Có tập `calib` riêng.** Temperature scaling (đòn #3) phải fit trên dữ liệu không-train-không-test. Fit trên test rồi lấy test báo ECE = số gian.
+
+**Băm bằng `md5(item_id)` chứ không dùng `hash()`** — `hash()` của Python bị salt ngẫu nhiên mỗi lần chạy → split đổi mỗi lần → không tái lập được.
+
+Kiểm phân bố: doc_type và năm trung vị đồng đều cả 3 phía (nghị định 6,9/6,6/6,3% · median 2023) → test không lệch chủ đề.
+
 ---
 
 ## Nợ kỹ thuật đang mở

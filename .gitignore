@@ -26,9 +26,11 @@ venv/
 *.bin
 *.safetensors
 guard_phobert*/
-data/raw/
-data/vbpl/
+
+# corpus dựng lại được bằng scripts/build_corpus.py — không nhồi 153MB vào repo public
+data/
 *.parquet
+*.jsonl
 
 # os / editor
 .DS_Store
