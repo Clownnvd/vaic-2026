@@ -85,10 +85,16 @@ export function ProgramCard({
           </h3>
         </div>
 
-        {ct.giaTriKyVong !== null && (
+        {(ct.giaTriHienThi || ct.giaTriKyVong !== null) && (
           <div className="shrink-0 text-right">
-            <div className="font-mono text-base font-bold leading-none text-eligible-600 dark:text-eligible-300">
-              ~{dinhDangVND(ct.giaTriKyVong)}
+            <div
+              className={`font-mono text-base font-bold leading-none ${
+                ct.duDieuKien === false
+                  ? "text-ink-400 line-through dark:text-ink-500"
+                  : "text-eligible-600 dark:text-eligible-300"
+              }`}
+            >
+              ~{ct.giaTriHienThi ?? dinhDangVND(ct.giaTriKyVong ?? 0)}
             </div>
             <div className="mt-1 text-[10px] uppercase tracking-wide text-text-muted">
               giá trị kỳ vọng
@@ -96,6 +102,30 @@ export function ProgramCard({
           </div>
         )}
       </header>
+
+      {/* Kết luận đủ / chưa đủ — TẤT ĐỊNH, không phải LLM đoán.
+          Chưa đủ thì phải nêu ĐÍCH DANH điều kiện thiếu, không nói chung chung. */}
+      {ct.duDieuKien !== undefined && (
+        <div
+          className={`mt-2.5 rounded-md border px-2.5 py-1.5 text-[12px] leading-snug ${
+            ct.duDieuKien
+              ? "border-eligible-300 bg-eligible-50 text-eligible-700 dark:border-eligible-700 dark:bg-eligible-500/10 dark:text-eligible-300"
+              : "border-caution-300 bg-caution-50 text-caution-700 dark:border-caution-700 dark:bg-caution-500/10 dark:text-caution-300"
+          }`}
+        >
+          {ct.duDieuKien ? (
+            <>
+              <span className="font-semibold">Đủ điều kiện</span> — hồ sơ hiện tại
+              thoả toàn bộ tiêu chí bắt buộc
+            </>
+          ) : (
+            <>
+              <span className="font-semibold">Chưa đủ điều kiện</span>
+              {ct.thieu?.length ? <> — thiếu: {ct.thieu.join(" · ")}</> : null}
+            </>
+          )}
+        </div>
+      )}
 
       <p className="mt-2.5 text-[13px] leading-relaxed text-text-muted">{ct.giaTri}</p>
 

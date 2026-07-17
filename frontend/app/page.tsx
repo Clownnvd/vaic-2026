@@ -4,19 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import { ChatInput } from "@/components/ChatInput";
 import { ChatMessage } from "@/components/ChatMessage";
 import { ProfileRibbon } from "@/components/ProfileRibbon";
-import { bocHoSo, thieuTruong } from "@/lib/extract";
-import { SEED_CHUONG_TRINH } from "@/lib/seed";
+import { BffLoi, hoiBff } from "@/lib/api";
+import { bocHoSo } from "@/lib/extract";
 import { PROFILE_FIELDS, type Message, type Profile } from "@/lib/types";
 
-/** Đủ 4 trường này là matcher chạy được; 2 trường còn lại chỉ tinh chỉnh thứ hạng. */
-const TRUONG_LOI = ["nganh", "von", "nhanSu", "chiRDPhanTram"] as const;
-
 const LOI_MO_DAU =
-  "Để tìm đúng ưu đãi và quỹ mà bạn đủ điều kiện, cho mình biết vài thông tin về doanh nghiệp: ngành, vốn điều lệ, số nhân sự, chi cho R&D (theo % doanh thu), địa bàn, và có vốn FDI không?\n\nBạn cứ mô tả bằng một câu tự nhiên cũng được.";
+  "Để tìm đúng ưu đãi và quỹ mà bạn đủ điều kiện, cho mình biết vài thông tin về doanh nghiệp: ngành, vốn điều lệ, số nhân sự, chi cho R&D (theo % doanh thu), địa bàn, và có vốn FDI không?\n\nBạn cứ mô tả bằng một câu tự nhiên — gõ không dấu cũng được.";
 
 const GOI_Y = [
   "Bên mình làm phần mềm ở Hà Nội, vốn 20 tỷ, 45 người, chi R&D khoảng 2,5% doanh thu, không có vốn FDI",
-  "Công ty bán dẫn tại Bắc Ninh, vốn 500 tỷ, 300 nhân sự, R&D 8%, có vốn FDI",
+  "Cty bán dẫn tại Bắc Ninh, vốn 500 tỷ, 300 nhân sự, R&D 8%, có vốn FDI",
 ];
 
 let dem = 0;
@@ -34,6 +31,7 @@ export default function Page() {
     },
   ]);
   const [dangBan, setDangBan] = useState(false);
+  const [treMs, setTreMs] = useState<number | null>(null);
   const cuoiRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -44,52 +42,79 @@ export default function Page() {
     setMessages((prev) => [...prev, m]);
   }
 
-  function xuLy(text: string) {
+  async function xuLy(text: string) {
     them({ id: nextId(), vaiTro: "nguoi-dung", noiDung: text });
     setDangBan(true);
 
-    // TẠM: bóc hồ sơ tại client. Bản thật do agent lo (xem lib/extract.ts).
+    // Bóc hồ sơ tạm ở client — sẽ chuyển hẳn sang agent slot-filling ở BFF.
     const hoSoMoi = bocHoSo(text, profile);
     setProfile(hoSoMoi);
 
-    const thieuLoi = TRUONG_LOI.filter((k) => hoSoMoi[k] === undefined);
+    try {
+      const d = await hoiBff(text, hoSoMoi);
+      setTreMs(d.ms);
 
-    setTimeout(() => {
-      if (thieuLoi.length > 0) {
-        const ten = thieuLoi
-          .map((k) => PROFILE_FIELDS.find((f) => f.key === k)!.nhan.toLowerCase())
-          .join(", ");
+      if (d.dang === "hoi_ho_so") {
         them({
           id: nextId(),
           vaiTro: "tro-ly",
           dang: "hoi-ho-so",
-          noiDung: `Mình ghi nhận rồi. Còn thiếu ${ten} — bạn bổ sung giúp mình để quét cho chính xác nhé.`,
-          dangHoi: thieuLoi.slice(),
+          noiDung: d.noi_dung,
+          dangHoi: [],
         });
       } else {
-        const conThieu = thieuTruong(hoSoMoi);
-        const ghiChu =
-          conThieu.length > 0
-            ? ` Còn thiếu ${conThieu
-                .map((k) => PROFILE_FIELDS.find((f) => f.key === k)!.nhan.toLowerCase())
-                .join(", ")} — bổ sung thì thứ hạng sẽ chuẩn hơn.`
-            : "";
-
-        const ketQua = [...SEED_CHUONG_TRINH].sort(
-          (a, b) => (b.giaTriKyVong ?? 0) - (a.giaTriKyVong ?? 0),
-        );
-
         them({
           id: nextId(),
           vaiTro: "tro-ly",
           dang: "ket-qua",
-          noiDung: `Với hồ sơ này, mình tìm thấy ${ketQua.length} chương trình đáng theo đuổi.${ghiChu}`,
-          chuongTrinh: ketQua,
-          daQuet: 158822,
+          noiDung: d.noi_dung,
+          daQuet: 2646,
+          chuongTrinh: d.chuong_trinh.map((c) => ({
+            id: c.id,
+            ten: c.ten,
+            coQuan: c.co_quan,
+            loai: "uu-dai-thue" as const,
+            giaTri: c.gia_tri,
+            giaTriKyVong: null,
+            giaTriHienThi: c.gia_tri_ky_vong,
+            hanNop: c.han_nop ?? undefined,
+            doTinCay: c.do_tin_cay,
+            duDieuKien: c.du_dieu_kien,
+            thieu: c.thieu,
+            hieuLucDaDoiChieu: false,
+            dieuKien: c.dieu_kien.map((k) => ({
+              yeuCau: k.yeu_cau,
+              hoSo: k.doi_chieu,
+              trangThai:
+                k.trang_thai === "dat"
+                  ? ("dat" as const)
+                  : k.trang_thai === "khong_dat"
+                    ? ("khong-dat" as const)
+                    : ("chua-du-thong-tin" as const),
+              citation: {
+                id: k.citation.khoa,
+                vanBan: k.citation.hien_thi,
+                trichDan: k.citation.trich,
+                docId: k.citation.doc_id ?? undefined,
+              },
+            })),
+          })),
         });
       }
+    } catch (e) {
+      them({
+        id: nextId(),
+        vaiTro: "tro-ly",
+        dang: "van-ban",
+        noiDung:
+          e instanceof BffLoi
+            ? e.message
+            : "Có lỗi khi gọi hệ thống. Vui lòng thử lại.",
+        grounding: "chua-du-can-cu",
+      });
+    } finally {
       setDangBan(false);
-    }, 420);
+    }
   }
 
   const chuaHoi = messages.length === 1;
@@ -101,7 +126,7 @@ export default function Page() {
           <span className="flex size-7 items-center justify-center rounded-md bg-brand-600 font-bold text-white">
             P
           </span>
-          <div>
+          <div className="min-w-0 flex-1">
             <h1 className="text-[15px] font-semibold leading-none text-text">
               PolicyRadar
             </h1>
@@ -109,6 +134,14 @@ export default function Page() {
               Tìm đúng chính sách bạn đủ điều kiện — có căn cứ tới từng điều khoản
             </p>
           </div>
+          {treMs !== null && (
+            <span
+              className="shrink-0 rounded border border-border-subtle px-1.5 py-0.5 font-mono text-[10px] text-text-muted"
+              title="Thời gian phản hồi. Đề bài yêu cầu ≤ 5.000ms cho câu đơn giản."
+            >
+              {treMs}ms
+            </span>
+          )}
         </div>
       </header>
 

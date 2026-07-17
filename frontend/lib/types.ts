@@ -81,11 +81,17 @@ export type ChuongTrinh = {
   giaTri: string;
   /** Giá trị kỳ vọng (VND) dùng để XẾP HẠNG. null = chưa lượng hoá được. */
   giaTriKyVong: number | null;
+  /** Giá trị kỳ vọng đã format sẵn ở backend ("3,4 tỷ đ") — dùng khi có. */
+  giaTriHienThi?: string;
   hanNop?: string;
   /** Vì sao DN đủ điều kiện — từng dòng có citation riêng */
   dieuKien: DieuKien[];
   /** Độ tin cậy của phép khớp, 0..1 */
   doTinCay: number;
+  /** Backend đã kết luận đủ điều kiện chưa (tất định, không phải LLM đoán) */
+  duDieuKien?: boolean;
+  /** Tên ĐÍCH DANH điều kiện chưa đạt — "chưa, vì thiếu Y" */
+  thieu?: string[];
   /** true nếu hiệu lực đã được đối chiếu với API vbpl.vn */
   hieuLucDaDoiChieu: boolean;
 };

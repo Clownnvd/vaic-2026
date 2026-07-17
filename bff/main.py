@@ -50,6 +50,41 @@ class YeuCau(BaseModel):
     ho_so: dict[str, Any] = {}
 
 
+class Citation(BaseModel):
+    """Nguồn dẫn. Ràng theo vết tra cứu THẬT, không phải LLM tự khai."""
+
+    hien_thi: str
+    khoa: str
+    trich: str = ""
+    doc_id: str | None = None
+
+
+class NextAction(BaseModel):
+    nhan: str
+    intent: str
+
+
+class AgentReply(BaseModel):
+    """Schema BẮT BUỘC của mọi câu trả lời — nguyên văn khung kho (PROMPT-PACK §5).
+
+    Luật verifier: grounded=True ⇒ citations PHẢI có ≥1 (enforce_grounding).
+    Luật write-gate: mọi hành động ghi/gửi ⇒ requires_approval=True.
+    """
+
+    text: str
+    citations: list[Citation] = []
+    next_actions: list[NextAction] = []
+    grounded: bool = True
+    requires_approval: bool = False
+
+    # ── phần riêng của P1: thẻ xếp hạng render trong bong bóng chat ──
+    dang: str = "van_ban"  # van_ban | hoi_ho_so | ket_qua
+    dang_hoi: list[str] = []
+    chuong_trinh: list[dict[str, Any]] = []
+    pii_da_che: list[str] = []
+    ms: int = 0
+
+
 PROFILE_FIELDS = ("nganh", "von", "nhan_su", "chi_rnd", "dia_ban", "fdi")
 
 
