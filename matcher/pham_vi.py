@@ -33,7 +33,14 @@ CHUA_PHU: dict[str, str] = {
     "lam nghiep": "lâm nghiệp",
     "chan nuoi": "chăn nuôi",
     "y te": "y tế",
-    "duoc": "dược",
+    # ⚠️ KHÔNG để "duoc" trần: bỏ dấu thì "được" (hư từ cực phổ biến) = "dược".
+    #    Câu "bạn giúp được gì" → "duoc" → bị hiểu nhầm là lĩnh vực dược.
+    #    Bắt "dược" phải kèm ngữ cảnh ngành → hết va chạm.
+    "duoc pham": "dược",
+    "nganh duoc": "dược",
+    "cong ty duoc": "dược",
+    "san xuat duoc": "dược",
+    "linh vuc duoc": "dược",
     "giao duc": "giáo dục",
     "dao tao nghe": "đào tạo nghề",
     "bat dong san": "bất động sản",
@@ -93,6 +100,7 @@ _META = [
     r"\bban co (nguoi yeu|gia dinh|cam xuc)\b",
     r"\bthoi tiet\b", r"\bhom nay (la )?(thu|ngay) may\b", r"\bmay gio\b",
     r"\bke chuyen\b", r"\bhat (cho|mot)\b", r"\bban thich\b",
+    r"\b(cam on|cang on|thanks?|thank you|tks|thank)\b",
 ]
 # lời chào ĐƠN THUẦN (cả câu chỉ là chào, không kèm nội dung chính sách)
 _CHAO = r"^(xin chao|chao( ban| buoi)?|hello|hi|hey|alo)[\s!.?]*$"
@@ -128,7 +136,7 @@ _TRA_CUU = [
     r"\btim hieu\b.*\b(luat|van ban|chinh sach|nghi dinh|thong tu)\b",
     r"\btra cuu\b",
     r"\b(xem|coi|doc)\b.*\b(luat|van ban|nghi dinh|chinh sach)\b",
-    r"\bco\b.*\b(luat|chinh sach|van ban|uu dai)\b.*\b(gi|nao)\b",
+    r"\bco\b.*\b(luat|chinh sach|van ban|uu dai|nghi dinh|thong tu|quyet dinh)\b.*\b(gi|nao)\b",
     r"\bdanh sach\b.*\b(luat|van ban)\b",
     r"\btim\b.*\b(van ban|luat|nghi dinh)\b",
 ]
