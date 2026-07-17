@@ -1,0 +1,21 @@
+{
+  "sanity_grounded": 0.995,
+  "probe": {
+    "INV_paraphrase": {
+      "fail": 0.006514657980456026,
+      "n": 307
+    },
+    "DIR_num_PhoBERT_alone": {
+      "fail": 0.995,
+      "n": 400
+    },
+    "DIR_num_full_stack": {
+      "fail": 0.05,
+      "n": 400
+    },
+    "DIR_sem": {
+      "fail": 0.6125,
+      "n": 400
+    }
+  }
+}

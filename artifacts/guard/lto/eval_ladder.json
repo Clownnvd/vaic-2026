@@ -1,0 +1,25 @@
+{
+  "n": 1348,
+  "thang": {
+    "Majority": {
+      "macro_f1": 0.39388489208633093,
+      "acc": 0.6498516320474778
+    },
+    "Rule-only (lệch số)": {
+      "macro_f1": 0.35190287439422385,
+      "acc": 0.4050445103857567
+    },
+    "Guard-PhoBERT (zero-shot)": {
+      "macro_f1": 0.33861062598467623,
+      "acc": 0.3954005934718101,
+      "R_grounded": 0.9830508474576272,
+      "R_ungrounded": 0.07876712328767123
+    },
+    "SOTA in-domain (Gemma, CÓ train)": {
+      "macro_f1": 0.899,
+      "tham_chieu": true,
+      "ghi_chu": "CÓ train + macro-F1 3 lớp — KHÔNG so trực tiếp"
+    }
+  },
+  "ghi_chu": "macro-F1 headline; acc phụ. SOTA chỉ tham chiếu."
+}
