@@ -1,11 +1,15 @@
-"""Login JupyterHub container mới + lấy token → ghi .fpt_container.json."""
-import sys, time
+"""Login JupyterHub container mới + lấy token → ghi .fpt_container.json.
+
+⚠️ PW & BASE lấy từ ENV (không hardcode credential vào repo public):
+    FPT_CONTAINER_URL=https://<ten>-8000.serverless.fptcloud.com FPT_PW=<pw> python scripts/login_c3.py
+"""
+import os, sys, time
 sys.path.insert(0, ".")
 from scripts.chrome_cdp import Tab, tabs
 from pathlib import Path
 
-BASE = "https://vaic-4don-h100-l9zbe38g-8000.serverless.fptcloud.com"
-PW = "vaic2026guard"
+BASE = os.getenv("FPT_CONTAINER_URL", "")
+PW = os.getenv("FPT_PW", "")
 
 
 def main():
