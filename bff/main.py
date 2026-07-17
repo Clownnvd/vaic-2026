@@ -265,7 +265,11 @@ def giam_sat() -> dict:
     Trả toàn bộ văn bản đã đối chiếu (scripts/cron_giam_sat.py quét vbpl.vn, cache
     đĩa) — mỗi dòng có trạng thái Còn/Hết. Frontend là 1 bảng + tìm kiếm + lọc.
     """
+    from matcher.luat_index import get_index
+
     quet = _nap_quet()
+    area = {v.item_id: v.linh_vuc for v in get_index().ds}  # item_id → lĩnh vực
+    # CHỈ giữ văn bản LIÊN QUAN đề (chính sách DN) — bỏ nội bộ/hành chính.
     van_ban = [
         {
             "so_hieu": r.get("so_hieu"),
@@ -277,7 +281,8 @@ def giam_sat() -> dict:
             "con_hieu_luc": r.get("con_hieu_luc"),
         }
         for r in quet
-        if r.get("con_hieu_luc") is not None  # chỉ dòng có kết luận rõ Còn/Hết
+        if r.get("con_hieu_luc") is not None  # có kết luận rõ Còn/Hết
+        and _lien_quan_dn(r.get("tieu_de"), area.get(r.get("item_id")))
     ]
     # hết hiệu lực trước, rồi mới nhất trước
     van_ban.sort(key=lambda x: (x["con_hieu_luc"] is not False, -(x.get("nam") or 0)))
@@ -291,6 +296,27 @@ def giam_sat() -> dict:
         "nguon": "vbpl.vn (Bộ Tư pháp)",
         "cap_nhat": "đối chiếu trực tiếp vbpl.vn, cache đĩa",
     }
+
+
+# Văn bản "liên quan doanh nghiệp" (miền sản phẩm phủ) vs nội bộ/hành chính.
+# legal_area 75% "Chưa phân loại" → không đủ; kết hợp keyword tiêu đề.
+_DN_KW = (
+    "doanh nghiệp", "hỗ trợ", "ưu đãi", "đầu tư", "thuế", "khoa học", "công nghệ",
+    "tín dụng", "cho vay", "nhỏ và vừa", "khởi nghiệp", "đổi mới sáng tạo",
+    "xuất khẩu", "nhập khẩu", "chuyển giao", "khu công nghiệp", "cụm công nghiệp",
+    "tài trợ", "sản xuất", "kinh doanh", "chuyển đổi số", "hợp tác xã",
+    "lãi suất", "ngành nghề", "quỹ",
+)
+_DN_AREA = ("khoa học", "công nghệ", "đầu tư", "thuế", "doanh nghiệp",
+            "xuất nhập khẩu", "công nghiệp")
+
+
+def _lien_quan_dn(tieu_de: str | None, legal_area: str | None) -> bool:
+    a = (legal_area or "").lower()
+    if any(k in a for k in _DN_AREA):
+        return True
+    s = (tieu_de or "").lower()
+    return any(k in s for k in _DN_KW)
 
 
 def _nap_quet() -> list[dict]:
