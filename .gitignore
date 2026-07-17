@@ -44,3 +44,6 @@ Thumbs.db
 # gateway config chua key - chi commit ban .example
 gateway/litellm.config.yaml
 artifacts/audit/
+
+# dataset ngoai - tai lai bang scripts/tai_vifactcheck.py
+data/ngoai/
