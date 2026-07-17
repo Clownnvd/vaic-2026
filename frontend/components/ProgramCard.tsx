@@ -1,3 +1,6 @@
+"use client";
+
+import { useI18n } from "@/lib/i18n";
 import type { ChuongTrinh, DieuKien } from "@/lib/types";
 import { LOAI_NHAN } from "@/lib/types";
 import { CitationChip } from "./CitationChip";
@@ -34,11 +37,12 @@ const TRANG_THAI_STYLE: Record<
 };
 
 function DongDieuKien({ dk }: { dk: DieuKien }) {
+  const { t } = useI18n();
   const s = TRANG_THAI_STYLE[dk.trangThai];
   return (
     <li className="flex gap-2">
       <span
-        aria-label={s.nhan}
+        aria-label={t(s.nhan)}
         className={`mt-px shrink-0 font-mono text-xs font-bold ${s.mau}`}
       >
         {s.icon}
@@ -46,7 +50,7 @@ function DongDieuKien({ dk }: { dk: DieuKien }) {
       <span className="min-w-0 flex-1">
         <span className="block text-[13px] leading-snug text-text">{dk.yeuCau}</span>
         <span className="mt-0.5 block text-[12px] leading-snug text-text-muted">
-          Hồ sơ: {dk.hoSo}
+          {t("Hồ sơ:")} {dk.hoSo}
         </span>
         <span className="mt-1 block">
           <CitationChip citation={dk.citation} />
@@ -63,6 +67,7 @@ export function ProgramCard({
   ct: ChuongTrinh;
   hang: number;
 }) {
+  const { t } = useI18n();
   return (
     <article
       className="animate-card-in rounded-card border border-border-subtle bg-surface p-4 shadow-sm transition-shadow hover:shadow-md"
@@ -76,7 +81,7 @@ export function ProgramCard({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded border border-brand-200 bg-brand-50 px-1.5 py-0.5 text-[11px] font-medium text-brand-700 dark:border-brand-800 dark:bg-brand-900/40 dark:text-brand-200">
-              {LOAI_NHAN[ct.loai]}
+              {t(LOAI_NHAN[ct.loai])}
             </span>
             <span className="text-[11px] text-text-muted">{ct.coQuan}</span>
           </div>
@@ -97,7 +102,7 @@ export function ProgramCard({
               ~{ct.giaTriHienThi ?? dinhDangVND(ct.giaTriKyVong ?? 0)}
             </div>
             <div className="mt-1 text-[10px] uppercase tracking-wide text-text-muted">
-              giá trị kỳ vọng
+              {t("giá trị kỳ vọng")}
             </div>
           </div>
         )}
@@ -115,13 +120,13 @@ export function ProgramCard({
         >
           {ct.duDieuKien ? (
             <>
-              <span className="font-semibold">Đủ điều kiện</span> — hồ sơ hiện tại
-              thoả toàn bộ tiêu chí bắt buộc
+              <span className="font-semibold">{t("Đủ điều kiện")}</span> —{" "}
+              {t("hồ sơ hiện tại thoả toàn bộ tiêu chí bắt buộc")}
             </>
           ) : (
             <>
-              <span className="font-semibold">Chưa đủ điều kiện</span>
-              {ct.thieu?.length ? <> — thiếu: {ct.thieu.join(" · ")}</> : null}
+              <span className="font-semibold">{t("Chưa đủ điều kiện")}</span>
+              {ct.thieu?.length ? <> — {t("thiếu:")} {ct.thieu.join(" · ")}</> : null}
             </>
           )}
         </div>
@@ -137,13 +142,13 @@ export function ProgramCard({
               d="M7 0a7 7 0 100 14A7 7 0 007 0zm.5 3v4.2l3 1.8-.5.9L6.5 7.8V3z"
             />
           </svg>
-          Hạn nộp: {ct.hanNop}
+          {t("Hạn nộp:")} {ct.hanNop}
         </p>
       )}
 
       <div className="mt-3 border-t border-border-subtle pt-3">
         <h4 className="text-[11px] font-semibold uppercase tracking-wide text-text-muted">
-          Vì sao đủ điều kiện
+          {t("Vì sao đủ điều kiện")}
         </h4>
         <ul className="mt-2 space-y-2.5">
           {ct.dieuKien.map((dk, i) => (
@@ -160,7 +165,7 @@ export function ProgramCard({
               style={{ width: `${Math.round(ct.doTinCay * 100)}%` }}
             />
           </span>
-          Độ tin cậy {Math.round(ct.doTinCay * 100)}%
+          {t("Độ tin cậy")} {Math.round(ct.doTinCay * 100)}%
         </span>
 
         {(() => {
@@ -170,7 +175,7 @@ export function ProgramCard({
           if (!hl || !hl.daDoiChieu) {
             return (
               <span className="text-[11px] text-caution-700 dark:text-caution-300">
-                ⚠ Hiệu lực chưa đối chiếu vbpl.vn
+                ⚠ {t("Hiệu lực chưa đối chiếu vbpl.vn")}
               </span>
             );
           }
@@ -178,22 +183,22 @@ export function ProgramCard({
             return (
               <span
                 className="text-[11px] text-emerald-700 dark:text-emerald-300"
-                title={`Đối chiếu vbpl.vn (${hl.nguon ?? "Bộ Tư pháp"})${hl.soQuanHe ? ` · ${hl.soQuanHe} văn bản liên quan` : ""}`}
+                title={`${t("đối chiếu vbpl.vn")} (${hl.nguon ?? "Bộ Tư pháp"})${hl.soQuanHe ? ` · ${hl.soQuanHe} văn bản liên quan` : ""}`}
               >
-                ✓ {hl.nhan} — đối chiếu vbpl.vn
+                ✓ {t(hl.nhan)} — {t("đối chiếu vbpl.vn")}
               </span>
             );
           }
           if (hl.conHieuLuc === false) {
             return (
               <span className="text-[11px] font-medium text-rose-700 dark:text-rose-300">
-                ⛔ {hl.nhan} — vbpl.vn
+                ⛔ {t(hl.nhan)} — vbpl.vn
               </span>
             );
           }
           return (
             <span className="text-[11px] text-caution-700 dark:text-caution-300">
-              ⚠ {hl.nhan}
+              ⚠ {t(hl.nhan)}
             </span>
           );
         })()}

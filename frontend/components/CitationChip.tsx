@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useI18n } from "@/lib/i18n";
 import type { Citation } from "@/lib/types";
 
 /** Gộp điều–khoản–điểm thành nhãn ngắn: "NĐ 80/2021 · Điều 5 · Khoản 2" */
@@ -17,6 +18,7 @@ export function nhanNgan(c: Citation): string {
  * Đây là thứ phân biệt matcher với chatbot: mọi khẳng định trỏ về được nguồn.
  */
 export function CitationChip({ citation }: { citation: Citation }) {
+  const { t } = useI18n();
   const [mo, setMo] = useState(false);
   const laPlaceholder = citation.trichDan.startsWith("[PLACEHOLDER");
 
@@ -48,7 +50,7 @@ export function CitationChip({ citation }: { citation: Citation }) {
           </span>
           {laPlaceholder && (
             <span className="mt-2 block rounded bg-caution-50 px-2 py-1 text-[11px] text-caution-700 dark:bg-caution-500/10 dark:text-caution-300">
-              ⚠ Chưa đối chiếu corpus — dữ liệu seed dựng UI
+              ⚠ {t("Chưa đối chiếu corpus — dữ liệu seed dựng UI")}
             </span>
           )}
           {citation.url && (
@@ -59,7 +61,7 @@ export function CitationChip({ citation }: { citation: Citation }) {
               onClick={(e) => e.stopPropagation()}
               className="mt-2 inline-flex items-center gap-1 rounded-md bg-brand-50 px-2 py-1 text-[11.5px] font-medium text-brand-700 hover:bg-brand-100 dark:bg-brand-900/40 dark:text-brand-200"
             >
-              Xem bài gốc trên vbpl.vn
+              {t("Xem bài gốc trên vbpl.vn")}
               <svg viewBox="0 0 16 16" className="size-3" fill="none">
                 <path d="M6 3h7v7M13 3l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>

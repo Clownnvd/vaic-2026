@@ -8,6 +8,7 @@ import { GiamSat } from "@/components/GiamSat";
 import { ProfilePanel } from "@/components/ProfilePanel";
 import { Sidebar, type Khung } from "@/components/Sidebar";
 import { SoanHoSo } from "@/components/SoanHoSo";
+import { LangToggle, useI18n } from "@/lib/i18n";
 import { BffLoi, hoiBff } from "@/lib/api";
 import { bocHoSo } from "@/lib/extract";
 import {
@@ -55,6 +56,7 @@ function hoiThoaiMoi(): CuocTroChuyen {
 }
 
 export default function Page() {
+  const { t } = useI18n();
   const [lichSu, setLichSu] = useState<CuocTroChuyen[]>([]);
   const [convId, setConvId] = useState<string | null>(null);
   const [khung, setKhungRaw] = useState<Khung>("chat");
@@ -246,7 +248,7 @@ export default function Page() {
         vaiTro: "tro-ly",
         dang: "van-ban",
         noiDung:
-          e instanceof BffLoi ? e.message : "Có lỗi khi gọi hệ thống. Vui lòng thử lại.",
+          e instanceof BffLoi ? e.message : t("Có lỗi khi gọi hệ thống. Vui lòng thử lại."),
         grounding: "chua-du-can-cu",
       });
     } finally {
@@ -279,8 +281,8 @@ export default function Page() {
             <button
               onClick={() => setSidebarMo(true)}
               className="-ml-1 rounded-md p-1.5 text-text-muted hover:bg-surface-2 md:hidden"
-              aria-label="Mở thanh bên"
-              title="Mở thanh bên"
+              aria-label={t("Mở thanh bên")}
+              title={t("Mở thanh bên")}
             >
               <svg viewBox="0 0 20 20" className="size-5" fill="none">
                 <path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
@@ -290,31 +292,33 @@ export default function Page() {
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-[15px] font-semibold leading-none text-text">
               {khung === "luat"
-                ? "Danh sách luật"
+                ? t("Danh sách luật")
                 : khung === "hoso"
-                  ? "Soạn hồ sơ xin tài trợ"
+                  ? t("Soạn hồ sơ xin tài trợ")
                   : khung === "giamsat"
-                    ? "Giám sát chính sách"
-                    : "Trợ lý tư vấn chính sách"}
+                    ? t("Giám sát chính sách")
+                    : t("Trợ lý tư vấn chính sách")}
             </h1>
             <p className="mt-1 truncate text-[11px] leading-none text-text-muted">
               {khung === "luat"
-                ? "Tra cứu văn bản trong corpus — tìm kiếm, lọc theo tiêu chí"
+                ? t("Tra cứu văn bản trong corpus — tìm kiếm, lọc theo tiêu chí")
                 : khung === "hoso"
-                  ? "Dựng khung hồ sơ, điền sẵn từ hồ sơ DN — bản nháp chờ duyệt"
+                  ? t("Dựng khung hồ sơ, điền sẵn từ hồ sơ DN — bản nháp chờ duyệt")
                   : khung === "giamsat"
-                    ? "Theo dõi hiệu lực + văn bản liên quan, đối chiếu vbpl.vn"
-                    : "Tìm đúng chính sách bạn đủ điều kiện — có căn cứ tới từng điều khoản"}
+                    ? t("Theo dõi hiệu lực + văn bản liên quan, đối chiếu vbpl.vn")
+                    : t("Tìm đúng chính sách bạn đủ điều kiện — có căn cứ tới từng điều khoản")}
             </p>
           </div>
           {khung === "chat" && treMs !== null && (
             <span
               className="shrink-0 rounded border border-border-subtle px-1.5 py-0.5 font-mono text-[10px] text-text-muted"
-              title="Thời gian phản hồi. Đề bài yêu cầu ≤ 5.000ms cho câu đơn giản."
+              title={t("Thời gian phản hồi. Đề bài yêu cầu ≤ 5.000ms cho câu đơn giản.")}
             >
               {treMs}ms
             </span>
           )}
+          {/* nút đổi ngôn ngữ trên nav trên cùng */}
+          <LangToggle />
         </header>
 
         {khung === "luat" ? (
@@ -333,7 +337,7 @@ export default function Page() {
                     <ChatMessage key={m.id} m={m} />
                   ))}
                   {dangBan && (
-                    <p className="text-[12px] text-text-muted">Đang quét kho văn bản…</p>
+                    <p className="text-[12px] text-text-muted">{t("Đang quét kho văn bản…")}</p>
                   )}
                   <div ref={cuoiRef} />
                 </div>

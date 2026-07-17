@@ -1,3 +1,6 @@
+"use client";
+
+import { useI18n } from "@/lib/i18n";
 import type { DienGiai, Message, TrangThaiGrounding } from "@/lib/types";
 import { CitationChip } from "./CitationChip";
 import { ProgramCard } from "./ProgramCard";
@@ -5,6 +8,7 @@ import { VietTat } from "./VietTat";
 
 /** ① Diễn giải luật do LLM sinh, đã qua GUARD lớp số — tô đỏ số bịa nếu có. */
 function DienGiaiGuard({ dg }: { dg: DienGiai }) {
+  const { t } = useI18n();
   // cắt text theo vị trí số bịa để tô đỏ đúng chỗ (bat_dau/ket_thuc từ guard)
   const bia = [...dg.soBia].sort((a, b) => a.batDau - b.batDau);
   const doan: { t: string; do: boolean }[] = [];
@@ -54,20 +58,22 @@ function DienGiaiGuard({ dg }: { dg: DienGiai }) {
           )}
         </span>
         <span className={"text-[12px] font-semibold " + (ok ? "text-eligible-800 dark:text-eligible-200" : "text-blocked-800 dark:text-blocked-200")}>
-          {ok ? "Đã kiểm chứng — số liệu bám nguồn" : `Guard chặn — ${dg.soBia.length} số không có căn cứ`}
+          {ok
+            ? t("Đã kiểm chứng — số liệu bám nguồn")
+            : `${t("Guard chặn")} — ${dg.soBia.length} ${t("số không có căn cứ")}`}
         </span>
         <span className="ml-auto flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-text-muted">
           <svg viewBox="0 0 16 16" className="size-3.5" fill="none">
             <path d="M8 1.5l5 2v4c0 3-2.2 5.3-5 6.5-2.8-1.2-5-3.5-5-6.5v-4l5-2Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
           </svg>
-          Guard
+          {t("Guard")}
         </span>
       </div>
 
       {/* nội dung diễn giải */}
       <div className="px-3.5 py-3">
         <p className="text-[10px] font-medium uppercase tracking-wide text-text-muted">
-          AI diễn giải · kiểm bằng lớp số tất định (đối chiếu nguyên văn corpus)
+          {t("AI diễn giải · kiểm bằng lớp số tất định (đối chiếu nguyên văn corpus)")}
         </p>
         <p className="mt-1.5 text-[13.5px] leading-relaxed text-text">
           {doan.map((d, k) =>
@@ -75,7 +81,7 @@ function DienGiaiGuard({ dg }: { dg: DienGiai }) {
               <mark
                 key={k}
                 className="rounded bg-blocked-200 px-1 font-semibold text-blocked-800 line-through decoration-blocked-500 dark:bg-blocked-500/30 dark:text-blocked-100"
-                title="Số này KHÔNG có trong căn cứ — guard tô đỏ"
+                title={t("Số này KHÔNG có trong căn cứ — guard tô đỏ")}
               >
                 {d.t}
               </mark>
@@ -111,12 +117,13 @@ const GROUNDING: Record<TrangThaiGrounding, { nhan: string; cls: string }> = {
 };
 
 function BadgeGrounding({ tt }: { tt: TrangThaiGrounding }) {
+  const { t } = useI18n();
   const g = GROUNDING[tt];
   return (
     <span
       className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${g.cls}`}
     >
-      {g.nhan}
+      {t(g.nhan)}
     </span>
   );
 }
@@ -172,22 +179,33 @@ export function ChatMessage({ m }: { m: Message }) {
   }
 
   if (m.dang === "hoi-ho-so") {
-    return (
-      <div className="max-w-[92%]">
-        <BongBong>
-          <p className="text-[14px] leading-relaxed text-text">{m.noiDung}</p>
-        </BongBong>
-      </div>
-    );
+    return <HoiHoSo m={m} />;
   }
 
   // dang === "ket-qua" — khoảnh khắc bung thẻ xếp hạng
+  return <KetQua m={m} />;
+}
+
+function HoiHoSo({ m }: { m: Extract<Message, { dang: "hoi-ho-so" }> }) {
+  const { t } = useI18n();
+  return (
+    <div className="max-w-[92%]">
+      <BongBong>
+        {/* t() dịch lời chào onboarding nếu có key; câu hỏi thật từ backend giữ nguyên tiếng Việt */}
+        <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-text">{t(m.noiDung)}</p>
+      </BongBong>
+    </div>
+  );
+}
+
+function KetQua({ m }: { m: Extract<Message, { dang: "ket-qua" }> }) {
+  const { t } = useI18n();
   return (
     <div className="max-w-[92%]">
       <BongBong>
         <p className="text-[14px] leading-relaxed text-text">{m.noiDung}</p>
         <p className="mt-1 text-[12px] text-text-muted">
-          Đã quét {m.daQuet.toLocaleString("vi-VN")} văn bản · xếp theo giá trị kỳ vọng
+          {t("Đã quét")} {m.daQuet.toLocaleString("vi-VN")} {t("văn bản · xếp theo giá trị kỳ vọng")}
         </p>
       </BongBong>
 

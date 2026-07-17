@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useI18n } from "@/lib/i18n";
 import {
   type KetQuaHoSo,
   type KhungHoSo,
@@ -33,6 +34,7 @@ function sangBackend(p: Profile): Record<string, unknown> {
  * Luôn là bản nháp chờ duyệt (write-gate).
  */
 export function SoanHoSo({ profile }: { profile: Profile }) {
+  const { t } = useI18n();
   const [ct, setCt] = useState<CtItem[]>([]);
   const [moCt, setMoCt] = useState<string>(""); // chương trình đang mở
   const [khungTheoCt, setKhungTheoCt] = useState<Record<string, KetQuaHoSo>>({});
@@ -67,11 +69,10 @@ export function SoanHoSo({ profile }: { profile: Profile }) {
     <div className="flex-1 overflow-y-auto">
       <div className="mx-auto max-w-4xl px-5 py-5">
         <div className="mb-4">
-          <h2 className="text-[16px] font-semibold text-text">Soạn hồ sơ xin tài trợ</h2>
+          <h2 className="text-[16px] font-semibold text-text">{t("Soạn hồ sơ xin tài trợ")}</h2>
           <p className="mt-1 text-[13px] leading-relaxed text-text-muted">
-            Chọn chương trình để xem bộ văn bản cần nộp. Bấm từng văn bản để mở biểu mẫu điền —
-            hệ thống điền sẵn phần biết chắc từ hồ sơ doanh nghiệp, bạn khai nốt phần còn lại.
-            <b> Mọi bản đều là bản nháp chờ bạn duyệt.</b>
+            {t("Chọn chương trình để xem bộ văn bản cần nộp. Bấm từng văn bản để mở biểu mẫu điền — hệ thống điền sẵn phần biết chắc từ hồ sơ doanh nghiệp, bạn khai nốt phần còn lại.")}
+            <b> {t("Mọi bản đều là bản nháp chờ bạn duyệt.")}</b>
           </p>
         </div>
 
@@ -96,7 +97,7 @@ export function SoanHoSo({ profile }: { profile: Profile }) {
                   {/* số biểu mẫu HIỆN NGAY (từ so_bieu_mau, không đợi mở) */}
                   {(c.so_bieu_mau ?? kq?.khung?.length) !== undefined && (
                     <span className="shrink-0 rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700 dark:bg-brand-900/40 dark:text-brand-200">
-                      {kq?.khung?.length ?? c.so_bieu_mau} văn bản
+                      {kq?.khung?.length ?? c.so_bieu_mau} {t("văn bản")}
                     </span>
                   )}
                 </button>
@@ -105,11 +106,11 @@ export function SoanHoSo({ profile }: { profile: Profile }) {
                 {mo && (
                   <div className="border-t border-border-subtle bg-surface-2/40 px-2 py-2">
                     {dangTai[c.id] && (
-                      <p className="px-3 py-2 text-[12.5px] text-text-muted">Đang dựng bộ hồ sơ…</p>
+                      <p className="px-3 py-2 text-[12.5px] text-text-muted">{t("Đang dựng bộ hồ sơ…")}</p>
                     )}
                     {kq && !kq.khung?.length && (
                       <p className="px-3 py-2 text-[12.5px] text-text-muted">
-                        {kq.text || "Chương trình này chưa gắn biểu mẫu trong kho."}
+                        {kq.text || t("Chương trình này chưa gắn biểu mẫu trong kho.")}
                       </p>
                     )}
                     {kq?.khung?.map((k) => (
@@ -128,6 +129,7 @@ export function SoanHoSo({ profile }: { profile: Profile }) {
 
 /** Một văn bản = hàng bấm mở → form điền được. */
 function VanBanForm({ k }: { k: KhungHoSo }) {
+  const { t } = useI18n();
   const [mo, setMo] = useState(false);
   // giá trị điền được, khởi từ phần code đã điền
   const [gt, setGt] = useState<Record<number, string>>(() =>
@@ -152,12 +154,12 @@ function VanBanForm({ k }: { k: KhungHoSo }) {
             <span className="truncate text-[13px] font-medium text-text">{k.ten}</span>
           </div>
           <div className="mt-0.5 text-[11px] text-text-muted">
-            Căn cứ {k.can_cu} · nơi nhận {k.co_quan_nhan}
-            {k.han_nop ? ` · hạn ${k.han_nop}` : ""}
+            {t("Căn cứ")} {k.can_cu} · {t("nơi nhận")} {k.co_quan_nhan}
+            {k.han_nop ? ` · ${t("hạn")} ${k.han_nop}` : ""}
           </div>
         </div>
         <span className="shrink-0 text-[11px] text-text-muted">
-          {day}/{tong} ô
+          {day}/{tong} {t("ô")}
         </span>
         <svg viewBox="0 0 16 16" className={"size-3.5 shrink-0 text-text-muted transition-transform " + (mo ? "rotate-90" : "")} fill="none">
           <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -178,14 +180,14 @@ function VanBanForm({ k }: { k: KhungHoSo }) {
               <svg viewBox="0 0 16 16" className="size-3.5" fill="none">
                 <path d="M3 8.5l3 3 6-7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              AI không tự điền — code gợi ý, bạn duyệt
+              {t("AI không tự điền — code gợi ý, bạn duyệt")}
             </span>
             <div className="ml-auto flex gap-2">
               <button className="rounded-lg border border-border-strong px-3 py-1.5 text-[12.5px] font-medium text-text hover:bg-surface-2">
-                Lưu nháp
+                {t("Lưu nháp")}
               </button>
               <button className="rounded-lg bg-brand-600 px-3 py-1.5 text-[12.5px] font-medium text-white hover:bg-brand-700">
-                Duyệt & tải
+                {t("Duyệt & tải")}
               </button>
             </div>
           </div>
@@ -197,6 +199,7 @@ function VanBanForm({ k }: { k: KhungHoSo }) {
 
 /** Một ô nhập liệu — có nhãn, nguồn, và input SỬA ĐƯỢC. */
 function ONhap({ o, value, onChange }: { o: OHoSo; value: string; onChange: (v: string) => void }) {
+  const { t } = useI18n();
   const ng = NGUON_NHAN[o.nguon];
   const goc = o.gia_tri ?? "";
   const daSua = value !== goc;
@@ -205,17 +208,17 @@ function ONhap({ o, value, onChange }: { o: OHoSo; value: string; onChange: (v: 
       <div className="mb-1 flex items-center justify-between">
         <label className="text-[12px] font-medium text-text">{o.nhan}</label>
         <span className={"text-[10.5px] " + ng.cls}>
-          {o.nguon === "nguoi" ? "Doanh nghiệp tự khai" : ng.nhan}
+          {o.nguon === "nguoi" ? t("Doanh nghiệp tự khai") : t(ng.nhan)}
         </span>
       </div>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={o.nguon === "nguoi" ? "Bạn tự khai ô này…" : "—"}
+        placeholder={o.nguon === "nguoi" ? t("Bạn tự khai ô này…") : "—"}
         className="w-full rounded-lg border border-border-strong bg-surface px-3 py-2 text-[13.5px] text-text outline-none placeholder:text-text-muted focus:border-brand-500"
       />
       {daSua && goc !== "" && (
-        <p className="mt-0.5 text-[10.5px] text-text-muted">Gốc hệ thống điền: {goc}</p>
+        <p className="mt-0.5 text-[10.5px] text-text-muted">{t("Gốc hệ thống điền:")} {goc}</p>
       )}
     </div>
   );

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
+import { I18nProvider } from "@/lib/i18n";
 
 // Be Vietnam Pro: có subset "vietnamese" — dấu ă/ơ/ư/đ render đúng một font,
 // không rớt sang font hệ thống như Geist (chỉ có latin).
@@ -22,7 +23,9 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="vi" className={`${beVietnam.variable} h-full`}>
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        <I18nProvider>{children}</I18nProvider>
+      </body>
     </html>
   );
 }

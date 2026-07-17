@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useI18n } from "@/lib/i18n";
 
 export function ChatInput({
   onGui,
@@ -11,6 +12,7 @@ export function ChatInput({
   dangBan?: boolean;
   goiY?: string[];
 }) {
+  const { t } = useI18n();
   const [text, setText] = useState("");
   const taRef = useRef<HTMLTextAreaElement>(null);
 
@@ -66,7 +68,7 @@ export function ChatInput({
               }
             }}
             rows={1}
-            placeholder="Mô tả doanh nghiệp của bạn, hoặc hỏi về một chương trình… (Shift+Enter để xuống dòng)"
+            placeholder={t("Mô tả doanh nghiệp của bạn, hoặc hỏi về một chương trình… (Shift+Enter để xuống dòng)")}
             className="min-h-[44px] flex-1 resize-none overflow-y-auto rounded-lg border border-border-strong bg-surface px-3 py-2.5 text-[14px] leading-relaxed text-text placeholder:text-text-muted focus:border-brand-400"
           />
           <button
@@ -74,13 +76,12 @@ export function ChatInput({
             disabled={dangBan || !text.trim()}
             className="h-[44px] shrink-0 rounded-lg bg-brand-600 px-4 text-[14px] font-medium text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Gửi
+            {t("Gửi")}
           </button>
         </form>
 
         <p className="mt-1.5 text-[11px] text-text-muted">
-          PolicyRadar chỉ khẳng định điều gì có căn cứ trong kho văn bản. Thiếu căn cứ thì
-          nói thẳng là chưa đủ căn cứ.
+          {t("PolicyRadar chỉ khẳng định điều gì có căn cứ trong kho văn bản. Thiếu căn cứ thì nói thẳng là chưa đủ căn cứ.")}
         </p>
       </div>
     </div>

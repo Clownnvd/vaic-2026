@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useI18n } from "@/lib/i18n";
 import {
   type BoLoc,
   type Facets,
@@ -15,6 +16,7 @@ const CS = 20;
 
 /** Danh sách luật — tra cứu corpus 2.669 văn bản: tìm kiếm + lọc + phân trang. */
 export function DanhSachLuat() {
+  const { t } = useI18n();
   const [loc, setLoc] = useState<BoLoc>({ trang: 1, cs: CS });
   const [data, setData] = useState<TrangLuat | null>(null);
   const [facets, setFacets] = useState<Facets | null>(null);
@@ -38,7 +40,7 @@ export function DanhSachLuat() {
         if (!huy) setData(d);
       })
       .catch((e) => {
-        if (!huy) setLoi(e instanceof Error ? e.message : "Lỗi tải");
+        if (!huy) setLoi(e instanceof Error ? e.message : t("Lỗi tải"));
       })
       .finally(() => {
         if (!huy) setDangTai(false);
@@ -84,7 +86,7 @@ export function DanhSachLuat() {
               <input
                 value={oTim}
                 onChange={(e) => onTim(e.target.value)}
-                placeholder="Tìm theo số hiệu, tiêu đề, cơ quan… (gõ không dấu cũng được)"
+                placeholder={t("Tìm theo số hiệu, tiêu đề, cơ quan… (gõ không dấu cũng được)")}
                 className="w-full rounded-lg border border-border-strong bg-surface-2 py-2 pl-9 pr-3 text-[13px] text-text outline-none placeholder:text-text-muted focus:border-brand-500"
               />
             </div>
@@ -96,7 +98,7 @@ export function DanhSachLuat() {
                 }}
                 className="shrink-0 rounded-lg border border-border-subtle px-3 py-2 text-[12px] text-text-muted hover:bg-surface-2"
               >
-                Xoá lọc
+                {t("Xoá lọc")}
               </button>
             )}
           </div>
@@ -104,26 +106,26 @@ export function DanhSachLuat() {
           {/* dropdown lọc theo tiêu chí */}
           <div className="mt-2.5 flex flex-wrap gap-2">
             <LocChon
-              nhan="Loại văn bản"
+              nhan={t("Loại văn bản")}
               gt={loc.doc_type ?? ""}
               opts={facets?.doc_type}
               nhanGt={nhanLoai}
               onChon={(v) => datLoc("doc_type", v)}
             />
             <LocChon
-              nhan="Lĩnh vực"
+              nhan={t("Lĩnh vực")}
               gt={loc.linh_vuc ?? ""}
               opts={facets?.linh_vuc}
               onChon={(v) => datLoc("linh_vuc", v)}
             />
             <LocChon
-              nhan="Cơ quan"
+              nhan={t("Cơ quan")}
               gt={loc.co_quan ?? ""}
               opts={facets?.co_quan}
               onChon={(v) => datLoc("co_quan", v)}
             />
             <LocChon
-              nhan="Năm"
+              nhan={t("Năm")}
               gt={loc.nam ?? ""}
               opts={facets?.nam}
               onChon={(v) => datLoc("nam", v)}
@@ -138,15 +140,15 @@ export function DanhSachLuat() {
           <div className="mb-3 flex items-center justify-between text-[12px] text-text-muted">
             <span>
               {dangTai
-                ? "Đang tải…"
+                ? t("Đang tải…")
                 : data
-                  ? `${data.tong.toLocaleString("vi-VN")} văn bản` +
-                    (loc.q ? ` khớp "${loc.q}"` : "")
+                  ? `${data.tong.toLocaleString("vi-VN")} ${t("văn bản")}` +
+                    (loc.q ? ` ${t("khớp")} "${loc.q}"` : "")
                   : ""}
             </span>
             {data && data.so_trang > 1 && (
               <span>
-                Trang {data.trang}/{data.so_trang}
+                {t("Trang")} {data.trang}/{data.so_trang}
               </span>
             )}
           </div>
@@ -163,7 +165,7 @@ export function DanhSachLuat() {
             ))}
             {!dangTai && data && data.van_ban.length === 0 && (
               <p className="py-12 text-center text-[13px] text-text-muted">
-                Không có văn bản nào khớp. Thử bỏ bớt bộ lọc.
+                {t("Không có văn bản nào khớp. Thử bỏ bớt bộ lọc.")}
               </p>
             )}
           </div>
@@ -197,6 +199,7 @@ function LocChon({
   nhanGt?: (v: string) => string;
   onChon: (v: string) => void;
 }) {
+  const { t } = useI18n();
   const co = gt !== "";
   return (
     <div className="relative">
@@ -210,7 +213,7 @@ function LocChon({
             : "border-border-strong bg-surface-2 text-text-muted")
         }
       >
-        <option value="">{nhan}: tất cả</option>
+        <option value="">{nhan}: {t("tất cả")}</option>
         {opts?.map((o) => (
           <option key={o.gia_tri} value={o.gia_tri}>
             {(nhanGt ? nhanGt(o.gia_tri) : o.gia_tri)} ({o.so_luong})
@@ -229,6 +232,7 @@ function LocChon({
 }
 
 function TheLuat({ v }: { v: VanBan }) {
+  const { t } = useI18n();
   // cả thẻ là link → bấm đâu cũng mở trang văn bản trên vbpl.vn.
   // Không có nguồn thì để <div> (không bấm được), tránh link chết.
   const Bọc = v.nguon_url ? "a" : "div";
@@ -253,7 +257,7 @@ function TheLuat({ v }: { v: VanBan }) {
         {v.nam && <span className="text-[11px] text-text-muted">{v.nam}</span>}
         {v.nguon_url && (
           <span className="ml-auto text-[11px] text-brand-600 opacity-0 transition-opacity group-hover:opacity-100 dark:text-brand-300">
-            Mở trên vbpl.vn ↗
+            {t("Mở trên vbpl.vn ↗")}
           </span>
         )}
       </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useI18n } from "@/lib/i18n";
 import type { Profile } from "@/lib/types";
 import { PROFILE_FIELDS } from "@/lib/types";
 import { dinhDangVND } from "./ProgramCard";
@@ -21,6 +22,7 @@ function hienThi(key: keyof Profile, v: Profile[keyof Profile]): string {
  * Dòng đã điền = xanh; dòng còn trống = AI sẽ hỏi tiếp.
  */
 export function ProfilePanel({ profile }: { profile: Profile }) {
+  const { t } = useI18n();
   const daDien = PROFILE_FIELDS.filter((f) => profile[f.key] !== undefined).length;
   const tong = PROFILE_FIELDS.length;
   const pct = Math.round((daDien / tong) * 100);
@@ -29,7 +31,7 @@ export function ProfilePanel({ profile }: { profile: Profile }) {
     <aside className="hidden w-72 shrink-0 flex-col border-l border-border-subtle bg-surface-2 lg:flex">
       <div className="border-b border-border-subtle px-4 py-3.5">
         <div className="flex items-center justify-between">
-          <h2 className="text-[13px] font-semibold text-text">Hồ sơ doanh nghiệp</h2>
+          <h2 className="text-[13px] font-semibold text-text">{t("Hồ sơ doanh nghiệp")}</h2>
           <span className="text-[12px] font-medium text-text-muted">
             {daDien}/{tong}
           </span>
@@ -41,7 +43,7 @@ export function ProfilePanel({ profile }: { profile: Profile }) {
           />
         </div>
         <p className="mt-1.5 text-[10.5px] leading-snug text-text-muted">
-          Ngữ cảnh giữ suốt cuộc trò chuyện. Dòng trống → trợ lý sẽ hỏi tiếp.
+          {t("Ngữ cảnh giữ suốt cuộc trò chuyện. Dòng trống → trợ lý sẽ hỏi tiếp.")}
         </p>
       </div>
 
@@ -64,14 +66,14 @@ export function ProfilePanel({ profile }: { profile: Profile }) {
                 }
               />
               <div className="min-w-0 flex-1">
-                <div className="text-[11px] leading-tight text-text-muted">{f.nhan}</div>
+                <div className="text-[11px] leading-tight text-text-muted">{t(f.nhan)}</div>
                 <div
                   className={
                     "mt-0.5 text-[13px] leading-snug " +
                     (co ? "font-medium text-text" : "text-text-muted")
                   }
                 >
-                  {co ? giaTri : "— chưa có"}
+                  {co ? giaTri : t("— chưa có")}
                 </div>
               </div>
             </div>

@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { Logo } from "@/components/Logo";
+import { useI18n } from "@/lib/i18n";
 import { type CuocTroChuyen, nhomTheoThoiGian } from "@/lib/lichsu";
 
 export type Khung = "chat" | "luat" | "hoso" | "giamsat";
@@ -31,6 +32,7 @@ export function Sidebar({
   onDong: () => void;
   onMo: () => void;
 }) {
+  const { t } = useI18n();
   const daDung = useMemo(
     () => lichSu.filter((c) => c.messages.some((m) => m.vaiTro === "nguoi-dung")),
     [lichSu],
@@ -54,26 +56,26 @@ export function Sidebar({
           <path d="M16 4v12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
       </button>
-      <RailBtn onClick={() => { onMoi(); onKhung("chat"); }} label="Cuộc trò chuyện mới">
+      <RailBtn onClick={() => { onMoi(); onKhung("chat"); }} label={t("Cuộc trò chuyện mới")}>
         <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
       </RailBtn>
-      <RailBtn active={khung === "chat"} onClick={() => onKhung("chat")} label="Trợ lý tư vấn">
+      <RailBtn active={khung === "chat"} onClick={() => onKhung("chat")} label={t("Trợ lý tư vấn")}>
         <path d="M4 5h12v8H8l-4 3V5Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
       </RailBtn>
-      <RailBtn active={khung === "hoso"} onClick={() => onKhung("hoso")} label="Soạn hồ sơ">
+      <RailBtn active={khung === "hoso"} onClick={() => onKhung("hoso")} label={t("Soạn hồ sơ")}>
         <path d="M6 3h5l3 3v11H6z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
         <path d="M11 3v3h3M8 11h4M8 14h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       </RailBtn>
-      <RailBtn active={khung === "giamsat"} onClick={() => onKhung("giamsat")} label="Giám sát">
+      <RailBtn active={khung === "giamsat"} onClick={() => onKhung("giamsat")} label={t("Giám sát chính sách")}>
         <path d="M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14Z" stroke="currentColor" strokeWidth="1.5" />
         <path d="M10 6v4l2.5 2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
       </RailBtn>
-      <RailBtn active={khung === "luat"} onClick={() => onKhung("luat")} label="Danh sách luật">
+      <RailBtn active={khung === "luat"} onClick={() => onKhung("luat")} label={t("Danh sách luật")}>
         <path d="M5 4h10v12H5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
         <path d="M8 8h4M8 11h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
       </RailBtn>
       <div className="mt-auto">
-        <span className="flex size-8 items-center justify-center rounded-full bg-brand-600 text-[12px] font-semibold text-white" title="Doanh nghiệp">
+        <span className="flex size-8 items-center justify-center rounded-full bg-brand-600 text-[12px] font-semibold text-white" title={t("Doanh nghiệp")}>
           DN
         </span>
       </div>
@@ -99,13 +101,13 @@ export function Sidebar({
           <Logo size={32} />
           <div className="min-w-0 flex-1">
             <div className="text-[14px] font-semibold leading-tight text-text">PolicyRadar</div>
-            <div className="text-[10.5px] leading-tight text-text-muted">Trợ lý chính sách · NIC</div>
+            <div className="text-[10.5px] leading-tight text-text-muted">{t("Trợ lý chính sách · NIC")}</div>
           </div>
           <button
             onClick={onDong}
             className="shrink-0 rounded-md p-1 text-text-muted hover:bg-surface"
-            aria-label="Thu gọn thanh bên"
-            title="Thu gọn thanh bên"
+            aria-label={t("Thu gọn thanh bên")}
+            title={t("Thu gọn thanh bên")}
           >
             <svg viewBox="0 0 20 20" className="size-[18px]" fill="none">
               <path d="M12 5l-5 5 5 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
@@ -122,29 +124,29 @@ export function Sidebar({
             <svg viewBox="0 0 20 20" className="size-4" fill="none">
               <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
             </svg>
-            Cuộc trò chuyện mới
+            {t("Cuộc trò chuyện mới")}
           </button>
         </div>
 
         <nav className="mt-3 px-3">
-          <MucNav active={khung === "chat"} onClick={() => onKhung("chat")} nhan="Trợ lý tư vấn" />
-          <MucNav active={khung === "hoso"} onClick={() => onKhung("hoso")} nhan="Soạn hồ sơ" />
-          <MucNav active={khung === "giamsat"} onClick={() => onKhung("giamsat")} nhan="Giám sát chính sách" />
-          <MucNav active={khung === "luat"} onClick={() => onKhung("luat")} nhan="Danh sách luật" />
+          <MucNav active={khung === "chat"} onClick={() => onKhung("chat")} nhan={t("Trợ lý tư vấn")} />
+          <MucNav active={khung === "hoso"} onClick={() => onKhung("hoso")} nhan={t("Soạn hồ sơ")} />
+          <MucNav active={khung === "giamsat"} onClick={() => onKhung("giamsat")} nhan={t("Giám sát chính sách")} />
+          <MucNav active={khung === "luat"} onClick={() => onKhung("luat")} nhan={t("Danh sách luật")} />
         </nav>
 
         <div className="mt-4 flex-1 overflow-y-auto px-2 pb-3">
           <div className="px-2 pb-1 text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
-            Lịch sử
+            {t("Lịch sử")}
           </div>
           {daDung.length === 0 && (
             <p className="px-2 py-3 text-[12px] leading-relaxed text-text-muted">
-              Chưa có cuộc trò chuyện nào. Bắt đầu bằng cách mô tả doanh nghiệp của bạn.
+              {t("Chưa có cuộc trò chuyện nào. Bắt đầu bằng cách mô tả doanh nghiệp của bạn.")}
             </p>
           )}
           {nhom.map((g) => (
             <div key={g.nhan} className="mb-2">
-              <div className="px-2 py-1 text-[10.5px] font-medium text-text-muted">{g.nhan}</div>
+              <div className="px-2 py-1 text-[10.5px] font-medium text-text-muted">{t(g.nhan)}</div>
               {g.items.map((c) => (
                 <button
                   key={c.id}
@@ -163,7 +165,7 @@ export function Sidebar({
                     onClick={(e) => { e.stopPropagation(); onXoa(c.id); }}
                     onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); onXoa(c.id); } }}
                     className="hidden shrink-0 rounded p-0.5 text-text-muted hover:text-blocked-600 group-hover:block"
-                    aria-label="Xoá cuộc trò chuyện"
+                    aria-label={t("Xoá cuộc trò chuyện")}
                   >
                     <svg viewBox="0 0 16 16" className="size-3.5" fill="none">
                       <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
@@ -181,8 +183,8 @@ export function Sidebar({
               DN
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-[12.5px] font-medium text-text">Doanh nghiệp</span>
-              <span className="block truncate text-[10.5px] text-text-muted">Gói tra cứu chính sách</span>
+              <span className="block truncate text-[12.5px] font-medium text-text">{t("Doanh nghiệp")}</span>
+              <span className="block truncate text-[10.5px] text-text-muted">{t("Gói tra cứu chính sách")}</span>
             </span>
           </button>
         </div>
