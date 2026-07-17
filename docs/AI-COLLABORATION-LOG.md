@@ -52,16 +52,56 @@ Khi dựng `lib/seed.ts`, AI cần dữ liệu chương trình ưu đãi để r
 
 Đã dựng: `ProfileRibbon` (ngữ cảnh hồ sơ luôn hiện hình), `ProgramCard` (thẻ xếp hạng: giá trị kỳ vọng, hạn nộp, từng điều kiện kèm trạng thái đạt/chưa đạt **và citation riêng cho từng dòng**), `CitationChip` (bấm mở đoạn căn cứ), `ChatMessage` (badge *đủ căn cứ / chưa đủ căn cứ / guard chặn*).
 
+### ~15:xx — Corpus: rủi ro Python đã thành hiện thực
+Rủi ro ghi nợ lúc 14:0x nổ đúng như dự báo: **Python 3.14 không import được `pyarrow`**. Không mất giờ debug — chuyển sang `uv run --python 3.11` là chạy (pyarrow 25.0.0). Ghi lại để không ai thử lại đường 3.14.
+
+### ~15:xx — Thăm dò schema TRƯỚC khi viết pipeline
+Không đoán dtype. Tải 1 shard, in schema thật → bắt được **2 chỗ mà spec ban đầu đoán sai**:
+- `doc_number` là `list<string>`, không phải string → thêm cột `doc_number_str` đã join.
+- Có sẵn `item_id` + `source_url` → map thẳng vào `docId`/`url` của `Citation`. Thiếu 2 field này thì citation không truy ngược được — suýt bỏ sót.
+
+### ~15:xx — Không tải 1.8GB: đọc footer parquet
+Parquet lưu min/max từng cột trong footer. Đọc footer 32 shard qua HTTP range (**vài KB thay vì 1.8GB**) → **14 shard có `year_max < 2018` ⇒ chắc chắn 0 dòng lọt lọc ⇒ khỏi tải**. Tiết kiệm ~770MB.
+
+Đây là suy luận từ **thống kê chính xác**, không phải ngoại suy mẫu. Và đã **chéo kiểm**: shard 24 đọc thật ra dải 1946–2015, footer cũng nói 1946–2015 → stats tin được.
+
+Tổng rows từ footer = 31×5000 + 3822 = **158.822**, khớp *chính xác* con số đã biết của kho.
+
+### ~15:xx — "0 khớp" trông như bug. Điều tra thay vì đoán.
+Shard 03 báo có văn bản tới **2025** nhưng lọc ra **0 khớp**. Hai giả thuyết trái ngược, cả hai đều nguy hiểm nếu đoán bừa:
+- "bộ lọc hỏng" → sửa nhầm cái đang đúng.
+- "kho không có dữ liệu" → bỏ cả hướng.
+
+**Đã làm:** dừng job tải (không để nó nuốt 18 shard rồi mới biết) → hỏi **HF datasets-server API** lấy số cứng → tải đúng shard 03, in phễu từng tầng.
+
+**Kết quả:** shard 03 có đúng **1/5000** văn bản từ 2018. `year_max=2025` là **một văn bản lẻ duy nhất**. Mọi tầng lọc đều sống (doc_type 4.616 · keyword 816). **Bộ lọc đúng, dữ liệu chỉ lệch khủng khiếp.**
+
+**Bài học ghi lại:** `year_max` chỉ chứng minh được chiều *"bỏ đi an toàn"*, không chứng minh *"có hàng"*. Đúng tinh thần: đừng suy từ mẫu.
+
+### ~15:xx — Số cứng của corpus (verify qua API, không ngoại suy)
+| Tầng | Số văn bản |
+|---|---|
+| Tổng kho | **158.822** |
+| year ≥ 2018 | **48.007** |
+| doc_type ∈ 4 loại | 77.907 |
+| year≥2018 ∧ doc_type | 46.465 |
+| ⭐ cả 3 tầng (corpus flagship) | **~7.598** |
+
+⚠️ Số keyword từ API **thấp hơn** số kho (ưu đãi 6.366 vs 11.950) vì `LIKE` phân biệt hoa/thường. Pipeline dùng `utf8_lower` nên số thật cao hơn. **Ghi rõ chỗ vênh này thay vì chọn số đẹp hơn.**
+
 ---
 
 ## Nợ kỹ thuật đang mở
 
 | # | Việc | Trạng thái |
 |---|---|---|
-| 1 | Python 3.14 có chạy được torch/transformers không | ❓ chưa verify |
+| 1 | ~~Python 3.14 chạy được pyarrow?~~ | ✅ đóng — KHÔNG. Dùng `uv run --python 3.11` |
+| 1b | Python 3.14 chạy được torch/transformers? | ❓ chưa verify — sẽ chặn guard |
 | 2 | Thay seed bằng dữ liệu sinh từ corpus vbpl-vn | 🔴 bắt buộc trước demo |
 | 3 | Join API vbpl.vn lấy trạng thái hiệu lực | 🔴 chưa làm |
-| 4 | Wire frontend → BFF (hiện đang bóc hồ sơ bằng regex ở client) | 🔴 tạm |
+| 4 | Wire frontend → BFF (hiện bóc hồ sơ bằng regex ở client) | 🔴 tạm |
+| 5 | **Corpus có field hiệu lực không?** Nếu không → bỏ phép nhiễu #7 | ❓ kiểm khi corpus xong |
+| 6 | Đo phân bố độ dài khoản → chốt `max_len` 128 hay 256 | ❓ chưa đo |
 
 ---
 
