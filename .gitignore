@@ -25,7 +25,11 @@ venv/
 *.pt
 *.bin
 *.safetensors
+*.tar.gz
 guard_phobert*/
+artifacts/guard/phobert_fpt/
+artifacts/guard/phobert_guard/
+artifacts/anh/
 
 # corpus dựng lại được bằng scripts/build_corpus.py — không nhồi 153MB vào repo public
 data/
@@ -47,3 +51,7 @@ artifacts/audit/
 
 # dataset ngoai - tai lai bang scripts/tai_vifactcheck.py
 data/ngoai/
+
+# token phien GPU/lab FPT - KHONG commit
+.fpt_lab.json
+.fpt_container.json

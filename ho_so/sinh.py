@@ -56,13 +56,19 @@ def _tu_ho_so(khoa: str, hs: dict) -> str | None:
     v = hs.get(khoa)
     if v is None:
         return None
-    if khoa == "von":
+    if khoa in ("von", "doanh_thu"):
         return format_vnd(int(v), rut_gon=False)
-    if khoa == "nhan_su":
+    if khoa == "lao_dong_bhxh":
         return f"{v} người"
-    if khoa == "chi_rnd":
-        return f"{str(v).replace('.', ',')}% doanh thu"
-    if khoa == "fdi":
+    if khoa == "ty_le_dt_khcn":
+        # dấu phẩy thập phân kiểu VN — "45.0" của Python đọc thành "45.0" (sai kiểu VN)
+        return f"{str(v).replace('.', ',')}% tổng doanh thu"
+    if khoa == "linh_vuc":
+        return {
+            "nong_lam_thuy_san__cong_nghiep_xay_dung": "Nông nghiệp, lâm nghiệp, thủy sản; công nghiệp và xây dựng",
+            "thuong_mai_dich_vu": "Thương mại và dịch vụ",
+        }.get(str(v), str(v))
+    if khoa in ("fdi", "co_gcn_khcn", "nu_lam_chu"):
         return "Có" if v else "Không"
     return str(v)
 

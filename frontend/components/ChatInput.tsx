@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function ChatInput({
   onGui,
@@ -12,6 +12,15 @@ export function ChatInput({
   goiY?: string[];
 }) {
   const [text, setText] = useState("");
+  const taRef = useRef<HTMLTextAreaElement>(null);
+
+  // tự nở theo nội dung (auto-grow) — cao dần tới trần rồi mới cuộn, dễ nhìn
+  useEffect(() => {
+    const ta = taRef.current;
+    if (!ta) return;
+    ta.style.height = "auto";
+    ta.style.height = Math.min(ta.scrollHeight, 240) + "px";
+  }, [text]);
 
   function gui(v: string) {
     const t = v.trim();
@@ -47,6 +56,7 @@ export function ChatInput({
           className="flex items-end gap-2"
         >
           <textarea
+            ref={taRef}
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => {
@@ -56,8 +66,8 @@ export function ChatInput({
               }
             }}
             rows={1}
-            placeholder="Mô tả doanh nghiệp của bạn, hoặc hỏi về một chương trình…"
-            className="max-h-40 min-h-[44px] flex-1 resize-y rounded-lg border border-border-strong bg-surface px-3 py-2.5 text-[14px] leading-relaxed text-text placeholder:text-text-muted focus:border-brand-400"
+            placeholder="Mô tả doanh nghiệp của bạn, hoặc hỏi về một chương trình… (Shift+Enter để xuống dòng)"
+            className="min-h-[44px] flex-1 resize-none overflow-y-auto rounded-lg border border-border-strong bg-surface px-3 py-2.5 text-[14px] leading-relaxed text-text placeholder:text-text-muted focus:border-brand-400"
           />
           <button
             type="submit"

@@ -1,0 +1,45 @@
+{
+  "T": 0.4132135510444641,
+  "ece_truoc": 0.007462143898010254,
+  "ece_sau": 1.2218952178955078e-05,
+  "nguong_refuse": 0.5,
+  "mining_curve": [
+    0.0
+  ],
+  "ablation": [
+    [
+      "Full",
+      1.0,
+      1.0,
+      0.5
+    ],
+    [
+      "− margin loss",
+      1.0,
+      1.0,
+      0.5
+    ],
+    [
+      "− hard-neg mining",
+      1.0,
+      1.0,
+      0.5
+    ],
+    [
+      "− calibration",
+      1.0,
+      1.0,
+      0.5
+    ],
+    [
+      "− NLI (chỉ rule)",
+      0.0,
+      0.0,
+      null
+    ]
+  ],
+  "n_train": 1200,
+  "n_test": 600,
+  "device": "cpu",
+  "giay": 6403
+}

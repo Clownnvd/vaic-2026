@@ -1,4 +1,15 @@
-"""Test matcher chạy ngược + diff monitoring.
+"""Test matcher: chạy ngược + diff monitoring + kho THẬT.
+
+⚠️ BẢN CŨ CÓ BẪY: fixture gán VĂN BẢN BỊA vào SỐ HIỆU THẬT —
+     Citation("13/2019/NĐ-CP", …, 6, 1, "…chi R&D tối thiểu 1%…")
+   Số hiệu thật, Điều/Khoản thật, nội dung bịa. Ai đọc test cũng tưởng luật nói
+   vậy, và chính nó đẻ ra điều kiện bịa "Chi R&D ≥ 1%" trong kho_mau.
+
+   Nay tách đôi:
+     • TEST LOGIC     → dùng văn bản HƯ CẤU RÕ RÀNG (HU-CAU/0000/TEST) —
+                        không ai nhầm được, và logic thì không cần luật thật
+     • TEST KHO THẬT  → dùng matcher.kho_mau, đối chiếu nguyên văn corpus
+
 Chạy: uv run --python 3.11 python matcher/test_match.py
 """
 
@@ -16,6 +27,7 @@ from matcher.schema import (  # noqa: E402
 )
 
 loi = 0
+TY = 1_000_000_000
 
 
 def eq(thuc, mong, nhan):
@@ -28,76 +40,95 @@ def eq(thuc, mong, nhan):
         print(f"      được : {thuc!r}\n      mong : {mong!r}")
 
 
-C = Citation("80/2021/NĐ-CP", "Chính phủ", 5, 3, "…hỗ trợ 50% chi phí tư vấn…", "d1")
-C2 = Citation("13/2019/NĐ-CP", "Chính phủ", 6, 1, "…chi R&D tối thiểu 1%…", "d2")
+# ══════════════════════════════════════════════════════════════
+#  PHẦN 1 — LOGIC. Văn bản HƯ CẤU, không dính số hiệu thật.
+# ══════════════════════════════════════════════════════════════
+CH = Citation("HU-CAU/0000/TEST", "(cơ quan hư cấu — chỉ để test logic)", 1, 1,
+              "Điều kiện hư cấu dùng cho test, không phải luật.", "test")
 
-CT_DNNVV = ChuongTrinh(
-    id="dnnvv-tuvan",
-    ten="Hỗ trợ chi phí tư vấn cho DNNVV",
-    co_quan="Chính phủ",
-    loai="ho_tro_chi_phi",
-    gia_tri_mo_ta="Hỗ trợ 50% chi phí tư vấn",
-    gia_tri_uoc=480_000_000,
-    han_nop="30/9 hằng năm",
-    dieu_kien=[
-        DieuKien("nhan_su", ToanTu.LTE, 200, "Nhân sự không quá 200 người", C),
-        DieuKien("von", ToanTu.LTE, 100_000_000_000, "Vốn điều lệ dưới 100 tỷ", C),
-        DieuKien("fdi", ToanTu.EQ, False, "Không có vốn FDI", C),
-    ],
-)
-
-CT_CNC = ChuongTrinh(
-    id="cnc-thue",
-    ten="Ưu đãi thuế cho doanh nghiệp công nghệ cao",
-    co_quan="Chính phủ",
-    loai="uu_dai_thue",
-    gia_tri_mo_ta="Miễn 4 năm, giảm 50% trong 9 năm tiếp",
-    gia_tri_uoc=3_400_000_000,
+CT_HC = ChuongTrinh(
+    id="hu-cau-1",
+    ten="[HƯ CẤU] Chương trình test logic",
+    co_quan="(hư cấu)",
+    loai="test",
+    gia_tri_mo_ta="(hư cấu)",
+    gia_tri_uoc=100_000_000,
     han_nop=None,
     dieu_kien=[
-        DieuKien("chi_rnd", ToanTu.GTE, 1.0, "Chi R&D ≥ 1% doanh thu", C2),
-        DieuKien("nhan_su", ToanTu.GTE, 30, "Tối thiểu 30 nhân sự", C2),
+        DieuKien("lao_dong_bhxh", ToanTu.LTE, 200, "[HƯ CẤU] Lao động ≤ 200", CH),
+        DieuKien("fdi", ToanTu.EQ, False, "[HƯ CẤU] Không có vốn FDI", CH),
     ],
 )
 
-KHO = [CT_DNNVV, CT_CNC]
+print("=== LOGIC: không gật bừa (anti-sycophancy) ===")
+p_fdi = Profile(lao_dong_bhxh=45, fdi=True)
+r = doi_chieu(p_fdi, CT_HC)
+eq(r.du_dieu_kien, False, "DN khẳng định đủ nhưng thực tế không → KHÔNG gật")
+eq(r.thieu, ["[HƯ CẤU] Không có vốn FDI"], "gọi ĐÍCH DANH điều kiện thiếu")
 
-print("=== HỒ SƠ ĐẦY ĐỦ — DN phần mềm 45 người, vốn 20 tỷ, R&D 2,5% ===")
-p = Profile("Sản xuất phần mềm", 20_000_000_000, 45, 2.5, "Hà Nội", False)
+print("\n=== LOGIC: thiếu tin → HỎI, không đoán ===")
+p_thieu = Profile(lao_dong_bhxh=45)  # chưa khai fdi
+r = doi_chieu(p_thieu, CT_HC)
+eq(r.can_hoi_them, ["fdi"], "biết phải hỏi field nào")
+eq(r.chi_tiet[1].trang_thai, TrangThai.THIEU_TIN, "thiếu tin ≠ không đạt")
+eq(r.du_dieu_kien, True, "chưa kết luận loại — vì chưa hỏi xong")
+
+print("\n=== LOGIC: monitoring ② — diff 2 snapshot, không cần API ===")
+truoc = quet_nguoc(Profile(lao_dong_bhxh=45, fdi=False), [CT_HC])
+sau = quet_nguoc(Profile(lao_dong_bhxh=45, fdi=True), [CT_HC])
+d = diff_ket_qua(truoc, sau)
+eq(d["vua_mat"], ["hu-cau-1"], "phát hiện chương trình VỪA MẤT điều kiện")
+
+# ══════════════════════════════════════════════════════════════
+#  PHẦN 2 — KHO THẬT. Đối chiếu nguyên văn corpus.
+# ══════════════════════════════════════════════════════════════
+from matcher.kho_mau import KHO  # noqa: E402
+
+print("\n=== KHO THẬT: mọi citation phải có nguyên văn, không placeholder ===")
+for ct in KHO:
+    cits = [dk.citation for dk in ct.dieu_kien] + (
+        [ct.citation_chinh] if ct.citation_chinh else []
+    )
+    for c in cits:
+        eq("PLACEHOLDER" in c.trich, False, f"{ct.id}: {c} có nguyên văn")
+        eq(len(c.trich) > 80, True, f"{ct.id}: {c} trích đủ dài ({len(c.trich)} ký tự)")
+        eq(c.doc_id is not None, True, f"{ct.id}: {c} trỏ về doc_id corpus")
+
+print("\n=== KHO THẬT: DN vừa ngành CN-XD, 150 LĐ, doanh thu 50 tỷ ===")
+p = Profile(
+    nganh="Sản xuất phần mềm",
+    linh_vuc="nong_lam_thuy_san__cong_nghiep_xay_dung",
+    lao_dong_bhxh=150,
+    doanh_thu=50 * TY,
+    von=20 * TY,
+    co_gcn_khcn=True,
+    ty_le_dt_khcn=45.0,
+    fdi=False,
+)
 kq = quet_nguoc(p, KHO)
 for r in kq:
-    print(f"  {r.chuong_trinh.ten[:44]:46} EV={r.gia_tri_ky_vong/1e6:8.1f}tr  "
-          f"P={r.diem_phu_hop:.2f}  {'ĐỦ' if r.du_dieu_kien else 'CHƯA'}")
-eq(kq[0].chuong_trinh.id, "cnc-thue", "xếp hạng: EV cao nhất lên đầu")
-eq(all(r.du_dieu_kien for r in kq), True, "cả 2 chương trình đều đủ điều kiện")
+    ev = f"{r.gia_tri_ky_vong/1e6:8.1f}tr" if r.gia_tri_ky_vong else "  chưa lượng hoá"
+    print(f"  {r.chuong_trinh.ten[:46]:48} EV={ev}  P={r.diem_phu_hop:.2f}  "
+          f"{'ĐỦ' if r.du_dieu_kien else 'CHƯA'}")
+eq(all(r.du_dieu_kien for r in kq), True, "cả 2 chương trình đủ điều kiện")
 
-print("\n=== KHỐI DEMO 2 — KHÔNG GẬT BỪA (anti-sycophancy) ===")
-print("  DN nói chắc 'bọn em đủ điều kiện công nghệ cao' nhưng R&D chỉ 0,3%:")
-p2 = Profile("Sản xuất phần mềm", 20_000_000_000, 45, 0.3, "Hà Nội", False)
-r = doi_chieu(p2, CT_CNC)
-eq(r.du_dieu_kien, False, "→ bot KHÔNG gật bừa")
-eq(r.thieu, ["Chi R&D ≥ 1% doanh thu"], "→ gọi ĐÍCH DANH điều kiện thiếu")
-print(f"      thiếu: {r.thieu}")
-print(f"      căn cứ: {r.chi_tiet[0].dieu_kien.citation}")
-print(f"      đối chiếu: {r.chi_tiet[0].giai_thich}")
+print("\n=== KHO THẬT: cùng hồ sơ nhưng THƯƠNG MẠI-DỊCH VỤ → mất DNNVV ===")
+print("  (150 LĐ vượt ngưỡng 100 của TM-DV — bản cũ phẳng hoá '≤200' nên bỏ lọt)")
+p_tm = Profile(**{**p.__dict__, "linh_vuc": "thuong_mai_dich_vu"})
+r_tm = doi_chieu(p_tm, KHO[0])
+eq(r_tm.du_dieu_kien, False, "→ KHÔNG đủ điều kiện DNNVV")
+eq(r_tm.thieu, ["Thuộc diện doanh nghiệp nhỏ và vừa theo Điều 5"], "→ nêu đích danh")
 
-print("\n=== THIẾU THÔNG TIN → HỎI, KHÔNG ĐOÁN ===")
-p3 = Profile(nganh="Sản xuất phần mềm", nhan_su=45)
-r = doi_chieu(p3, CT_CNC)
-eq(r.can_hoi_them, ["chi_rnd"], "biết phải hỏi thêm field nào")
-eq(r.chi_tiet[0].trang_thai, TrangThai.THIEU_TIN, "thiếu tin ≠ không đạt")
-eq(r.du_dieu_kien, True, "chưa kết luận loại — vì chưa hỏi xong")
-print(f"      cần hỏi: {r.can_hoi_them}  ·  P={r.diem_phu_hop} (chưa chắc)")
+print("\n=== KHO THẬT: DN KH&CN doanh thu KH&CN chỉ 20% (<30%) ===")
+p_20 = Profile(**{**p.__dict__, "ty_le_dt_khcn": 20.0})
+r_20 = doi_chieu(p_20, KHO[1])
+eq(r_20.du_dieu_kien, False, "→ KHÔNG được ưu đãi thuế (Điều 12 K3)")
+eq(
+    r_20.thieu,
+    ["Doanh thu sản phẩm hình thành từ kết quả KH&CN đạt tối thiểu 30% tổng doanh thu"],
+    "→ nêu đích danh, đúng ngưỡng 30% của luật (không phải 'R&D 1%' bịa)",
+)
 
-print("\n=== MONITORING (② của đề) — diff 2 snapshot, KHÔNG cần API ===")
-print("  Giả lập: quy định siết ngưỡng FDI → DN có FDI mất điều kiện DNNVV")
-p_fdi = Profile("Sản xuất phần mềm", 20_000_000_000, 45, 2.5, "Hà Nội", True)
-truoc = quet_nguoc(p, KHO)      # DN không FDI
-sau = quet_nguoc(p_fdi, KHO)    # DN có FDI
-d = diff_ket_qua(truoc, sau)
-eq(d["vua_mat"], ["dnnvv-tuvan"], "phát hiện chương trình VỪA MẤT điều kiện")
-print(f"      vừa mất: {d['vua_mat']}  ·  giữ nguyên: {d['giu_nguyen']}")
-
-print("\n" + "=" * 56)
+print("\n" + "=" * 58)
 print("TẤT CẢ PASS ✓" if loi == 0 else f"{loi} TEST HỎNG ✗")
 sys.exit(1 if loi else 0)

@@ -94,8 +94,11 @@ NAFOSTED = [
         han_nop="14/08/2026",
         truong=[
             Truong("ten_to_chuc", "Tên tổ chức", "ho_so"),
-            Truong("nhan_su", "Tổng số nhân sự", "ho_so"),
-            Truong("chi_rnd", "Tỷ lệ chi cho R&D (% doanh thu)", "ho_so"),
+            Truong("lao_dong_bhxh", "Số lao động tham gia BHXH bình quân năm", "ho_so"),
+            # nguồn "nguoi" chứ KHÔNG phải "ho_so": Profile không còn `chi_rnd`
+            # (điều kiện "chi R&D ≥ 1%" là BỊA, không có trong 13/2019). Không có
+            # trong hồ sơ thì để DN tự khai — KHÔNG bịa một field để điền cho kín.
+            Truong("chi_rnd_bao_cao", "Tỷ lệ chi cho R&D (% doanh thu) — nếu có", "nguoi"),
             Truong("csvc", "Cơ sở vật chất phục vụ nghiên cứu", "nguoi"),
         ],
     ),
@@ -131,8 +134,15 @@ DNNVV = [
             Truong("mst", "Mã số thuế", "ho_so"),
             Truong("dia_chi", "Địa chỉ", "ho_so"),
             Truong("nganh", "Ngành nghề kinh doanh chính", "ho_so"),
-            Truong("nhan_su", "Số lao động bình quân năm", "ho_so"),
-            Truong("von", "Tổng nguồn vốn (đồng)", "ho_so"),
+            # Điều 5 phân 2 nhóm lĩnh vực với NGƯỠNG LAO ĐỘNG KHÁC NHAU (200 vs 100)
+            # → tờ khai không có ô này thì không xác định nổi quy mô.
+            Truong("linh_vuc", "Lĩnh vực hoạt động (theo Điều 5 NĐ 80/2021)", "ho_so"),
+            # khoá cũ là `nhan_su` trong khi nhãn đã ghi đúng "lao động bình quân năm"
+            # → nhãn hỏi đúng nhưng ĐỌC NHẦM FIELD. Luật đếm lao động THAM GIA BHXH.
+            Truong("lao_dong_bhxh", "Số lao động tham gia BHXH bình quân năm", "ho_so"),
+            # Điều 5 dùng "tổng doanh thu của năm" ở MỌI ngưỡng — tờ khai cũ THIẾU HẲN
+            Truong("doanh_thu", "Tổng doanh thu của năm (đồng)", "ho_so"),
+            Truong("von", "Tổng nguồn vốn của năm (đồng)", "ho_so"),
             Truong("nhu_cau", "Nội dung hỗ trợ đề xuất", "nguoi"),
         ],
     ),

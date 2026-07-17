@@ -163,11 +163,40 @@ export function ProgramCard({
           Độ tin cậy {Math.round(ct.doTinCay * 100)}%
         </span>
 
-        {!ct.hieuLucDaDoiChieu && (
-          <span className="text-[11px] text-caution-700 dark:text-caution-300">
-            ⚠ Hiệu lực chưa đối chiếu vbpl.vn
-          </span>
-        )}
+        {(() => {
+          // Trạng thái hiệu lực THẬT từ vbpl.vn (② của đề). 3 trạng thái, KHÔNG
+          // đoán: còn (xanh) / hết (đỏ) / chưa xác định (vàng). Nguồn: Bộ Tư pháp.
+          const hl = ct.hieuLuc;
+          if (!hl || !hl.daDoiChieu) {
+            return (
+              <span className="text-[11px] text-caution-700 dark:text-caution-300">
+                ⚠ Hiệu lực chưa đối chiếu vbpl.vn
+              </span>
+            );
+          }
+          if (hl.conHieuLuc === true) {
+            return (
+              <span
+                className="text-[11px] text-emerald-700 dark:text-emerald-300"
+                title={`Đối chiếu vbpl.vn (${hl.nguon ?? "Bộ Tư pháp"})${hl.soQuanHe ? ` · ${hl.soQuanHe} văn bản liên quan` : ""}`}
+              >
+                ✓ {hl.nhan} — đối chiếu vbpl.vn
+              </span>
+            );
+          }
+          if (hl.conHieuLuc === false) {
+            return (
+              <span className="text-[11px] font-medium text-rose-700 dark:text-rose-300">
+                ⛔ {hl.nhan} — vbpl.vn
+              </span>
+            );
+          }
+          return (
+            <span className="text-[11px] text-caution-700 dark:text-caution-300">
+              ⚠ {hl.nhan}
+            </span>
+          );
+        })()}
       </footer>
     </article>
   );

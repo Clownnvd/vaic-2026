@@ -78,12 +78,32 @@ class ChuongTrinh:
 
 @dataclass
 class Profile:
-    """6 field — chốt trong kho, lặp lại y nhau ở 3 file."""
+    """Hồ sơ doanh nghiệp.
+
+    ⚠️ ĐÃ MỞ RỘNG sau khi đối chiếu NGUYÊN VĂN 80/2021/NĐ-CP và 13/2019/NĐ-CP
+    (xem scripts/moi_nguyen_van.py). Bản cũ 6 field được thiết kế quanh những
+    ĐIỀU KIỆN BỊA, nên thiếu đúng thứ luật hỏi:
+
+      • `doanh_thu` — KHÔNG HỀ CÓ ở bản cũ, mà Điều 5 dùng doanh thu ở MỌI ngưỡng
+      • `linh_vuc`  — ngưỡng lao động đổi theo lĩnh vực (200 với CN-XD, 100 với TM-DV).
+                      Bản cũ phẳng hoá thành "≤ 200" → SAI với thương mại-dịch vụ
+      • `lao_dong_bhxh` — luật đếm "lao động CÓ THAM GIA BHXH BÌNH QUÂN NĂM",
+                      không phải `nhan_su` (đầu người). Hai đại lượng khác nhau.
+      • `nu_lam_chu` — Điều 13 K2 nâng trần cho DN do phụ nữ làm chủ / nhiều lao
+                      động nữ / DN xã hội. Bản cũ không có chiều này.
+      • `ty_le_dt_khcn` — Điều 12 K3 của 13/2019 đòi doanh thu sản phẩm KH&CN
+                      ≥ 30% tổng doanh thu. Bản cũ ghi "chi_rnd ≥ 1%" — BỊA,
+                      không tồn tại trong văn bản.
+    """
 
     nganh: str | None = None
-    von: int | None = None  # VND
-    nhan_su: int | None = None
-    chi_rnd: float | None = None  # % doanh thu
+    linh_vuc: str | None = None  # xem matcher.quy_mo.LinhVuc — 2 nhóm của Điều 5
+    von: int | None = None  # VND — "tổng nguồn vốn của năm"
+    doanh_thu: int | None = None  # VND — "tổng doanh thu của năm"
+    lao_dong_bhxh: int | None = None  # người — BHXH bình quân năm
+    ty_le_dt_khcn: float | None = None  # % doanh thu từ sản phẩm KH&CN
+    co_gcn_khcn: bool | None = None  # có Giấy chứng nhận DN KH&CN (13/2019 Điều 4)
+    nu_lam_chu: bool | None = None
     dia_ban: str | None = None
     fdi: bool | None = None
 

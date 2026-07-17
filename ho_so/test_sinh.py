@@ -26,9 +26,12 @@ HO_SO = {
     "mst": "0123456789",
     "dia_chi": "12 Nguyễn Huệ, Hà Nội",
     "nganh": "Sản xuất phần mềm",
+    "linh_vuc": "nong_lam_thuy_san__cong_nghiep_xay_dung",
     "von": 20_000_000_000,
-    "nhan_su": 45,
-    "chi_rnd": 2.5,
+    "doanh_thu": 50_000_000_000,
+    "lao_dong_bhxh": 45,
+    "ty_le_dt_khcn": 45.0,
+    "co_gcn_khcn": True,
     "fdi": False,
 }
 
@@ -52,8 +55,11 @@ k = sinh_khung(next(m for m in TAT_CA if m.ma == "TK-DNNVV"), HO_SO)
 o_von = next(o for o in k.o if o.khoa == "von")
 eq(o_von.gia_tri, "20.000.000.000 đ", "vốn: CODE format, dấu chấm ngăn nghìn")
 eq(o_von.nguon, "ho_so", "nguồn = hồ sơ DN, không phải AI")
-o_ns = next(o for o in k.o if o.khoa == "nhan_su")
-eq(o_ns.gia_tri, "45 người", "nhân sự")
+o_ns = next(o for o in k.o if o.khoa == "lao_dong_bhxh")
+eq(o_ns.gia_tri, "45 người", "lao động BHXH bình quân năm")
+# Điều 5 dùng doanh thu ở MỌI ngưỡng — tờ khai cũ THIẾU HẲN ô này
+o_dt = next(o for o in k.o if o.khoa == "doanh_thu")
+eq(o_dt.gia_tri, "50.000.000.000 đ", "doanh thu: CODE format, có trong tờ khai")
 
 print("\n=== WRITE-GATE: hồ sơ là hành động GHI ===")
 eq(k.requires_approval, True, "requires_approval=True — bản nháp chờ duyệt")
@@ -67,9 +73,9 @@ eq(ks[0].thieu, ["Nội dung hỗ trợ đề xuất"], "nêu ĐÍCH DANH ô cò
 
 print("\n=== HỒ SƠ THIẾU FIELD → không bịa, để trống ===")
 k2 = sinh_khung(next(m for m in TAT_CA if m.ma == "BM-07"), {"ten_to_chuc": "Cty ABC"})
-o_rnd = next(o for o in k2.o if o.khoa == "chi_rnd")
-eq(o_rnd.gia_tri, None, "thiếu chi_rnd → để TRỐNG, không đoán")
-eq("Tỷ lệ chi cho R&D (% doanh thu)" in k2.thieu, True, "báo thiếu đích danh")
+o_ld = next(o for o in k2.o if o.khoa == "lao_dong_bhxh")
+eq(o_ld.gia_tri, None, "thiếu lao_dong_bhxh → để TRỐNG, không đoán")
+eq("Số lao động tham gia BHXH bình quân năm" in k2.thieu, True, "báo thiếu đích danh")
 
 print("\n=== KHUNG HỒ SƠ XUẤT RA ===")
 k3 = sinh_khung(next(m for m in TAT_CA if m.ma == "BM-03"), HO_SO)

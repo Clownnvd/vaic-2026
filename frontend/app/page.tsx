@@ -3,59 +3,153 @@
 import { useEffect, useRef, useState } from "react";
 import { ChatInput } from "@/components/ChatInput";
 import { ChatMessage } from "@/components/ChatMessage";
+import { DanhSachLuat } from "@/components/DanhSachLuat";
 import { ProfileRibbon } from "@/components/ProfileRibbon";
+import { Sidebar, type Khung } from "@/components/Sidebar";
 import { BffLoi, hoiBff } from "@/lib/api";
 import { bocHoSo } from "@/lib/extract";
-import { PROFILE_FIELDS, type Message, type Profile } from "@/lib/types";
+import {
+  type CuocTroChuyen,
+  datTieuDe,
+  luuLichSu,
+  taiLichSu,
+} from "@/lib/lichsu";
+import {
+  PROFILE_FIELDS,
+  type LoaiChuongTrinh,
+  type Message,
+  type Profile,
+} from "@/lib/types";
 
 const LOI_MO_DAU =
-  "Để tìm đúng ưu đãi và quỹ mà bạn đủ điều kiện, cho mình biết vài thông tin về doanh nghiệp: ngành, vốn điều lệ, số nhân sự, chi cho R&D (theo % doanh thu), địa bàn, và có vốn FDI không?\n\nBạn cứ mô tả bằng một câu tự nhiên — gõ không dấu cũng được.";
+  "Để tìm đúng ưu đãi và quỹ mà bạn đủ điều kiện, cho mình biết vài thông tin về doanh nghiệp: lĩnh vực (nông-lâm-thuỷ sản/công nghiệp-xây dựng hay thương mại-dịch vụ), số lao động tham gia BHXH bình quân năm, tổng doanh thu, tổng nguồn vốn, có Giấy chứng nhận DN KH&CN không, và tỷ lệ doanh thu từ sản phẩm KH&CN.\n\nBạn cứ mô tả bằng một câu tự nhiên — gõ không dấu cũng được.";
 
 const GOI_Y = [
-  "Bên mình làm phần mềm ở Hà Nội, vốn 20 tỷ, 45 người, chi R&D khoảng 2,5% doanh thu, không có vốn FDI",
-  "Cty bán dẫn tại Bắc Ninh, vốn 500 tỷ, 300 nhân sự, R&D 8%, có vốn FDI",
+  "Bên mình làm phần mềm (công nghiệp) ở Hà Nội, 45 lao động, doanh thu 50 tỷ, vốn 20 tỷ, có giấy chứng nhận DN KH&CN, doanh thu từ sản phẩm KH&CN khoảng 45%",
+  "Cty thương mại - dịch vụ tại Bắc Ninh, 150 lao động, doanh thu 120 tỷ, vốn 60 tỷ, có vốn FDI",
 ];
 
 let dem = 0;
-const nextId = () => `m${++dem}`;
+const nextId = () => `m${Date.now().toString(36)}-${++dem}`;
+
+function hoiThoaiMoi(): CuocTroChuyen {
+  const now = Date.now();
+  return {
+    id: `c${now.toString(36)}-${++dem}`,
+    tieuDe: "Cuộc trò chuyện mới",
+    taoLuc: now,
+    suaLuc: now,
+    profile: {},
+    messages: [
+      {
+        id: nextId(),
+        vaiTro: "tro-ly",
+        dang: "hoi-ho-so",
+        noiDung: LOI_MO_DAU,
+        dangHoi: PROFILE_FIELDS.map((f) => f.key),
+      },
+    ],
+  };
+}
 
 export default function Page() {
-  const [profile, setProfile] = useState<Profile>({});
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: nextId(),
-      vaiTro: "tro-ly",
-      dang: "hoi-ho-so",
-      noiDung: LOI_MO_DAU,
-      dangHoi: PROFILE_FIELDS.map((f) => f.key),
-    },
-  ]);
+  const [lichSu, setLichSu] = useState<CuocTroChuyen[]>([]);
+  const [convId, setConvId] = useState<string | null>(null);
+  const [khung, setKhung] = useState<Khung>("chat");
+  const [sidebarMo, setSidebarMo] = useState(true); // mở mặc định (desktop); toggle được như Claude
   const [dangBan, setDangBan] = useState(false);
   const [treMs, setTreMs] = useState<number | null>(null);
+  const [mocNgay, setMocNgay] = useState(0);
   const cuoiRef = useRef<HTMLDivElement>(null);
+
+  // nạp lịch sử 1 lần
+  useEffect(() => {
+    setMocNgay(Date.now());
+    const ds = taiLichSu();
+    if (ds.length === 0) {
+      const c = hoiThoaiMoi();
+      setLichSu([c]);
+      setConvId(c.id);
+    } else {
+      setLichSu(ds);
+      setConvId(ds[0].id);
+    }
+  }, []);
+
+  const conv = lichSu.find((c) => c.id === convId) ?? null;
+  const messages = conv?.messages ?? [];
+  const profile = conv?.profile ?? {};
 
   useEffect(() => {
     cuoiRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages]);
+  }, [messages, khung]);
 
-  function them(m: Message) {
-    setMessages((prev) => [...prev, m]);
+  function capNhat(id: string, sua: (c: CuocTroChuyen) => CuocTroChuyen) {
+    setLichSu((prev) => {
+      const ds = prev.map((c) => (c.id === id ? { ...sua(c), suaLuc: Date.now() } : c));
+      luuLichSu(ds);
+      return ds;
+    });
+  }
+
+  function themTin(id: string, m: Message) {
+    capNhat(id, (c) => {
+      const messages = [...c.messages, m];
+      return { ...c, messages, tieuDe: datTieuDe(messages) };
+    });
+  }
+
+  function moi() {
+    // như Claude: nếu đang có một chat RỖNG (chưa gõ gì) thì dùng lại nó,
+    // đừng tạo thêm chat rỗng chất đống trong lịch sử.
+    const rong = lichSu.find((c) => !c.messages.some((m) => m.vaiTro === "nguoi-dung"));
+    if (rong) {
+      setConvId(rong.id);
+      setTreMs(null);
+      return;
+    }
+    const c = hoiThoaiMoi();
+    setLichSu((prev) => {
+      const ds = [c, ...prev];
+      luuLichSu(ds);
+      return ds;
+    });
+    setConvId(c.id);
+    setTreMs(null);
+  }
+
+  function xoa(id: string) {
+    setLichSu((prev) => {
+      const ds = prev.filter((c) => c.id !== id);
+      luuLichSu(ds);
+      if (id === convId) {
+        if (ds.length > 0) setConvId(ds[0].id);
+        else {
+          const c = hoiThoaiMoi();
+          ds.unshift(c);
+          luuLichSu(ds);
+          setConvId(c.id);
+        }
+      }
+      return ds;
+    });
   }
 
   async function xuLy(text: string) {
-    them({ id: nextId(), vaiTro: "nguoi-dung", noiDung: text });
+    if (!convId) return;
+    const id = convId;
+    themTin(id, { id: nextId(), vaiTro: "nguoi-dung", noiDung: text });
     setDangBan(true);
 
-    // Bóc hồ sơ tạm ở client — sẽ chuyển hẳn sang agent slot-filling ở BFF.
     const hoSoMoi = bocHoSo(text, profile);
-    setProfile(hoSoMoi);
+    capNhat(id, (c) => ({ ...c, profile: hoSoMoi }));
 
     try {
       const d = await hoiBff(text, hoSoMoi);
       setTreMs(d.ms);
 
       if (d.dang === "hoi_ho_so") {
-        them({
+        themTin(id, {
           id: nextId(),
           vaiTro: "tro-ly",
           dang: "hoi-ho-so",
@@ -63,7 +157,7 @@ export default function Page() {
           dangHoi: [],
         });
       } else {
-        them({
+        themTin(id, {
           id: nextId(),
           vaiTro: "tro-ly",
           dang: "ket-qua",
@@ -73,7 +167,7 @@ export default function Page() {
             id: c.id,
             ten: c.ten,
             coQuan: c.co_quan,
-            loai: "uu-dai-thue" as const,
+            loai: (c.loai?.replace(/_/g, "-") ?? "uu-dai-thue") as LoaiChuongTrinh,
             giaTri: c.gia_tri,
             giaTriKyVong: null,
             giaTriHienThi: c.gia_tri_ky_vong,
@@ -81,7 +175,17 @@ export default function Page() {
             doTinCay: c.do_tin_cay,
             duDieuKien: c.du_dieu_kien,
             thieu: c.thieu,
-            hieuLucDaDoiChieu: false,
+            hieuLucDaDoiChieu: c.hieu_luc?.da_doi_chieu ?? false,
+            hieuLuc: c.hieu_luc
+              ? {
+                  daDoiChieu: c.hieu_luc.da_doi_chieu,
+                  conHieuLuc: c.hieu_luc.con_hieu_luc,
+                  nhan: c.hieu_luc.nhan,
+                  ma: c.hieu_luc.ma,
+                  soQuanHe: c.hieu_luc.so_quan_he,
+                  nguon: c.hieu_luc.nguon,
+                }
+              : undefined,
             dieuKien: c.dieu_kien.map((k) => ({
               yeuCau: k.yeu_cau,
               hoSo: k.doi_chieu,
@@ -102,14 +206,12 @@ export default function Page() {
         });
       }
     } catch (e) {
-      them({
+      themTin(id, {
         id: nextId(),
         vaiTro: "tro-ly",
         dang: "van-ban",
         noiDung:
-          e instanceof BffLoi
-            ? e.message
-            : "Có lỗi khi gọi hệ thống. Vui lòng thử lại.",
+          e instanceof BffLoi ? e.message : "Có lỗi khi gọi hệ thống. Vui lòng thử lại.",
         grounding: "chua-du-can-cu",
       });
     } finally {
@@ -120,21 +222,43 @@ export default function Page() {
   const chuaHoi = messages.length === 1;
 
   return (
-    <main className="flex h-dvh flex-col">
-      <header className="border-b border-border-subtle bg-surface">
-        <div className="mx-auto flex max-w-3xl items-center gap-2.5 px-4 py-3">
-          <span className="flex size-7 items-center justify-center rounded-md bg-brand-600 font-bold text-white">
-            P
-          </span>
+    <div className="flex h-dvh">
+      <Sidebar
+        khung={khung}
+        onKhung={setKhung}
+        lichSu={lichSu}
+        convId={convId}
+        onChon={setConvId}
+        onMoi={moi}
+        onXoa={xoa}
+        mocNgay={mocNgay}
+        mo={sidebarMo}
+        onDong={() => setSidebarMo(false)}
+      />
+
+      <main className="flex min-w-0 flex-1 flex-col">
+        <header className="flex items-center gap-2 border-b border-border-subtle bg-surface px-4 py-2.5">
+          <button
+            onClick={() => setSidebarMo((v) => !v)}
+            className="rounded-md p-1.5 text-text-muted hover:bg-surface-2"
+            aria-label={sidebarMo ? "Đóng thanh bên" : "Mở thanh bên"}
+            title={sidebarMo ? "Đóng thanh bên" : "Mở thanh bên"}
+          >
+            <svg viewBox="0 0 20 20" className="size-5" fill="none">
+              <path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+            </svg>
+          </button>
           <div className="min-w-0 flex-1">
-            <h1 className="text-[15px] font-semibold leading-none text-text">
-              PolicyRadar
+            <h1 className="truncate text-[15px] font-semibold leading-none text-text">
+              {khung === "luat" ? "Danh sách luật" : "Trợ lý tư vấn chính sách"}
             </h1>
-            <p className="mt-1 text-[11px] leading-none text-text-muted">
-              Tìm đúng chính sách bạn đủ điều kiện — có căn cứ tới từng điều khoản
+            <p className="mt-1 truncate text-[11px] leading-none text-text-muted">
+              {khung === "luat"
+                ? "Tra cứu văn bản trong corpus — tìm kiếm, lọc theo tiêu chí"
+                : "Tìm đúng chính sách bạn đủ điều kiện — có căn cứ tới từng điều khoản"}
             </p>
           </div>
-          {treMs !== null && (
+          {khung === "chat" && treMs !== null && (
             <span
               className="shrink-0 rounded border border-border-subtle px-1.5 py-0.5 font-mono text-[10px] text-text-muted"
               title="Thời gian phản hồi. Đề bài yêu cầu ≤ 5.000ms cho câu đơn giản."
@@ -142,24 +266,28 @@ export default function Page() {
               {treMs}ms
             </span>
           )}
-        </div>
-      </header>
+        </header>
 
-      <ProfileRibbon profile={profile} />
-
-      <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto flex max-w-3xl flex-col gap-3 px-4 py-4">
-          {messages.map((m) => (
-            <ChatMessage key={m.id} m={m} />
-          ))}
-          {dangBan && (
-            <p className="text-[12px] text-text-muted">Đang quét kho văn bản…</p>
-          )}
-          <div ref={cuoiRef} />
-        </div>
-      </div>
-
-      <ChatInput onGui={xuLy} dangBan={dangBan} goiY={chuaHoi ? GOI_Y : []} />
-    </main>
+        {khung === "luat" ? (
+          <DanhSachLuat />
+        ) : (
+          <>
+            <ProfileRibbon profile={profile} />
+            <div className="flex-1 overflow-y-auto">
+              <div className="mx-auto flex max-w-3xl flex-col gap-3 px-4 py-4">
+                {messages.map((m) => (
+                  <ChatMessage key={m.id} m={m} />
+                ))}
+                {dangBan && (
+                  <p className="text-[12px] text-text-muted">Đang quét kho văn bản…</p>
+                )}
+                <div ref={cuoiRef} />
+              </div>
+            </div>
+            <ChatInput onGui={xuLy} dangBan={dangBan} goiY={chuaHoi ? GOI_Y : []} />
+          </>
+        )}
+      </main>
+    </div>
   );
 }

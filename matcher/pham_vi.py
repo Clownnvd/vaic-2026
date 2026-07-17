@@ -81,6 +81,42 @@ def ngoai_pham_vi(cau: str) -> str | None:
     return None
 
 
+# ── câu META/LẠC ĐỀ (bot phải HIỂU CONTEXT, không chạy matcher) ──────
+# Bug thật: hồ sơ đã đầy từ lượt trước → câu "bạn năm nay bao tuổi" cũng
+# re-run matcher → trả kết quả đủ điều kiện cho một câu KHÔNG hỏi chính sách.
+# Bot phải nhận ra đây là câu meta/tán gẫu và chuyển hướng, không đoán.
+_META = [
+    r"\bbao (nhieu )?tuoi\b", r"\bmay tuoi\b", r"\bnam nay bao\b",
+    r"\bban la ai\b", r"\bten (la )?gi\b", r"\bten ban\b",
+    r"\bban co phai (la )?(nguoi|ai|robot|con nguoi|may)\b",
+    r"\bai (tao|lam|xay dung|phat trien) ra ban\b", r"\bban duoc tao\b",
+    r"\bban co (nguoi yeu|gia dinh|cam xuc)\b",
+    r"\bthoi tiet\b", r"\bhom nay (la )?(thu|ngay) may\b", r"\bmay gio\b",
+    r"\bke chuyen\b", r"\bhat (cho|mot)\b", r"\bban thich\b",
+]
+# lời chào ĐƠN THUẦN (cả câu chỉ là chào, không kèm nội dung chính sách)
+_CHAO = r"^(xin chao|chao( ban| buoi)?|hello|hi|hey|alo)[\s!.?]*$"
+
+
+def cau_meta_lac_de(cau: str) -> bool:
+    """True nếu câu là meta (hỏi về bot) / chào hỏi đơn thuần / tán gẫu lạc đề."""
+    c = bo_dau(cau).strip().lower()
+    if re.match(_CHAO, c):
+        return True
+    return any(re.search(p, c) for p in _META)
+
+
+def cau_chuyen_huong() -> str:
+    """Trả lời câu meta/lạc đề — kéo về đúng việc, không đoán chính sách."""
+    return (
+        "Mình là **PolicyRadar** — trợ lý tra cứu chính sách, ưu đãi và quỹ hỗ trợ "
+        "cho doanh nghiệp, có căn cứ tới từng điều–khoản.\n\n"
+        "Mình chỉ trả lời trong phạm vi đó, nên câu này mình xin phép không suy đoán. "
+        "Bạn mô tả doanh nghiệp (lĩnh vực, lao động, doanh thu, vốn…) hoặc hỏi về một "
+        "chương trình cụ thể để mình tra giúp nhé."
+    )
+
+
 def hoi_van_ban_ngoai_kho(cau: str) -> str | None:
     """Hỏi đích danh văn bản KHÔNG có trong corpus → trả tên văn bản.
 

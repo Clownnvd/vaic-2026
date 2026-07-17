@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import random
 import sys
 import time
@@ -31,10 +32,12 @@ import torch.nn as nn
 sys.path.insert(0, ".")
 
 SEED = 7
-MODEL = "vinai/phobert-base"  # MIT — KHÔNG dùng v2 (AGPL)
+# MODEL_DIR: đường model trên đĩa (lab FPT không ra được CDN HuggingFace →
+# nạp từ /mnt/data/phobert đã đẩy sẵn). Không đặt thì tải từ HF như thường.
+MODEL = os.environ.get("MODEL_DIR", "vinai/phobert-base")  # MIT — KHÔNG dùng v2 (AGPL)
 MAX_LEN = 256  # đo thật: 25,9% khoản vượt 128 token
-DATA = Path("./data/guard")
-OUT = Path("./artifacts/guard")
+DATA = Path(os.environ.get("DATA_DIR", "./data/guard"))
+OUT = Path(os.environ.get("OUT_DIR", "./artifacts/guard"))
 
 # 4 trục NGỮ NGHĨA — thứ rule KHÔNG bắt được, đây là việc của model
 TRUC_NGU_NGHIA = {
@@ -119,8 +122,15 @@ def main() -> None:
     tr = can_bang(nap("train", chi_nn, None), rng)
     if n_train:
         tr = tr[:n_train]
-    te = can_bang(nap("test", chi_nn, None), rng)
-    print(f"\ntrain {len(tr):,} cặp (đã cân 1:1) · test {len(te):,}")
+    # TEST: dùng TOÀN BỘ, KHÔNG cân.
+    # FPR/TPR là tỉ lệ TRONG TỪNG LỚP → không đổi khi tỉ lệ lớp đổi. Cân test
+    # chỉ tổ vứt bớt câu đo → ước lượng lỏng hơn, chẳng được gì.
+    # (Trước đây cân test rồi báo `acc`. acc trên test lệch 23/77 thì đoán bừa
+    #  đã 77% — con số đó vô nghĩa. Nay báo FPR/TPR tách riêng theo trục.)
+    # smoke chỉ cần bắt lỗi API → 400 câu là đủ; bản thật đo nguyên bộ.
+    te = nap("test", chi_nn, 400 if args.smoke else None)
+    print(f"\ntrain {len(tr):,} cặp (đã cân 1:1) · test {len(te):,}"
+          f"{' (mẫu smoke)' if args.smoke else ' (nguyên bộ, KHÔNG cân)'}")
     if not tr:
         raise SystemExit("Không có dữ liệu — chạy guard/make_data.py trước.")
 
@@ -160,28 +170,51 @@ def main() -> None:
         print(f"epoch {ep}: loss TB {tong / max(len(idx) // bs, 1):.4f}  ({time.time() - t0:.0f}s)")
 
     # ── đo trên test ──────────────────────────────────────────
+    # KỶ LUẬT CHECKLIST (Ribeiro et al., ACL 2020): báo FAILURE RATE THEO TỪNG
+    # CAPABILITY, KHÔNG gộp thành một con `acc`. Một số tổng che mất chỗ thủng.
+    # Và BÁO ĐỘNG GIẢ phải đứng riêng, in đậm: guard chặn oan câu ĐÚNG thì
+    # người dùng tắt guard → guard vô dụng dù bắt bịa giỏi đến đâu.
+    # (Đây đúng bệnh GPT-4o mắc: đo được nó từ chối oan 62,5% câu đúng.)
     model.eval()
-    dung = 0
-    bat_bia = 0
-    n_bia = 0
+    theo_truc: dict[str, list[int]] = {}  # trục -> [bắt được, tổng]
+    fp = 0
+    n_that = 0
     with torch.no_grad():
         for i in range(0, len(te), 32):
             b = te[i : i + 32]
             enc, y = batch(b)
             pred = model(**enc).logits.argmax(1)
-            dung += (pred == y).sum().item()
-            for p_, y_ in zip(pred.tolist(), y.tolist()):
-                if y_ == 0:
-                    n_bia += 1
+            for r, p_, y_ in zip(b, pred.tolist(), y.tolist()):
+                if y_ == 1:  # câu ĐÚNG
+                    n_that += 1
                     if p_ == 0:
-                        bat_bia += 1
+                        fp += 1  # ← chặn oan
+                else:  # câu bịa
+                    t = r.get("corruption_type") or "(không rõ)"
+                    d = theo_truc.setdefault(t, [0, 0])
+                    d[1] += 1
+                    if p_ == 0:
+                        d[0] += 1
 
-    acc = dung / max(len(te), 1)
-    r_bia = bat_bia / max(n_bia, 1)
-    print(f"\n{'=' * 52}")
-    print(f"acc      = {acc:.3f}   ({dung}/{len(te)})")
-    print(f"bắt bịa  = {r_bia:.3f}   ({bat_bia}/{n_bia})")
-    print(f"thời gian= {time.time() - t0:.0f}s trên {dev}")
+    fpr = fp / max(n_that, 1)
+    tprs = [d[0] / max(d[1], 1) for d in theo_truc.values()]
+    tb = sum(tprs) / max(len(tprs), 1)
+
+    print(f"\n{'=' * 60}")
+    print("GUARD NLI (PhoBERT) — failure rate theo TRỤC, không gộp 1 số")
+    print("=" * 60)
+    print(f"\n  🔴 BÁO ĐỘNG GIẢ (chặn oan câu ĐÚNG) = {fpr:.3f}  ({fp}/{n_that})")
+    print(f"     → so chuẩn: GPT-4o tự kiểm chặn oan 0.625 · lớp tất định 0.000")
+    print(f"\n  Bắt bịa theo trục:")
+    for t in sorted(theo_truc, key=lambda x: theo_truc[x][0] / max(theo_truc[x][1], 1)):
+        b_, n_ = theo_truc[t]
+        r_ = b_ / max(n_, 1)
+        cd = "🟢" if r_ > 0.9 else ("🟡" if r_ > 0.7 else "🔴")
+        nn_ = " ← NGỮ NGHĨA (rule mù)" if t in TRUC_NGU_NGHIA else ""
+        print(f"    {t:24} {r_:.3f}  ({b_:4}/{n_:4}) {cd}{nn_}")
+    print(f"\n  TB các trục = {tb:.3f}   (KHÔNG phải accuracy — test lệch 23/77,")
+    print(f"                          đoán bừa 'bịa' đã được 0.77)")
+    print(f"  thời gian   = {time.time() - t0:.0f}s trên {dev}")
 
     if args.smoke:
         print("\n✓ SMOKE XANH — đường ống chạy được, giờ đẩy lên GPU chạy thật.")
@@ -191,8 +224,8 @@ def main() -> None:
     # so với lớp tất định — trục ngữ nghĩa nó ra 0.000
     print(f"\nSo sánh trên trục NGỮ NGHĨA:")
     print(f"  lớp tất định : 0.000  (rule KHÔNG THỂ bắt — không có số/mã nào sai)")
-    print(f"  PhoBERT NLI  : {r_bia:.3f}")
-    if r_bia > 0.5:
+    print(f"  PhoBERT NLI  : {tb:.3f}  (TB các trục ngữ nghĩa)")
+    if tb > 0.5:
         print(f"  ⇒ model VÁ được chỗ rule mù → PyTorch load-bearing, ablation có cái để nói.")
     else:
         print(f"  ⇒ model CHƯA vá được. Chưa có gì để khoe — nói thật, đừng ép số.")
@@ -202,8 +235,18 @@ def main() -> None:
     tok.save_pretrained(d)
     (OUT / "phobert_ket_qua.json").write_text(
         json.dumps(
-            {"acc": acc, "bat_bia": r_bia, "n_train": len(tr), "n_test": len(te),
-             "epochs": epochs, "device": str(dev), "chi_ngu_nghia": chi_nn},
+            {
+                "bao_dong_gia": round(fpr, 4),
+                "tb_bat_bia_ngu_nghia": round(tb, 4),
+                "theo_truc": {t: round(v[0] / max(v[1], 1), 4) for t, v in theo_truc.items()},
+                "n_train": len(tr),
+                "n_test": len(te),
+                "epochs": epochs,
+                "device": str(dev),
+                "chi_ngu_nghia": chi_nn,
+                "luu_y": "F1/bắt-bịa cao trên test TỔNG HỢP (template). Con số thành thật "
+                "cần đối chiếu output LLM thật — xem guard/eval_llm_that.py.",
+            },
             ensure_ascii=False, indent=2,
         ),
         encoding="utf-8",

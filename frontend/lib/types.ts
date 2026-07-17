@@ -22,14 +22,40 @@ export type Citation = {
   url?: string;
 };
 
-/** Hồ sơ doanh nghiệp — các slot AI cần hỏi đủ trước khi match. */
+/** Lĩnh vực theo Điều 5 NĐ 80/2021 — CHỈ 2 nhóm, không phải ngành nghề tự do.
+ *  Ngưỡng lao động khác nhau giữa 2 nhóm (200 vs 100) nên bắt buộc phải phân biệt. */
+export type LinhVuc =
+  | "nong_lam_thuy_san__cong_nghiep_xay_dung"
+  | "thuong_mai_dich_vu";
+
+/** Hồ sơ doanh nghiệp — các slot AI cần hỏi đủ trước khi match.
+ *
+ *  ⚠️ ĐÃ SỬA theo nguyên văn 80/2021/NĐ-CP + 13/2019/NĐ-CP. Bản cũ dựng quanh
+ *  ĐIỀU KIỆN BỊA nên hỏi sai thứ:
+ *    • `nhanSu` → `laoDongBhxh`: luật đếm "lao động CÓ THAM GIA BHXH bình quân
+ *      năm", không phải đầu người. Hai đại lượng khác nhau.
+ *    • `chiRDPhanTram` → `tyLeDtKhcn`: 13/2019 Đ12 K3 đòi doanh thu sản phẩm
+ *      KH&CN ≥ 30% tổng doanh thu. "Chi R&D ≥ 1%" KHÔNG tồn tại trong văn bản.
+ *    • thêm `doanhThu`: Đ5 dùng doanh thu ở MỌI ngưỡng — bản cũ không có field này.
+ *    • thêm `linhVuc`: ngưỡng lao động đổi theo lĩnh vực.
+ *    • thêm `nuLamChu`: Đ13 K2 nâng trần cho DN do phụ nữ làm chủ / nhiều lao
+ *      động nữ / DN xã hội.
+ */
 export type Profile = {
   nganh?: string;
-  /** vốn điều lệ, VND */
+  linhVuc?: LinhVuc;
+  /** tổng nguồn vốn của năm, VND */
   von?: number;
-  nhanSu?: number;
-  /** chi R&D theo % doanh thu */
-  chiRDPhanTram?: number;
+  /** tổng doanh thu của năm, VND */
+  doanhThu?: number;
+  /** lao động tham gia BHXH bình quân năm */
+  laoDongBhxh?: number;
+  /** doanh thu từ sản phẩm KH&CN, % tổng doanh thu */
+  tyLeDtKhcn?: number;
+  /** có Giấy chứng nhận doanh nghiệp KH&CN */
+  coGcnKhcn?: boolean;
+  /** do phụ nữ làm chủ / sử dụng nhiều lao động nữ / là DN xã hội */
+  nuLamChu?: boolean;
   diaBan?: string;
   fdi?: boolean;
 };
@@ -37,10 +63,14 @@ export type Profile = {
 export type ProfileField = keyof Profile;
 
 export const PROFILE_FIELDS: { key: ProfileField; nhan: string; goiY: string }[] = [
+  { key: "linhVuc", nhan: "Lĩnh vực", goiY: "nông-lâm-thuỷ sản / CN-XD hay thương mại-dịch vụ" },
+  { key: "laoDongBhxh", nhan: "Lao động BHXH", goiY: "bình quân năm, vd: 45 người" },
+  { key: "doanhThu", nhan: "Doanh thu năm", goiY: "vd: 50 tỷ" },
+  { key: "von", nhan: "Tổng nguồn vốn", goiY: "vd: 20 tỷ" },
+  { key: "tyLeDtKhcn", nhan: "Doanh thu KH&CN", goiY: "% tổng doanh thu" },
+  { key: "coGcnKhcn", nhan: "GCN DN KH&CN", goiY: "có / không" },
+  { key: "nuLamChu", nhan: "Nữ làm chủ", goiY: "có / không — được nâng trần hỗ trợ" },
   { key: "nganh", nhan: "Ngành", goiY: "vd: sản xuất phần mềm" },
-  { key: "von", nhan: "Vốn điều lệ", goiY: "vd: 20 tỷ" },
-  { key: "nhanSu", nhan: "Nhân sự", goiY: "vd: 45 người" },
-  { key: "chiRDPhanTram", nhan: "Chi R&D", goiY: "% doanh thu" },
   { key: "diaBan", nhan: "Địa bàn", goiY: "vd: Hà Nội" },
   { key: "fdi", nhan: "Vốn FDI", goiY: "có / không" },
 ];
@@ -94,6 +124,19 @@ export type ChuongTrinh = {
   thieu?: string[];
   /** true nếu hiệu lực đã được đối chiếu với API vbpl.vn */
   hieuLucDaDoiChieu: boolean;
+  /** Trạng thái hiệu lực THẬT từ vbpl.vn (② của đề). undefined = chưa có. */
+  hieuLuc?: HieuLuc;
+};
+
+/** Trạng thái hiệu lực văn bản — đối chiếu API vbpl.vn (Bộ Tư pháp). */
+export type HieuLuc = {
+  daDoiChieu: boolean;
+  /** true=còn · false=hết · null=chưa xác định (KHÔNG đoán) */
+  conHieuLuc: boolean | null;
+  nhan: string;
+  ma?: string;
+  soQuanHe?: number;
+  nguon?: string;
 };
 
 /** Nhãn kiểm chứng gắn lên mỗi câu trả lời của AI. */

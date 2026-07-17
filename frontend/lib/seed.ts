@@ -18,12 +18,15 @@ import type { ChuongTrinh, Profile } from "./types";
 export const SEED_CANH_BAO =
   "Dữ liệu seed dựng UI — trích dẫn chưa đối chiếu corpus. Thay trước khi demo.";
 
-/** Hồ sơ mẫu để thử luồng: DN phần mềm, có R&D, không FDI. */
+/** Hồ sơ mẫu để thử luồng: DN phần mềm (công nghiệp), có GCN KH&CN, không FDI. */
 export const HO_SO_MAU: Profile = {
   nganh: "Sản xuất phần mềm",
+  linhVuc: "nong_lam_thuy_san__cong_nghiep_xay_dung",
   von: 20_000_000_000,
-  nhanSu: 45,
-  chiRDPhanTram: 2.5,
+  doanhThu: 50_000_000_000,
+  laoDongBhxh: 45,
+  tyLeDtKhcn: 45,
+  coGcnKhcn: true,
   diaBan: "Hà Nội",
   fdi: false,
 };

@@ -7,6 +7,7 @@ Chạy: uv run --python 3.11 --with pyarrow python guard/make_data.py
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import random
 import sys
@@ -86,8 +87,49 @@ def main() -> None:
 
     OUT.mkdir(parents=True, exist_ok=True)
     tong = Counter()
+
+    # sinh cả 3 phía TRƯỚC, rồi mới dọn — vì dọn cần biết test có gì.
+    kho = {ten: sinh_cho_phia(ten, args.gioi_han) for ten in ("train", "calib", "test")}
+
+    # ── GỠ RÒ RỈ PREMISE ────────────────────────────────────────
+    # soi_data.py bắt: 9 đoạn nguồn nằm ở CẢ train lẫn test dù doc_id đã tách.
+    # Vì sao: điều khoản mẫu ("Thông tư này có hiệu lực từ…") lặp NGUYÊN VĂN ở
+    # nhiều văn bản khác nhau → doc_id khác nhau mà text y hệt. Tách theo doc_id
+    # KHÔNG bắt được ca này.
+    # Dọn ở TRAIN, TUYỆT ĐỐI không đụng test — test là thước đo; sửa thước đo
+    # để nó vừa với mình là tự lừa mình.
+    def bam(s: str) -> str:
+        return hashlib.md5(s.strip().encode()).hexdigest()
+
+    cam = {bam(c.premise) for c in kho["test"]} | {bam(c.premise) for c in kho["calib"]}
+    truoc = len(kho["train"])
+    kho["train"] = [c for c in kho["train"] if bam(c.premise) not in cam]
+    bo = truoc - len(kho["train"])
+    print(f"Gỡ rò rỉ premise: bỏ {bo} cặp khỏi TRAIN (nguồn trùng test/calib)\n")
+
+    # ── CÂN NHÃN ────────────────────────────────────────────────
+    # Hạ negative xuống ngang positive, hạ ĐỀU theo từng trục để giữ nguyên
+    # tỉ lệ trục đã cân công phu (~40% định danh / 35% số / 25% ngữ nghĩa).
+    # Chỉ cân TRAIN. test/calib giữ phân bố tự nhiên để đo cho thật.
+    def can_bang(ds: list, rng: random.Random) -> list:
+        pos = [c for c in ds if c.label == 1]
+        neg = [c for c in ds if c.label == 0]
+        if not pos or len(neg) <= len(pos):
+            return ds
+        ty = len(pos) / len(neg)  # hạ mỗi trục theo cùng một tỉ lệ
+        theo: dict = {}
+        for c in neg:
+            theo.setdefault(c.corruption_type, []).append(c)
+        giu = []
+        for _, ds_t in sorted(theo.items(), key=lambda x: str(x[0])):
+            k = max(1, round(len(ds_t) * ty))
+            giu += rng.sample(ds_t, min(k, len(ds_t)))
+        return pos + giu
+
+    kho["train"] = can_bang(kho["train"], random.Random(SEED))
+
     for ten in ("train", "calib", "test"):
-        cap = sinh_cho_phia(ten, args.gioi_han)
+        cap = kho[ten]
         f = OUT / f"{ten}.jsonl"
         with f.open("w", encoding="utf-8") as fh:
             for c in cap:
@@ -95,10 +137,12 @@ def main() -> None:
 
         pos = sum(1 for c in cap if c.label == 1)
         neg = len(cap) - pos
-        print(f"{ten:6} {len(cap):7,} cặp  ({pos:6,} thật / {neg:6,} bịa)  → {f.name}"
+        print(f"{ten:6} {len(cap):7,} cặp  ({pos:6,} thật / {neg:6,} bịa"
+              f" = {pos/max(len(cap),1)*100:.0f}%/{neg/max(len(cap),1)*100:.0f}%)  → {f.name}"
               f"  {f.stat().st_size / 1e6:.1f} MB")
-        for c in cap:
-            tong[c.corruption_type or "(positive)"] += 1
+        if ten == "train":
+            for c in cap:
+                tong[c.corruption_type or "(positive)"] += 1
 
     print("\n=== Phân bố theo trục ===")
     for k, v in tong.most_common():

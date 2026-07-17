@@ -4,10 +4,14 @@ import { dinhDangVND } from "./ProgramCard";
 
 function hienThi(key: keyof Profile, v: Profile[keyof Profile]): string {
   if (v === undefined || v === "") return "";
-  if (key === "von") return dinhDangVND(v as number);
-  if (key === "nhanSu") return `${v} người`;
-  if (key === "chiRDPhanTram") return `${String(v).replace(".", ",")}% doanh thu`;
-  if (key === "fdi") return v ? "Có" : "Không";
+  if (key === "von" || key === "doanhThu") return dinhDangVND(v as number);
+  if (key === "laoDongBhxh") return `${v} người`;
+  if (key === "tyLeDtKhcn") return `${String(v).replace(".", ",")}% doanh thu`;
+  if (key === "linhVuc")
+    return v === "thuong_mai_dich_vu"
+      ? "Thương mại - dịch vụ"
+      : "Nông-lâm-thuỷ sản / CN-XD";
+  if (key === "fdi" || key === "coGcnKhcn" || key === "nuLamChu") return v ? "Có" : "Không";
   return String(v);
 }
 

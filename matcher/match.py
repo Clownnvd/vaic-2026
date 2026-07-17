@@ -53,10 +53,54 @@ def _so_sanh(dk: DieuKien, gt) -> tuple[TrangThai, str]:
         return TrangThai.THIEU_TIN, "kiểu dữ liệu không so được"
 
     return (
-        (TrangThai.DAT, f"{gt} {t.value} {dk.nguong}")
+        (TrangThai.DAT, _loi_giai(gt, t, dk.nguong, True))
         if ok
-        else (TrangThai.KHONG_DAT, f"{gt} không thoả {t.value} {dk.nguong}")
+        else (TrangThai.KHONG_DAT, _loi_giai(gt, t, dk.nguong, False))
     )
+
+
+# nhãn người-đọc cho giá trị dẫn xuất (tránh in "nho in ('sieu_nho','nho','vua')")
+_NHAN_GT = {
+    "sieu_nho": "doanh nghiệp siêu nhỏ",
+    "nho": "doanh nghiệp nhỏ",
+    "vua": "doanh nghiệp vừa",
+    "ngoai": "vượt ngưỡng doanh nghiệp vừa",
+    True: "có",
+    False: "không",
+}
+
+
+def _loi_giai(gt, t: ToanTu, nguong, dat: bool) -> str:
+    """Câu đối chiếu cho NGƯỜI ĐỌC — không phải biểu thức Python thô."""
+    v = _NHAN_GT.get(gt, gt)
+    if t in (ToanTu.IN, ToanTu.NOT_IN):
+        return f"Hồ sơ: {v}" if dat else f"Hồ sơ: {v} — chưa thuộc diện áp dụng"
+    if t is ToanTu.EQ:
+        return f"Hồ sơ: {v}" if dat else f"Hồ sơ: {v} (cần: {_NHAN_GT.get(nguong, nguong)})"
+    # so sánh số (>=, <=)
+    don = "%" if isinstance(nguong, float) else ""
+    return (
+        f"Hồ sơ: {gt}{don} (đạt ngưỡng {t.value} {nguong}{don})"
+        if dat
+        else f"Hồ sơ: {gt}{don} — chưa đạt ngưỡng {t.value} {nguong}{don}"
+    )
+
+
+def _dan_xuat(profile: Profile) -> dict:
+    """Field DẪN XUẤT — tính từ hồ sơ theo đúng thuật toán của luật.
+
+    `quy_mo_dnnvv` KHÔNG phải thứ doanh nghiệp tự khai: nó là kết quả của bậc
+    thang Điều 5 (80/2021/NĐ-CP), mà ngưỡng đổi theo lĩnh vực và có phép HOẶC
+    giữa doanh thu / nguồn vốn. DieuKien phẳng không diễn tả nổi → tính riêng
+    ở matcher/quy_mo.py rồi bơm vào đây.
+
+    Thiếu tin → xac_dinh_quy_mo trả None → _so_sanh cho ra THIEU_TIN → hỏi thêm,
+    KHÔNG kết luận. Đúng nguyên tắc: thiếu tin ≠ không đạt.
+    """
+    from matcher.quy_mo import xac_dinh_quy_mo
+
+    kq = xac_dinh_quy_mo(profile)
+    return {"quy_mo_dnnvv": kq.quy_mo.value if kq.quy_mo else None}
 
 
 def doi_chieu(profile: Profile, ct: ChuongTrinh) -> KetQuaKhop:
@@ -66,9 +110,10 @@ def doi_chieu(profile: Profile, ct: ChuongTrinh) -> KetQuaKhop:
     can_hoi: list[str] = []
     dat = 0.0
     tong_trong_so = 0.0
+    dx = _dan_xuat(profile)
 
     for dk in ct.dieu_kien:
-        gt = getattr(profile, dk.field, None)
+        gt = dx[dk.field] if dk.field in dx else getattr(profile, dk.field, None)
         tt, gt_thich = _so_sanh(dk, gt)
         chi_tiet.append(KetQuaDieuKien(dk, tt, gt, gt_thich))
 

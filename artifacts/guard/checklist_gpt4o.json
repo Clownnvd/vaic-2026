@@ -1,0 +1,63 @@
+{
+  "phuong_phap": "CheckList (Ribeiro et al., ACL 2020 Best Paper)",
+  "model_do": "gpt-4o (bên thứ ba — đội KHÔNG kiểm soát)",
+  "ket_qua": {
+    "MFT|bia_bo_rang_buoc": {
+      "dung": 12,
+      "tong": 12
+    },
+    "MFT|bia_co_quan": {
+      "dung": 10,
+      "tong": 12
+    },
+    "MFT|bia_dieu_khoan": {
+      "dung": 10,
+      "tong": 12
+    },
+    "MFT|bia_so_van_ban": {
+      "dung": 7,
+      "tong": 12
+    },
+    "MFT|bia_suy_dien": {
+      "dung": 12,
+      "tong": 12
+    },
+    "MFT|bia_tong_quat_hoa": {
+      "dung": 12,
+      "tong": 12
+    },
+    "MFT|bia_tu_du_dieu_kien": {
+      "dung": 12,
+      "tong": 12
+    },
+    "MFT|sai_han_ngay": {
+      "dung": 11,
+      "tong": 12
+    },
+    "MFT|sai_muc_phan_tram": {
+      "dung": 12,
+      "tong": 12
+    },
+    "MFT|sai_nguong_tien": {
+      "dung": 12,
+      "tong": 12
+    },
+    "MFT|(câu đúng)": {
+      "dung": 9,
+      "tong": 24
+    },
+    "INV|INV: đảo thứ tự điều/khoản": {
+      "dung": 8,
+      "tong": 19
+    },
+    "INV|INV: viết tắt tên loại văn bản": {
+      "dung": 0,
+      "tong": 1
+    },
+    "INV|INV: phần trăm → chữ": {
+      "dung": 4,
+      "tong": 4
+    }
+  },
+  "luu_y": "Đây là FAILURE RATE theo capability, KHÔNG phải accuracy tổng quát. Test suite = công cụ ĐO, tuyệt đối không dùng để TRAIN (Checking HateCheck: train trên template → học thuộc khuôn → tụt ngoài đời)."
+}

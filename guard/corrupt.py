@@ -221,26 +221,45 @@ def bia_so_trong_cau(cau: str, rng: random.Random) -> tuple[str, str, str, str] 
 # ── sinh cặp ──────────────────────────────────────────────────────
 
 
+MAX_POS = 4  # số câu thật tối đa lấy làm positive từ 1 khoản
+
+
 def sinh_cap(
     khoan_text: str, cit: TrichDan, doc_id: str, rng: random.Random
 ) -> list[Cap]:
-    """1 khoản → 1 positive + nhiều hard-negative đủ các trục."""
+    """1 khoản → NHIỀU positive (mỗi câu thật 1 cái) + hard-negative đủ các trục.
+
+    ⚠️ SỬA LỖI CÂN NHÃN (soi_data.py bắt được: 17% thật / 83% bịa):
+      Bản cũ: `c = rng.choice(cau)` — lấy ĐÚNG 1 câu làm positive rồi VỨT hết
+      câu còn lại, nhưng vẫn đẻ ~5 negative từ chính câu đó → tỉ lệ 1:5.
+      Đời thật thì NGƯỢC: LLM phần lớn nói đúng, chỉ bịa một phần. Train với
+      phân bố lật ngược → model học tủ "cứ đoán BỊA" (ăn ngay 83%) → hoang
+      tưởng → CHẶN OAN câu đúng. Guard chặn oan thì người dùng tắt guard.
+      Nay: lấy NỐT các câu thật đang bị vứt. Đây là data THẬT (trích nguyên
+      văn từ khoản), không phải chế thêm để cho đẹp số.
+
+    ⚠️ BẪY đã tránh: positive PHẢI lấy từ chính `_cau_co_so` (câu CÓ %/tiền/ngày),
+      KHÔNG lấy câu thường. Nếu positive toàn câu không số còn negative toàn câu
+      có số → model học mẹo tủ "thấy số là bịa". Hỏng nặng hơn lệch nhãn.
+    """
     cau = _cau_co_so(khoan_text)
     if not cau:
         return []
-    c = rng.choice(cau)
+    c = rng.choice(cau)  # câu ĐƯỢC CHỌN để đẻ negative
     ra: list[Cap] = []
 
-    # POSITIVE — trích đúng, citation đúng
-    ra.append(
-        Cap(
-            premise=khoan_text,
-            hypothesis=f"Theo {cit}, {c}",
-            label=1,
-            corruption_type=None,
-            doc_id=doc_id,
+    # POSITIVE — trích đúng, citation đúng. Lấy MỌI câu thật (trần MAX_POS
+    # để một khoản dài không nuốt hết phân bố).
+    for cp in cau[:MAX_POS]:
+        ra.append(
+            Cap(
+                premise=khoan_text,
+                hypothesis=f"Theo {cit}, {cp}",
+                label=1,
+                corruption_type=None,
+                doc_id=doc_id,
+            )
         )
-    )
 
     # ── trục ĐỊNH DANH — lấy NGẪU NHIÊN 2/3, không lấy cả 3 ──
     # Lấy cả 3 thì tỉ lệ ra 60% định danh / 20% số → model chỉ học mẹo soi citation.

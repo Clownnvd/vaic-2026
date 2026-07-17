@@ -27,10 +27,20 @@ export type ApiDieuKien = {
   citation: ApiCitation;
 };
 
+export type ApiHieuLuc = {
+  da_doi_chieu: boolean;
+  con_hieu_luc: boolean | null; // null = chưa xác định (KHÔNG đoán)
+  nhan: string;
+  ma?: string;
+  so_quan_he?: number;
+  nguon?: string;
+};
+
 export type ApiChuongTrinh = {
   id: string;
   ten: string;
   co_quan: string;
+  loai: string; // "ho_tro_chi_phi" | "uu_dai_thue" ... (gạch dưới, đổi sang gạch ngang ở UI)
   gia_tri: string;
   gia_tri_ky_vong: string;
   han_nop: string | null;
@@ -39,6 +49,7 @@ export type ApiChuongTrinh = {
   thieu: string[];
   can_hoi_them: string[];
   dieu_kien: ApiDieuKien[];
+  hieu_luc?: ApiHieuLuc;
 };
 
 export type ApiTraLoi =
@@ -61,9 +72,13 @@ export type ApiTraLoi =
 function sangBackend(p: Profile): Record<string, unknown> {
   const ra: Record<string, unknown> = {};
   if (p.nganh !== undefined) ra.nganh = p.nganh;
+  if (p.linhVuc !== undefined) ra.linh_vuc = p.linhVuc;
   if (p.von !== undefined) ra.von = p.von;
-  if (p.nhanSu !== undefined) ra.nhan_su = p.nhanSu;
-  if (p.chiRDPhanTram !== undefined) ra.chi_rnd = p.chiRDPhanTram;
+  if (p.doanhThu !== undefined) ra.doanh_thu = p.doanhThu;
+  if (p.laoDongBhxh !== undefined) ra.lao_dong_bhxh = p.laoDongBhxh;
+  if (p.tyLeDtKhcn !== undefined) ra.ty_le_dt_khcn = p.tyLeDtKhcn;
+  if (p.coGcnKhcn !== undefined) ra.co_gcn_khcn = p.coGcnKhcn;
+  if (p.nuLamChu !== undefined) ra.nu_lam_chu = p.nuLamChu;
   if (p.diaBan !== undefined) ra.dia_ban = p.diaBan;
   if (p.fdi !== undefined) ra.fdi = p.fdi;
   return ra;

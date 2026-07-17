@@ -33,6 +33,8 @@ from ho_so.sinh import checklist, render_text  # noqa: E402
 from matcher.kiem_ho_so import kiem, mo_ta_loi  # noqa: E402
 from matcher.match import diff_ket_qua, quet_nguoc  # noqa: E402
 from matcher.pham_vi import (  # noqa: E402
+    cau_chuyen_huong,
+    cau_meta_lac_de,
     cau_tu_choi_linh_vuc,
     cau_tu_choi_van_ban,
     hoi_van_ban_ngoai_kho,
@@ -94,24 +96,168 @@ class AgentReply(BaseModel):
     ms: int = 0
 
 
-PROFILE_FIELDS = ("nganh", "von", "nhan_su", "chi_rnd", "dia_ban", "fdi")
+# ⚠️ ĐỔI theo Profile mới — Profile cũ dựng quanh ĐIỀU KIỆN BỊA.
+# `nhan_su`/`chi_rnd` không phải thứ luật hỏi:
+#   80/2021 Đ5 đếm "lao động CÓ THAM GIA BHXH bình quân năm" (≠ đầu người),
+#     và dùng TỔNG DOANH THU — field mà bản cũ không hề có;
+#   13/2019 Đ12 K3 đòi doanh thu sản phẩm KH&CN ≥ 30% tổng doanh thu,
+#     KHÔNG phải "chi R&D ≥ 1%" (điều kiện đó không tồn tại trong văn bản).
+PROFILE_FIELDS = (
+    "linh_vuc",
+    "lao_dong_bhxh",
+    "doanh_thu",
+    "von",
+    "ty_le_dt_khcn",
+    "co_gcn_khcn",
+    "nu_lam_chu",
+    "nganh",
+    "dia_ban",
+    "fdi",
+)
+
+
+def _field_can_hoi() -> tuple[str, ...]:
+    """CHỈ hỏi field mà kho THẬT SỰ dùng — đừng bắt DN khai cho đủ bộ.
+
+    PROFILE_FIELDS là thứ Profile CHỨA (10 field). Nếu hỏi hết 10 thì bot thành
+    cái tờ khai, hỏi mãi mới chịu trả lời. Nên hỏi đúng:
+      • field xuất hiện trong dieu_kien của chương trình nào đó, CỘNG
+      • field mà bậc thang Điều 5 cần để ra quy mô (quy_mo_dnnvv là DẪN XUẤT,
+        DN không tự khai được — phải hỏi nguyên liệu của nó)
+    Kho đổi thì danh sách này tự đổi theo, không phải sửa tay.
+    """
+    can = {f for ct in KHO for dk in ct.dieu_kien for f in (dk.field,)}
+    if "quy_mo_dnnvv" in can:
+        can.discard("quy_mo_dnnvv")
+        can |= {"linh_vuc", "lao_dong_bhxh", "doanh_thu"}  # nguyên liệu của Điều 5
+    return tuple(f for f in PROFILE_FIELDS if f in can)
+
+
+FIELD_CAN_HOI = _field_can_hoi()
 
 
 def _nhan(f: str) -> str:
     return {
+        "linh_vuc": "lĩnh vực (nông-lâm-thuỷ sản/công nghiệp-xây dựng hay thương mại-dịch vụ)",
+        "lao_dong_bhxh": "số lao động tham gia BHXH bình quân năm",
+        "doanh_thu": "tổng doanh thu của năm",
+        "von": "tổng nguồn vốn của năm",
+        "ty_le_dt_khcn": "tỷ lệ doanh thu từ sản phẩm KH&CN (% tổng doanh thu)",
+        "co_gcn_khcn": "có Giấy chứng nhận doanh nghiệp KH&CN hay không",
+        "nu_lam_chu": "doanh nghiệp có do phụ nữ làm chủ / sử dụng nhiều lao động nữ / là DN xã hội không",
         "nganh": "ngành",
-        "von": "vốn điều lệ",
-        "nhan_su": "số nhân sự",
-        "chi_rnd": "chi R&D (% doanh thu)",
         "dia_ban": "địa bàn",
         "fdi": "có vốn FDI hay không",
     }[f]
+
+
+def _hieu_luc_the(ct) -> dict:
+    """Trạng thái hiệu lực THẬT (② của đề) — đọc CACHE vbpl.vn, không gọi API.
+
+    Lấy doc_id từ citation chính. chi_cache=True → không bao giờ block /chat.
+    Cache hâm trước bằng scripts/ham_cache_vbpl.py. Cache miss → 'chưa xác định'
+    (KHÔNG đoán — đúng nguyên tắc: thà nói chưa biết còn hơn khẳng định sai).
+    """
+    doc_id = None
+    if ct.citation_chinh and ct.citation_chinh.doc_id:
+        doc_id = ct.citation_chinh.doc_id
+    elif ct.dieu_kien and ct.dieu_kien[0].citation.doc_id:
+        doc_id = ct.dieu_kien[0].citation.doc_id
+    if not doc_id:
+        return {"da_doi_chieu": False, "con_hieu_luc": None, "nhan": "Chưa có mã văn bản"}
+
+    try:
+        from vbpl.api import tra_hieu_luc
+
+        hl = tra_hieu_luc(doc_id, chi_cache=True)
+    except Exception:  # noqa: BLE001
+        return {"da_doi_chieu": False, "con_hieu_luc": None, "nhan": "Chưa đối chiếu"}
+
+    if hl.loi:  # cache miss / lỗi → chưa đối chiếu được (đừng khẳng định)
+        return {"da_doi_chieu": False, "con_hieu_luc": None, "nhan": hl.nhan}
+    return {
+        "da_doi_chieu": True,
+        "con_hieu_luc": hl.con_hieu_luc,
+        "nhan": hl.nhan,
+        "ma": hl.ma,
+        "so_quan_he": hl.so_quan_he,
+        "nguon": "vbpl.vn (Bộ Tư pháp)",
+    }
 
 
 @app.get("/health")
 def health() -> dict:
     """Landing tĩnh + curl-grep được — V1 là MÁY chấm, phải trả nhanh."""
     return {"ok": True, "service": "policyradar-bff", "so_chuong_trinh": len(KHO)}
+
+
+@app.get("/luat/facets")
+def luat_facets() -> dict:
+    """Giá trị lọc (loại VB / lĩnh vực / cơ quan / năm) + số lượng — cho dropdown."""
+    from matcher.luat_index import get_index
+
+    return get_index().facets()
+
+
+@app.get("/luat")
+def danh_sach_luat(
+    q: str = "",
+    doc_type: str = "",
+    linh_vuc: str = "",
+    co_quan: str = "",
+    nam: str = "",
+    trang: int = 1,
+    cs: int = 20,
+) -> dict:
+    """Danh sách LUẬT có tìm kiếm + lọc + phân trang — 2.669 văn bản trong corpus.
+
+    Tra cứu thuần: KHÔNG cần hồ sơ, KHÔNG đối chiếu điều kiện. Chỉ metadata.
+    """
+    from matcher.luat_index import get_index
+
+    return get_index().truy_van(q, doc_type, linh_vuc, co_quan, nam, trang, cs)
+
+
+@app.get("/chuong-trinh")
+def danh_sach_chuong_trinh() -> dict:
+    """Danh sách LUẬT/chương trình hệ thống biết — cho sidebar 'Danh sách luật'.
+
+    Mỗi mục kèm căn cứ (điều–khoản + nguyên văn corpus) và hiệu lực THẬT (vbpl.vn).
+    KHÔNG cần hồ sơ — đây là tra cứu thuần, không đối chiếu điều kiện.
+    """
+    ra = []
+    for ct in KHO:
+        cits = []
+        seen = set()
+        for dk in ct.dieu_kien:
+            c = dk.citation
+            if c.khoa in seen:
+                continue
+            seen.add(c.khoa)
+            cits.append(
+                {
+                    "hien_thi": str(c),
+                    "so_vb": c.so_vb,
+                    "co_quan": c.co_quan,
+                    "trich": c.trich,
+                    "doc_id": c.doc_id,
+                    "yeu_cau": dk.mo_ta,
+                }
+            )
+        ra.append(
+            {
+                "id": ct.id,
+                "ten": ct.ten,
+                "co_quan": ct.co_quan,
+                "loai": ct.loai,
+                "gia_tri": ct.gia_tri_mo_ta,
+                "han_nop": ct.han_nop,
+                "so_hieu_chinh": ct.citation_chinh.so_vb if ct.citation_chinh else None,
+                "hieu_luc": _hieu_luc_the(ct),
+                "can_cu": cits,
+            }
+        )
+    return {"tong": len(ra), "chuong_trinh": ra}
 
 
 @app.post("/chat")
@@ -152,6 +298,21 @@ def chat(r: YeuCau) -> dict:
             "ms": int((time.perf_counter() - t0) * 1000),
         }
 
+    # ── CÂU META / LẠC ĐỀ → hiểu context, KHÔNG chạy matcher ──────
+    # Bug thật: hồ sơ đầy từ lượt trước → "bạn bao tuổi" cũng ra kết quả đủ
+    # điều kiện. Bot phải nhận ra câu KHÔNG hỏi chính sách và chuyển hướng.
+    if cau_meta_lac_de(cau):
+        return {
+            "dang": "van_ban",
+            "text": cau_chuyen_huong(),
+            "noi_dung": cau_chuyen_huong(),
+            "grounded": False,
+            "citations": [],
+            "requires_approval": False,
+            "pii_da_che": list(da_che.keys()),
+            "ms": int((time.perf_counter() - t0) * 1000),
+        }
+
     p = Profile(**{k: v for k, v in r.ho_so.items() if k in PROFILE_FIELDS})
 
     # ── SỐ VÔ LÝ → KHÔNG đối chiếu ────────────────────────────
@@ -171,7 +332,7 @@ def chat(r: YeuCau) -> dict:
             "ms": int((time.perf_counter() - t0) * 1000),
         }
 
-    thieu = [f for f in PROFILE_FIELDS if getattr(p, f) is None]
+    thieu = [f for f in FIELD_CAN_HOI if getattr(p, f) is None]
 
     # ── thiếu hồ sơ → HỎI, không đoán ─────────────────────────
     if len(thieu) > 2:
@@ -195,6 +356,7 @@ def chat(r: YeuCau) -> dict:
                 "id": k.chuong_trinh.id,
                 "ten": k.chuong_trinh.ten,
                 "co_quan": k.chuong_trinh.co_quan,
+                "loai": k.chuong_trinh.loai,  # E2E bắt: thiếu field này → frontend hardcode "uu-dai-thue" → thẻ gắn nhãn SAI
                 "gia_tri": k.chuong_trinh.gia_tri_mo_ta,
                 "gia_tri_ky_vong": format_vnd(int(k.gia_tri_ky_vong)),
                 "han_nop": k.chuong_trinh.han_nop,
@@ -202,6 +364,7 @@ def chat(r: YeuCau) -> dict:
                 "do_tin_cay": k.diem_phu_hop,
                 "thieu": k.thieu,  # tên ĐÍCH DANH điều kiện chưa đạt
                 "can_hoi_them": k.can_hoi_them,
+                "hieu_luc": _hieu_luc_the(k.chuong_trinh),  # ② — trạng thái thật từ vbpl.vn
                 "dieu_kien": [
                     {
                         "yeu_cau": c.dieu_kien.mo_ta,

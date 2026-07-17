@@ -151,22 +151,69 @@ class IndexCorpus:
 
 
 # ── bóc citation ngược từ câu AI nói ─────────────────────────────
-RE_CIT = re.compile(
-    r"Khoản\s+(\d+)\s+Điều\s+(\d+)\s+(\S+?)\s+do\s+(.+?)\s+ban hành",
-    re.I,
-)
+#
+# ⚠️ BẢN CŨ CHỈ BẮT MỘT DẠNG và bỏ lọt 3 dạng thật (đo được ở dao_bia_that.py:
+#    79/120 câu GPT-4o RÕ RÀNG có trích dẫn mà parser báo "không có citation"):
+#      cũ: r"Khoản (\d+) Điều (\d+) (\S+?) do (.+?) ban hành"
+#    Bỏ lọt:
+#      1. "Nghị định 57/2018/NĐ-CP"  → `\S+?` không nuốt được tiền tố có dấu cách
+#      2. "Điều 5 Khoản 3 80/2021/NĐ-CP" → ĐIỀU TRƯỚC KHOẢN. Chí mạng: chính
+#         Citation.__str__ của mình xuất dạng này → guard không đọc nổi citation
+#         của chính mình → chặn oan câu đúng trên production.
+#      3. thiếu "do ... ban hành" → regex cũ BẮT BUỘC cụm này.
+#
+# Lối mới: TÌM SỐ VĂN BẢN TRƯỚC (mỏ neo chắc chắn: \d+/\d{4}/CHỮ), rồi soi
+# Điều/Khoản quanh nó (cả 2 thứ tự), rồi soi "do ... ban hành" nếu có.
+
+# số hiệu VB: 57/2018/NĐ-CP · 77/2018/NQ-HĐND · 01/2018/QĐ-UBND · 15/2023/QH15
+RE_SO_VB = re.compile(r"\b(\d{1,4}/\d{4}/[A-ZĐ][A-ZĐ0-9-]*)", re.I)
+RE_DIEU = re.compile(r"Điều\s+(\d+)", re.I)
+RE_KHOAN = re.compile(r"Khoản\s+(\d+)", re.I)
+RE_BAN_HANH = re.compile(r"\bdo\s+(.+?)\s+ban hành", re.I)
 
 
 @dataclass
 class CitationBoc:
-    khoan: int
+    khoan: int | None
     dieu: int
     so_vb: str
-    co_quan: str
+    co_quan: str | None
 
 
 def boc_citation(text: str) -> CitationBoc | None:
-    m = RE_CIT.search(text)
-    if not m:
+    """Bóc (điều, khoản, số VB, cơ quan) từ câu AI nói. None nếu không có số VB.
+
+    Số VB là mỏ neo bắt buộc — không có nó thì không tra ngược corpus được.
+    Điều bắt buộc; Khoản/cơ quan có thì lấy, không thì None (nhiều câu chỉ trích
+    tới cấp Điều — vẫn tra được).
+    """
+    m_vb = RE_SO_VB.search(text)
+    if not m_vb:
         return None
-    return CitationBoc(int(m.group(1)), int(m.group(2)), m.group(3), m.group(4).strip())
+    so_vb = m_vb.group(1).upper()
+
+    # Điều/Khoản: lấy match GẦN số VB nhất về phía TRƯỚC (câu VN đặt Điều/Khoản
+    # trước số hiệu). Nếu trước không có thì mới nhìn cả câu.
+    dau = text[: m_vb.start()]
+    m_dieu = _cuoi_cung(RE_DIEU, dau) or _cuoi_cung(RE_DIEU, text)
+    if not m_dieu:
+        return None  # không có Điều → không định vị được
+    m_khoan = _cuoi_cung(RE_KHOAN, dau) or _cuoi_cung(RE_KHOAN, text)
+
+    m_bh = RE_BAN_HANH.search(text)
+    co_quan = m_bh.group(1).strip() if m_bh else None
+
+    return CitationBoc(
+        khoan=int(m_khoan.group(1)) if m_khoan else None,
+        dieu=int(m_dieu.group(1)),
+        so_vb=so_vb,
+        co_quan=co_quan,
+    )
+
+
+def _cuoi_cung(rx: re.Pattern, s: str) -> re.Match | None:
+    """Match CUỐI CÙNG trong s — Điều/Khoản sát số VB nhất, tránh nuốt số lạ ở đầu câu."""
+    m = None
+    for m in rx.finditer(s):
+        pass
+    return m

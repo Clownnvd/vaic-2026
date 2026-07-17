@@ -1,0 +1,15 @@
+{
+  "phuong_phap": "Deterministic guard trên output THẬT của GPT-4o (bên thứ ba, đội không kiểm soát)",
+  "n_cau": 150,
+  "gpt4o_dung": 143,
+  "gpt4o_bia_so_dinh_danh": 7,
+  "ty_le_bia_so_dinh_danh": 0.0467,
+  "rule_bat_duoc": 7,
+  "rule_lot": 0,
+  "phan_tang": {
+    "tang2_so": 3,
+    "tang1_vi_tri": 2,
+    "tang1_ton_tai": 2
+  },
+  "gioi_han": "Lớp tất định MÙ ngữ nghĩa — con số này chỉ là bịa SỐ/ĐỊNH DANH, không phải bịa toàn phần. Bịa ngữ nghĩa là việc của PhoBERT."
+}
