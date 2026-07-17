@@ -1,0 +1,6 @@
+ban,f1,bat_bia,nguong_refuse
+Full,1.0,1.0,0.5
+− margin loss,1.0,1.0,0.5
+− hard-neg mining,1.0,1.0,0.5
+− calibration,1.0,1.0,0.5
+− NLI (chỉ rule),0.0,0.0,

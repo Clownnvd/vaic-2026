@@ -1,0 +1,17 @@
+{
+  "bo": "ViFactCheck (tranthaihoa/vifactcheck, MIT, arXiv:2412.15308)",
+  "che_do": "zero-shot — KHÔNG train trên bộ này",
+  "toan_bo_tin_tuc": {
+    "n": 1348,
+    "acc": 0.6031157270029673,
+    "bat": 0.6449771689497716
+  },
+  "nhom_cham_van_ban_luat": {
+    "n": 448,
+    "acc": 0.5736607142857143,
+    "bat": 0.607773851590106
+  },
+  "da_loc_dieu_6": 99,
+  "sota_tham_chieu": "Gemma macro-F1 89.90% (AAAI 2025) — CÓ train, macro-F1 3 lớp, KHÔNG so trực tiếp được",
+  "gioi_han": "domain TIN TỨC, chỉ 33% chạm văn bản luật → đo TỔNG QUÁT HOÁ, không đo độ chính xác domain luật"
+}

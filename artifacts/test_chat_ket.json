@@ -1,0 +1,212 @@
+[
+  {
+    "i": 1,
+    "nhom": "HAPPY",
+    "cau": "Bên mình làm phần mềm (công nghiệp) ở Hà Nội, 45 lao động, doanh thu 50 tỷ, vốn 20 tỷ, có giấy chứng nhận DN KH&CN, doanh thu từ sản phẩm KH&CN khoảng 45%",
+    "dang": "hoi_ho_so",
+    "n_ct": 0,
+    "n_cit": 0,
+    "grounding": "",
+    "noi_dung": "Để quét đúng chính sách bạn đủ điều kiện, cho mình biết thêm: lĩnh vực (nông-lâm-thuỷ sản/công nghiệp-xây dựng hay thương mại-dịch vụ), số lao động tham gia BHXH bình quân năm, tổng doanh thu của năm?"
+  },
+  {
+    "i": 2,
+    "nhom": "HAPPY",
+    "cau": "Cty thương mại - dịch vụ tại Bắc Ninh, 150 lao động, doanh thu 120 tỷ, vốn 60 tỷ, có vốn FDI",
+    "dang": "hoi_ho_so",
+    "n_ct": 0,
+    "n_cit": 0,
+    "grounding": "",
+    "noi_dung": "Để quét đúng chính sách bạn đủ điều kiện, cho mình biết thêm: lĩnh vực (nông-lâm-thuỷ sản/công nghiệp-xây dựng hay thương mại-dịch vụ), số lao động tham gia BHXH bình quân năm, tổng doanh thu của năm?"
+  },
+  {
+    "i": 3,
+    "nhom": "HAPPY",
+    "cau": "doanh nghiệp nhỏ, 15 lao động, doanh thu 8 tỷ, vốn 5 tỷ, nữ làm chủ",
+    "dang": "hoi_ho_so",
+    "n_ct": 0,
+    "n_cit": 0,
+    "grounding": "",
+    "noi_dung": "Để quét đúng chính sách bạn đủ điều kiện, cho mình biết thêm: lĩnh vực (nông-lâm-thuỷ sản/công nghiệp-xây dựng hay thương mại-dịch vụ), số lao động tham gia BHXH bình quân năm, tổng doanh thu của năm?"
+  },
+  {
+    "i": 4,
+    "nhom": "KHONG_DAU",
+    "cau": "cong ty phan mem ha noi 45 lao dong doanh thu 50 ty von 20 ty co gcn khcn",
+    "dang": "hoi_ho_so",
+    "n_ct": 0,
+    "n_cit": 0,
+    "grounding": "",
+    "noi_dung": "Để quét đúng chính sách bạn đủ điều kiện, cho mình biết thêm: lĩnh vực (nông-lâm-thuỷ sản/công nghiệp-xây dựng hay thương mại-dịch vụ), số lao động tham gia BHXH bình quân năm, tổng doanh thu của năm?"
+  },
+  {
+    "i": 5,
+    "nhom": "META",
+    "cau": "xin chào",
+    "dang": "van_ban",
+    "n_ct": 0,
+    "n_cit": 0,
+    "grounding": "",
+    "noi_dung": "Mình là **PolicyRadar** — trợ lý tra cứu chính sách, ưu đãi và quỹ hỗ trợ cho doanh nghiệp, có căn cứ tới từng điều–khoản.\n\nMình chỉ trả lời trong phạm vi đó, nên câu này mình xin phép không suy đoán. Bạn mô tả doanh nghiệp (lĩnh vực, lao động, doanh thu, vốn…) hoặc hỏi về một chương trình cụ thể để mình tra giúp nhé."
+  },
+  {
+    "i": 6,
+    "nhom": "META",
+    "cau": "bạn là ai",
+    "dang": "van_ban",
+    "n_ct": 0,
+    "n_cit": 0,
+    "grounding": "",
+    "noi_dung": "Mình là **PolicyRadar** — trợ lý tra cứu chính sách, ưu đãi và quỹ hỗ trợ cho doanh nghiệp, có căn cứ tới từng điều–khoản.\n\nMình chỉ trả lời trong phạm vi đó, nên câu này mình xin phép không suy đoán. Bạn mô tả doanh nghiệp (lĩnh vực, lao động, doanh thu, vốn…) hoặc hỏi về một chương trình cụ thể để mình tra giúp nhé."
+  },
+  {
+    "i": 7,
+    "nhom": "META",
+    "cau": "bạn giúp được gì cho tôi",
+    "dang": "hoi_ho_so",
+    "n_ct": 0,
+    "n_cit": 0,
+    "grounding": "",
+    "noi_dung": "Để quét đúng chính sách bạn đủ điều kiện, cho mình biết thêm: lĩnh vực (nông-lâm-thuỷ sản/công nghiệp-xây dựng hay thương mại-dịch vụ), số lao động tham gia BHXH bình quân năm, tổng doanh thu của năm?"
+  },
+  {
+    "i": 8,
+    "nhom": "META",
+    "cau": "cảm ơn nhé",
+    "dang": "van_ban",
+    "n_ct": 0,
+    "n_cit": 0,
+    "grounding": "",
+    "noi_dung": "Mình là **PolicyRadar** — trợ lý tra cứu chính sách, ưu đãi và quỹ hỗ trợ cho doanh nghiệp, có căn cứ tới từng điều–khoản.\n\nMình chỉ trả lời trong phạm vi đó, nên câu này mình xin phép không suy đoán. Bạn mô tả doanh nghiệp (lĩnh vực, lao động, doanh thu, vốn…) hoặc hỏi về một chương trình cụ thể để mình tra giúp nhé."
+  },
+  {
+    "i": 9,
+    "nhom": "BROWSE",
+    "cau": "cho tôi xem danh sách các văn bản luật",
+    "dang": "van_ban",
+    "n_ct": 0,
+    "n_cit": 0,
+    "grounding": "",
+    "noi_dung": "Bạn muốn tra cứu văn bản đúng không? Mình có **kho 2.669 văn bản** (luật, nghị định, thông tư) — mở mục **“Danh sách luật”** ở thanh bên để tìm kiếm và lọc theo loại / lĩnh vực / cơ quan / năm.\n\nHoặc nói rõ bạn quan tâm **chủ đề gì** (vd: ưu đãi thuế cho doanh nghiệp KH&CN, hỗ trợ doanh nghiệp nhỏ và vừa…) để mình tra thẳng vào điều–khoản giúp bạn."
+  },
+  {
+    "i": 10,
+    "nhom": "BROWSE",
+    "cau": "có nghị định nào về thuế không",
+    "dang": "van_ban",
+    "n_ct": 0,
+    "n_cit": 0,
+    "grounding": "",
+    "noi_dung": "Bạn muốn tra cứu văn bản đúng không? Mình có **kho 2.669 văn bản** (luật, nghị định, thông tư) — mở mục **“Danh sách luật”** ở thanh bên để tìm kiếm và lọc theo loại / lĩnh vực / cơ quan / năm.\n\nHoặc nói rõ bạn quan tâm **chủ đề gì** (vd: ưu đãi thuế cho doanh nghiệp KH&CN, hỗ trợ doanh nghiệp nhỏ và vừa…) để mình tra thẳng vào điều–khoản giúp bạn."
+  },
+  {
+    "i": 11,
+    "nhom": "BROWSE",
+    "cau": "tra cứu luật hỗ trợ doanh nghiệp nhỏ và vừa",
+    "dang": "van_ban",
+    "n_ct": 0,
+    "n_cit": 0,
+    "grounding": "",
+    "noi_dung": "Bạn muốn tra cứu văn bản đúng không? Mình có **kho 2.669 văn bản** (luật, nghị định, thông tư) — mở mục **“Danh sách luật”** ở thanh bên để tìm kiếm và lọc theo loại / lĩnh vực / cơ quan / năm.\n\nHoặc nói rõ bạn quan tâm **chủ đề gì** (vd: ưu đãi thuế cho doanh nghiệp KH&CN, hỗ trợ doanh nghiệp nhỏ và vừa…) để mình tra thẳng vào điều–khoản giúp bạn."
+  },
+  {
+    "i": 12,
+    "nhom": "THIEU",
+    "cau": "công ty tôi ở Hà Nội",
+    "dang": "hoi_ho_so",
+    "n_ct": 0,
+    "n_cit": 0,
+    "grounding": "",
+    "noi_dung": "Để quét đúng chính sách bạn đủ điều kiện, cho mình biết thêm: lĩnh vực (nông-lâm-thuỷ sản/công nghiệp-xây dựng hay thương mại-dịch vụ), số lao động tham gia BHXH bình quân năm, tổng doanh thu của năm?"
+  },
+  {
+    "i": 13,
+    "nhom": "THIEU",
+    "cau": "tôi muốn xin hỗ trợ",
+    "dang": "hoi_ho_so",
+    "n_ct": 0,
+    "n_cit": 0,
+    "grounding": "",
+    "noi_dung": "Để quét đúng chính sách bạn đủ điều kiện, cho mình biết thêm: lĩnh vực (nông-lâm-thuỷ sản/công nghiệp-xây dựng hay thương mại-dịch vụ), số lao động tham gia BHXH bình quân năm, tổng doanh thu của năm?"
+  },
+  {
+    "i": 14,
+    "nhom": "NGOAI",
+    "cau": "thời tiết hôm nay thế nào",
+    "dang": "van_ban",
+    "n_ct": 0,
+    "n_cit": 0,
+    "grounding": "",
+    "noi_dung": "Mình là **PolicyRadar** — trợ lý tra cứu chính sách, ưu đãi và quỹ hỗ trợ cho doanh nghiệp, có căn cứ tới từng điều–khoản.\n\nMình chỉ trả lời trong phạm vi đó, nên câu này mình xin phép không suy đoán. Bạn mô tả doanh nghiệp (lĩnh vực, lao động, doanh thu, vốn…) hoặc hỏi về một chương trình cụ thể để mình tra giúp nhé."
+  },
+  {
+    "i": 15,
+    "nhom": "NGOAI",
+    "cau": "1 + 1 bằng mấy",
+    "dang": "hoi_ho_so",
+    "n_ct": 0,
+    "n_cit": 0,
+    "grounding": "",
+    "noi_dung": "Để quét đúng chính sách bạn đủ điều kiện, cho mình biết thêm: lĩnh vực (nông-lâm-thuỷ sản/công nghiệp-xây dựng hay thương mại-dịch vụ), số lao động tham gia BHXH bình quân năm, tổng doanh thu của năm?"
+  },
+  {
+    "i": 16,
+    "nhom": "EDGE",
+    "cau": "asdfghjkl qwerty",
+    "dang": "hoi_ho_so",
+    "n_ct": 0,
+    "n_cit": 0,
+    "grounding": "",
+    "noi_dung": "Để quét đúng chính sách bạn đủ điều kiện, cho mình biết thêm: lĩnh vực (nông-lâm-thuỷ sản/công nghiệp-xây dựng hay thương mại-dịch vụ), số lao động tham gia BHXH bình quân năm, tổng doanh thu của năm?"
+  },
+  {
+    "i": 17,
+    "nhom": "EDGE",
+    "cau": "",
+    "dang": "hoi_ho_so",
+    "n_ct": 0,
+    "n_cit": 0,
+    "grounding": "",
+    "noi_dung": "Để quét đúng chính sách bạn đủ điều kiện, cho mình biết thêm: lĩnh vực (nông-lâm-thuỷ sản/công nghiệp-xây dựng hay thương mại-dịch vụ), số lao động tham gia BHXH bình quân năm, tổng doanh thu của năm?"
+  },
+  {
+    "i": 18,
+    "nhom": "EDGE",
+    "cau": "?????",
+    "dang": "hoi_ho_so",
+    "n_ct": 0,
+    "n_cit": 0,
+    "grounding": "",
+    "noi_dung": "Để quét đúng chính sách bạn đủ điều kiện, cho mình biết thêm: lĩnh vực (nông-lâm-thuỷ sản/công nghiệp-xây dựng hay thương mại-dịch vụ), số lao động tham gia BHXH bình quân năm, tổng doanh thu của năm?"
+  },
+  {
+    "i": 19,
+    "nhom": "EDGE",
+    "cau": "😀😀😀 chính sách 😀",
+    "dang": "hoi_ho_so",
+    "n_ct": 0,
+    "n_cit": 0,
+    "grounding": "",
+    "noi_dung": "Để quét đúng chính sách bạn đủ điều kiện, cho mình biết thêm: lĩnh vực (nông-lâm-thuỷ sản/công nghiệp-xây dựng hay thương mại-dịch vụ), số lao động tham gia BHXH bình quân năm, tổng doanh thu của năm?"
+  },
+  {
+    "i": 20,
+    "nhom": "CO_HS",
+    "cau": "tôi đủ điều kiện gì",
+    "dang": "ket_qua",
+    "n_ct": 2,
+    "n_cit": 0,
+    "grounding": "",
+    "noi_dung": "Với hồ sơ này, mình tìm thấy 2/2 chương trình bạn đủ điều kiện."
+  },
+  {
+    "i": 21,
+    "nhom": "CO_HS",
+    "cau": "điều kiện hỗ trợ tư vấn cho doanh nghiệp nhỏ và vừa là gì",
+    "dang": "ket_qua",
+    "n_ct": 2,
+    "n_cit": 0,
+    "grounding": "",
+    "noi_dung": "Với hồ sơ này, mình tìm thấy 2/2 chương trình bạn đủ điều kiện."
+  }
+]

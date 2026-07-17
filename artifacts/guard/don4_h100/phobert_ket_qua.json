@@ -1,0 +1,45 @@
+{
+  "T": 0.5118334293365479,
+  "ece_truoc": 0.0012510418891906738,
+  "ece_sau": 2.0265579223632812e-06,
+  "nguong_refuse": 0.5,
+  "mining_curve": [
+    0.0
+  ],
+  "ablation": [
+    [
+      "Full",
+      1.0,
+      1.0,
+      0.5
+    ],
+    [
+      "− margin loss",
+      1.0,
+      1.0,
+      0.5
+    ],
+    [
+      "− hard-neg mining",
+      1.0,
+      1.0,
+      0.5
+    ],
+    [
+      "− calibration",
+      1.0,
+      1.0,
+      0.5
+    ],
+    [
+      "− NLI (chỉ rule)",
+      0.0,
+      0.0,
+      null
+    ]
+  ],
+  "n_train": 3034,
+  "n_test": 600,
+  "device": "cuda",
+  "giay": 276
+}
