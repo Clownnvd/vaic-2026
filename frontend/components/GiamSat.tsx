@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/lib/i18n";
-import { type CtGiamSat, type KetQuaGiamSat, type QuetHieuLuc, type VanBanHet, traGiamSat } from "@/lib/giamsat";
+import { type CtGiamSat, type KetQuaGiamSat, type QuetHieuLuc, traGiamSat } from "@/lib/giamsat";
 
 /**
  * ② GIÁM SÁT chính sách — đối chiếu hiệu lực THẬT (vbpl.vn) + văn bản liên quan.
@@ -64,10 +64,17 @@ export function GiamSat() {
   );
 }
 
-/** Quét kho: đối chiếu vbpl.vn nhiều VB → BẮT được văn bản đã hết hiệu lực. */
+/** Quét kho: đối chiếu vbpl.vn nhiều VB → BẢNG văn bản đã hết hiệu lực. */
 function QuetKho({ q }: { q: QuetHieuLuc }) {
   const { t } = useI18n();
-  const [moHet, setMoHet] = useState(true);
+  const [tim, setTim] = useState("");
+  const loc = useMemo(() => {
+    const s = tim.trim().toLowerCase();
+    if (!s) return q.het;
+    return q.het.filter((v) =>
+      `${v.so_hieu ?? ""} ${v.tieu_de} ${v.co_quan}`.toLowerCase().includes(s),
+    );
+  }, [tim, q.het]);
   return (
     <div className="mb-5 overflow-hidden rounded-xl border border-border-subtle bg-surface">
       <div className="border-b border-border-subtle bg-surface-2/40 px-4 py-3">
@@ -90,67 +97,76 @@ function QuetKho({ q }: { q: QuetHieuLuc }) {
         </p>
       </div>
 
-      <button
-        onClick={() => setMoHet((v) => !v)}
-        className="flex w-full items-center gap-1.5 px-4 py-2.5 text-left text-[12.5px] font-medium text-text-muted hover:text-text"
-      >
-        <svg viewBox="0 0 16 16" className={"size-3.5 transition-transform " + (moHet ? "rotate-90" : "")} fill="none">
-          <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        {t("Danh sách văn bản đã hết hiệu lực")} ({q.het.length})
-      </button>
-
-      {moHet && (
-        <div className="max-h-[30rem] space-y-2 overflow-y-auto border-t border-border-subtle bg-surface-2/30 p-3">
-          {q.het.map((v, i) => (
-            <TheVanBanHet key={i} v={v} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** Thẻ 1 văn bản hết hiệu lực — GIAO DIỆN như thẻ Danh sách luật, badge đỏ. */
-function TheVanBanHet({ v }: { v: VanBanHet }) {
-  const { t } = useI18n();
-  const Bọc = v.url ? "a" : "div";
-  const props = v.url ? { href: v.url, target: "_blank", rel: "noreferrer" } : {};
-  return (
-    <Bọc
-      {...props}
-      className={
-        "group block rounded-xl border border-border-subtle bg-surface px-4 py-3 transition-colors " +
-        (v.url ? "cursor-pointer hover:border-blocked-400 hover:bg-blocked-50/40 dark:hover:bg-blocked-500/10" : "")
-      }
-    >
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-md bg-blocked-50 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-blocked-700 dark:bg-blocked-500/15 dark:text-blocked-300">
-          {v.so_hieu || "—"}
+      {/* ô tìm + tiêu đề bảng */}
+      <div className="flex flex-wrap items-center gap-2 border-t border-border-subtle px-4 py-2.5">
+        <span className="text-[12.5px] font-medium text-text">
+          {t("Danh sách văn bản đã hết hiệu lực")} ({loc.length})
         </span>
-        <span className="inline-flex items-center gap-1 rounded-md border border-blocked-300 bg-blocked-50 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-blocked-700 dark:border-blocked-700 dark:bg-blocked-500/10 dark:text-blocked-300">
-          <span className="size-1.5 rounded-full bg-blocked-500" />
-          {v.nhan}
-        </span>
-        {v.nam && <span className="text-[11px] text-text-muted">{v.nam}</span>}
-        {v.url && (
-          <span className="ml-auto text-[11px] text-blocked-600 opacity-0 transition-opacity group-hover:opacity-100 dark:text-blocked-300">
-            {t("Mở trên vbpl.vn ↗")}
-          </span>
-        )}
-      </div>
-      <h3 className="mt-1.5 text-[13.5px] font-medium leading-snug text-text group-hover:text-blocked-800 dark:group-hover:text-blocked-100">
-        {v.tieu_de}
-      </h3>
-      {v.co_quan && (
-        <div className="mt-1.5 flex items-center gap-1 text-[11px] text-text-muted">
-          <svg viewBox="0 0 16 16" className="size-3.5 shrink-0" fill="none">
-            <path d="M2 6l6-3 6 3M3 6v6M13 6v6M2 13h12M6 8v3M10 8v3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+        <div className="relative ml-auto">
+          <svg className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-text-muted" viewBox="0 0 20 20" fill="none">
+            <circle cx="9" cy="9" r="6" stroke="currentColor" strokeWidth="1.6" />
+            <path d="m14 14 3 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
           </svg>
-          {v.co_quan}
+          <input
+            value={tim}
+            onChange={(e) => setTim(e.target.value)}
+            placeholder={t("Tìm số hiệu, tiêu đề, cơ quan…")}
+            className="w-56 rounded-lg border border-border-strong bg-surface-2 py-1.5 pl-8 pr-3 text-[12px] text-text outline-none placeholder:text-text-muted focus:border-brand-500"
+          />
         </div>
-      )}
-    </Bọc>
+      </div>
+
+      {/* BẢNG — căn cột như bảng thật */}
+      <div className="max-h-[32rem] overflow-auto border-t border-border-subtle">
+        <table className="w-full border-collapse text-left">
+          <thead className="sticky top-0 z-10 bg-surface-2">
+            <tr className="text-[10.5px] uppercase tracking-wide text-text-muted">
+              <th className="border-b border-border-subtle px-4 py-2 font-semibold">{t("Số hiệu")}</th>
+              <th className="border-b border-border-subtle px-3 py-2 font-semibold">{t("Văn bản")}</th>
+              <th className="border-b border-border-subtle px-3 py-2 font-semibold">{t("Cơ quan")}</th>
+              <th className="border-b border-border-subtle px-3 py-2 text-center font-semibold">{t("Năm")}</th>
+              <th className="border-b border-border-subtle px-4 py-2 font-semibold">{t("Trạng thái")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loc.map((v, i) => (
+              <tr
+                key={i}
+                onClick={() => v.url && window.open(v.url, "_blank", "noreferrer")}
+                className={
+                  "border-b border-border-subtle/70 transition-colors " +
+                  (v.url ? "cursor-pointer hover:bg-blocked-50/50 dark:hover:bg-blocked-500/5" : "")
+                }
+              >
+                <td className="whitespace-nowrap px-4 py-2 align-top">
+                  <span className="font-mono text-[11.5px] font-semibold text-blocked-700 dark:text-blocked-300">
+                    {v.so_hieu || "—"}
+                  </span>
+                </td>
+                <td className="px-3 py-2 align-top text-[12.5px] leading-snug text-text">
+                  <span className="line-clamp-2">{v.tieu_de}</span>
+                </td>
+                <td className="px-3 py-2 align-top text-[11.5px] leading-snug text-text-muted">{v.co_quan}</td>
+                <td className="whitespace-nowrap px-3 py-2 text-center align-top text-[11.5px] text-text-muted">{v.nam ?? "—"}</td>
+                <td className="whitespace-nowrap px-4 py-2 align-top">
+                  <span className="inline-flex items-center gap-1 rounded-md border border-blocked-300 bg-blocked-50 px-1.5 py-0.5 text-[10px] font-medium text-blocked-700 dark:border-blocked-700 dark:bg-blocked-500/10 dark:text-blocked-300">
+                    <span className="size-1.5 rounded-full bg-blocked-500" />
+                    {v.nhan}
+                  </span>
+                </td>
+              </tr>
+            ))}
+            {loc.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-[12.5px] text-text-muted">
+                  {t("Không có văn bản nào khớp. Thử bỏ bớt bộ lọc.")}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 

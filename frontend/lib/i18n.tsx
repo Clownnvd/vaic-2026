@@ -146,6 +146,10 @@ const EN: Record<string, string> = {
   "Nếu trợ lý trích các văn bản này mà không đối chiếu → doanh nghiệp nộp theo văn bản đã chết. Giám sát chặn đúng lỗi đó.":
     "If the assistant cited these without checking → the business would file against a dead document. Monitoring blocks exactly that.",
   "Danh sách văn bản đã hết hiệu lực": "List of expired documents",
+  "Số hiệu": "Number",
+  "Văn bản": "Document",
+  "Trạng thái": "Status",
+  "Tìm số hiệu, tiêu đề, cơ quan…": "Search number, title, authority…",
   // loại chương trình (LOAI_NHAN)
   "Ưu đãi thuế": "Tax incentive",
   "Quỹ hỗ trợ": "Support fund",
