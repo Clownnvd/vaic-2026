@@ -169,4 +169,14 @@ export type Message =
       chuongTrinh: ChuongTrinh[];
       /** tổng số văn bản đã quét để ra kết quả này */
       daQuet: number;
+      /** ① LLM diễn giải luật + phán quyết guard lớp số */
+      dienGiai?: DienGiai;
     };
+
+/** Diễn giải LLM (① interpreting) đã qua guard kiểm số. */
+export type DienGiai = {
+  text: string;
+  grounded: boolean;
+  soBia: { raw: string; batDau: number; ketThuc: number }[];
+  canhBao?: string | null;
+};

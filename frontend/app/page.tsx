@@ -163,6 +163,18 @@ export default function Page() {
           dang: "ket-qua",
           noiDung: d.noi_dung,
           daQuet: 2646,
+          dienGiai: d.dien_giai
+            ? {
+                text: d.dien_giai.text,
+                grounded: d.dien_giai.grounded,
+                soBia: d.dien_giai.so_bia.map((s) => ({
+                  raw: s.raw,
+                  batDau: s.bat_dau,
+                  ketThuc: s.ket_thuc,
+                })),
+                canhBao: d.dien_giai.canh_bao,
+              }
+            : undefined,
           chuongTrinh: d.chuong_trinh.map((c) => ({
             id: c.id,
             ten: c.ten,

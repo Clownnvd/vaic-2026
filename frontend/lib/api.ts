@@ -64,9 +64,19 @@ export type ApiTraLoi =
       dang: "ket_qua";
       noi_dung: string;
       chuong_trinh: ApiChuongTrinh[];
+      dien_giai?: ApiDienGiai | null;
       pii_da_che: string[];
       ms: number;
     };
+
+/** Diễn giải LLM (① interpreting) + phán quyết guard lớp số. */
+export type ApiDienGiai = {
+  text: string;
+  grounded: boolean;
+  so_bia: { raw: string; loai: string; bat_dau: number; ket_thuc: number }[];
+  guard: string;
+  canh_bao: string | null;
+};
 
 /** Map Profile của UI → khoá backend (UI dùng camelCase, backend snake_case). */
 function sangBackend(p: Profile): Record<string, unknown> {

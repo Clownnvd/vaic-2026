@@ -108,39 +108,69 @@ def resolve_model(tac_vu: str = "task-deep"):
     return (os.getenv("REAL_MODEL", "gpt-4o"), base, m)
 
 
-def goi_llm(prompt: str, muc_dich: str, tac_vu: str = "task-deep", **opts):
-    """Điểm vào DUY NHẤT gọi LLM. Mọi call đi qua đây → mọi call có vết.
+def _doc_key() -> str | None:
+    key = os.getenv("OPENAI_API_KEY")
+    if not key and Path(".env").exists():
+        for line in Path(".env").read_text(encoding="utf-8").splitlines():
+            if line.startswith("OPENAI_API_KEY="):
+                return line.split("=", 1)[1].strip()
+    return key
 
-    Chưa wire client thật (chưa có key). Nhưng cổng dựng TRƯỚC call đầu tiên
-    thì không call nào có đường lách — dựng sau là chắc chắn sót.
+
+# Chuỗi fallback I2 — primary sập thì thử cái kế. Đề cấm PHỤ THUỘC MỘT LLM.
+# ⚠️ Lý tưởng khác provider (OpenAI→Anthropic→Gemini) nhưng chỉ có key OpenAI,
+# nên hiện fallback trong OpenAI (gpt-4o → gpt-4o-mini). Khai thẳng giới hạn này.
+FALLBACK = {
+    "task-deep": ["gpt-4o", "gpt-4o-mini"],
+    "task-fast": ["gpt-4o-mini", "gpt-4o"],
+    "task-vn": ["gpt-4o", "gpt-4o-mini"],
+}
+
+
+def goi_llm(prompt: str, muc_dich: str, tac_vu: str = "task-deep", he_thong: str = "", **opts):
+    """Điểm vào DUY NHẤT gọi LLM. Mọi call đi qua đây → mọi call có vết (audit + egress).
+
+    Có fallback I2: primary lỗi → thử model kế trong chuỗi. Mỗi lần thử ghi audit.
     """
     model, base, m = resolve_model(tac_vu)
     trace_id = str(uuid.uuid4())[:8]
-    t0 = time.perf_counter()
 
-    try:
-        if m == "test":
-            kq = f"[TestModel] {muc_dich}: {prompt[:60]}…"
-        else:
-            raise NotImplementedError(
-                "Chưa wire client LLM thật — chờ API key. "
-                "Khi wire: dùng OpenAI-compatible client trỏ vào base_url ở trên."
-            )
-        ok, loi = True, None
+    if m == "test":
+        t0 = time.perf_counter()
+        kq = f"[TestModel] {muc_dich}: {prompt[:60]}…"
+        ghi_audit(BanGhi(trace_id, time.strftime("%Y-%m-%dT%H:%M:%S"), m, "test",
+                         muc_dich, int((time.perf_counter() - t0) * 1000), True, None))
         return kq
-    except Exception as e:  # noqa: BLE001
-        ok, loi = False, f"{type(e).__name__}: {e}"[:160]
-        raise
-    finally:
-        ghi_audit(
-            BanGhi(
-                trace_id=trace_id,
-                luc=time.strftime("%Y-%m-%dT%H:%M:%S"),
-                che_do=m,
-                model=str(model),
-                muc_dich=muc_dich,
-                do_tre_ms=int((time.perf_counter() - t0) * 1000),
-                thanh_cong=ok,
-                loi=loi,
+
+    from openai import OpenAI
+
+    key = _doc_key()
+    if not key:
+        raise RuntimeError("Không có OPENAI_API_KEY")
+    base_url = base if m == "gateway" else os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
+    kiem_egress(base_url)
+    cli = OpenAI(api_key=key, base_url=base_url)
+
+    msgs = ([{"role": "system", "content": he_thong}] if he_thong else []) + [
+        {"role": "user", "content": prompt}
+    ]
+    loi_cuoi = None
+    for mdl in FALLBACK.get(tac_vu, ["gpt-4o"]):
+        t0 = time.perf_counter()
+        ok, loi = False, None
+        try:
+            r = cli.chat.completions.create(
+                model=mdl,
+                messages=msgs,
+                temperature=opts.get("temperature", 0.2),
+                max_tokens=opts.get("max_tokens", 320),
             )
-        )
+            ok = True
+            return (r.choices[0].message.content or "").strip()
+        except Exception as e:  # noqa: BLE001
+            loi = f"{type(e).__name__}: {e}"[:160]
+            loi_cuoi = loi
+        finally:
+            ghi_audit(BanGhi(trace_id, time.strftime("%Y-%m-%dT%H:%M:%S"), m, mdl,
+                             muc_dich, int((time.perf_counter() - t0) * 1000), ok, loi))
+    raise RuntimeError(f"Mọi model trong chuỗi fallback đều lỗi: {loi_cuoi}")

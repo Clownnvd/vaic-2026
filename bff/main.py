@@ -185,6 +185,19 @@ def _hieu_luc_the(ct) -> dict:
     }
 
 
+def _cho_dien_giai() -> bool:
+    """Có bật bước LLM diễn giải không — cần key + không tắt bằng USE_LLM=0."""
+    import os
+
+    if os.getenv("USE_LLM", "1") == "0":
+        return False
+    if os.getenv("OPENAI_API_KEY"):
+        return True
+    from pathlib import Path
+
+    return Path(".env").exists() and "OPENAI_API_KEY=" in Path(".env").read_text(encoding="utf-8")
+
+
 @app.get("/health")
 def health() -> dict:
     """Landing tĩnh + curl-grep được — V1 là MÁY chấm, phải trả nhanh."""
@@ -382,11 +395,25 @@ def chat(r: YeuCau) -> dict:
             }
         )
 
+    # ── ① INTERPRETING: LLM diễn giải + GUARD gác số live ─────
+    # Đây là chỗ guard load-bearing thật: LLM sinh text → lớp số tất định kiểm
+    # ngay, số bịa → tô đỏ. Bật/tắt bằng USE_LLM (mặc định bật nếu có key).
+    du = [k.chuong_trinh for k in kq if k.du_dieu_kien]
+    dg = None
+    if du and _cho_dien_giai():
+        try:
+            from bff.dien_giai import dien_giai_va_gac
+
+            dg = dien_giai_va_gac(du, [c.ten for c in du])
+        except Exception:  # noqa: BLE001
+            dg = None  # không bao giờ làm hỏng /chat vì diễn giải
+
     return {
         "dang": "ket_qua",
         "noi_dung": f"Với hồ sơ này, mình tìm thấy {sum(1 for k in kq if k.du_dieu_kien)}"
         f"/{len(kq)} chương trình bạn đủ điều kiện.",
         "chuong_trinh": the,
+        "dien_giai": dg,  # {text, grounded, so_bia, canh_bao} hoặc None
         "pii_da_che": list(da_che.keys()),
         "ms": int((time.perf_counter() - t0) * 1000),
     }
