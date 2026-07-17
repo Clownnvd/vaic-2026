@@ -1,0 +1,4 @@
+T=17.1189
+ECE_truoc=0.3746
+ECE_sau=0.1309
+nguong_refuse=None
