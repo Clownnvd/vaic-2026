@@ -1,0 +1,76 @@
+# LiteLLM proxy config - PolicyRadar
+# Rang buoc J: MOI LLM call phai qua proxy CO LOGGING.
+# Rang buoc I2: CAM phu thuoc 1 provider khong fallback.
+#
+# !!! FILE NAY PHAI ASCII-ONLY - KHONG DAU TIENG VIET !!!
+# Ly do: LiteLLM doc yaml bang cp1252 tren Windows -> comment tieng Viet lam VO file.
+# Day la bug that da gap, ghi trong kho kinh nghiem. Dung thu lai.
+#
+# Cach dung:
+#   copy -> gateway/litellm.config.yaml  (dien key qua ENV, KHONG hardcode)
+#   litellm --config gateway/litellm.config.yaml --port 4000
+#   (goi console script litellm.exe, KHONG dung `python -m litellm`)
+#   (kill cong 4000 truoc khi boot)
+#
+# Version: litellm >= 1.90.0  (CVE-2026-12773 auth-bypass o ban <= 1.59.8)
+
+model_list:
+  # ---- task-deep: suy luan / soan ho so ----
+  - model_name: task-deep
+    litellm_params:
+      model: openai/gpt-4o          # diem ngot: chat luong + toc do. gpt-5.1 compose ~20s -> qua SLA
+      api_key: os.environ/OPENAI_API_KEY
+    model_info:
+      mode: chat
+
+  - model_name: task-deep
+    litellm_params:
+      model: anthropic/claude-sonnet-4-5   # fallback 1
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: task-deep
+    litellm_params:
+      model: gemini/gemini-2.5-pro         # fallback 2
+      api_key: os.environ/GEMINI_API_KEY
+
+  # ---- task-fast: slot-filling / phan loai intent ----
+  - model_name: task-fast
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: task-fast
+    litellm_params:
+      model: gemini/gemini-2.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+
+  # ---- task-vn: duong chu quyen du lieu (data khong roi VN) ----
+  # Chi Qwen3.6-27B dat chat luong demo + nuot xgrammar.
+  # Doi lai cham 16-26s. Chien thuat: demo tren gpt-4o, ban 1 cau live tren FPT de chung minh.
+  - model_name: task-vn
+    litellm_params:
+      model: openai/Qwen3.6-27B
+      api_base: https://mkp-api.fptcloud.com/v1
+      api_key: os.environ/FPT_API_KEY
+
+router_settings:
+  # I2: fallback da provider - cam phu thuoc 1 nha cung cap
+  fallbacks:
+    - task-deep: ["task-fast"]
+    - task-fast: ["task-deep"]
+  num_retries: 2
+  timeout: 30
+  allowed_fails: 2
+  cooldown_time: 30
+
+litellm_settings:
+  # J: log MOI call. success + failure deu phai co vet.
+  success_callback: ["langfuse"]
+  failure_callback: ["langfuse"]
+  drop_params: true
+  set_verbose: false
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  # J: egress allowlist - chi duoc goi host trong danh sach
+  # (LiteLLM khong co allowlist native -> cuong che o gateway/client.py)

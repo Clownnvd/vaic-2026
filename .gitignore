@@ -40,3 +40,7 @@ Thumbs.db
 
 # logs
 *.log
+
+# gateway config chua key - chi commit ban .example
+gateway/litellm.config.yaml
+artifacts/audit/
