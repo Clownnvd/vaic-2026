@@ -52,12 +52,20 @@ _MO = [
     "Như {cit} đã nêu, {noi_dung}",
 ]
 
+# ⚠️ NỚI KHO CÂU 4→~10 mỗi kiểu (workflow yêu cầu): leave-KIỂU-out chỉ có power
+#    thống kê khi mỗi kiểu đủ đa dạng; 16 câu cố định thì test-side model học thuộc.
 # kiểu 1 — TỔNG QUÁT HOÁ QUÁ ĐÀ: bỏ hết điều kiện ràng buộc
 _TONG_QUAT = [
     "mọi doanh nghiệp nhỏ và vừa đều mặc nhiên đủ điều kiện nhận hỗ trợ",
     "tất cả doanh nghiệp trong ngành đều được hưởng, không cần điều kiện gì thêm",
     "doanh nghiệp nào nộp hồ sơ cũng sẽ được duyệt",
     "quy định này áp dụng cho toàn bộ doanh nghiệp trên cả nước",
+    "bất kỳ tổ chức nào cũng thuộc phạm vi điều chỉnh, không phân biệt quy mô",
+    "chính sách này phủ khắp mọi lĩnh vực kinh tế mà không loại trừ trường hợp nào",
+    "hễ là doanh nghiệp thì đều nằm trong diện thụ hưởng",
+    "toàn bộ hợp tác xã và hộ kinh doanh cũng được áp dụng như nhau",
+    "mức ưu đãi được trao đại trà cho tất cả người nộp, bất kể ngành nghề",
+    "không có nhóm đối tượng nào bị đặt ngoài phạm vi hỗ trợ",
 ]
 
 # kiểu 2 — TỰ KHẲNG ĐỊNH ĐỦ ĐIỀU KIỆN (anti-sycophancy)
@@ -66,6 +74,12 @@ _DU_DK = [
     "hồ sơ bạn mô tả hoàn toàn đáp ứng, không thiếu tiêu chí nào",
     "trường hợp này chắc chắn được chấp thuận",
     "bạn đủ điều kiện hưởng mức hỗ trợ cao nhất",
+    "với thông tin đã cung cấp, đơn của bạn cầm chắc được phê duyệt",
+    "bạn không cần bổ sung gì thêm, cứ yên tâm nộp là đạt",
+    "hồ sơ của bạn vượt mọi ngưỡng yêu cầu nên sẽ được ưu tiên",
+    "bạn nghiễm nhiên nằm trong nhóm được nhận tài trợ",
+    "chắc chắn cơ quan sẽ duyệt vì bạn đã thỏa toàn bộ tiêu chí",
+    "trường hợp của bạn là điển hình được hưởng, không có rủi ro bị loại",
 ]
 
 # kiểu 3 — BỎ RÀNG BUỘC / PHỦ ĐỊNH ĐIỀU KIỆN
@@ -74,6 +88,12 @@ _BO_RANG_BUOC = [
     "không có giới hạn về thời gian nộp hồ sơ",
     "không yêu cầu giấy chứng nhận nào kèm theo",
     "việc thẩm định là thủ tục hình thức, không ảnh hưởng kết quả",
+    "không bắt buộc phải chứng minh năng lực tài chính khi đăng ký",
+    "hồ sơ nộp lúc nào cũng được, không có hạn chót ràng buộc",
+    "không cần qua bước xét duyệt của hội đồng nào cả",
+    "mọi điều kiện đi kèm đều có thể bỏ qua nếu doanh nghiệp đề nghị",
+    "không có mức trần hay giới hạn nào áp cho khoản hỗ trợ",
+    "doanh nghiệp được miễn toàn bộ nghĩa vụ báo cáo sau khi nhận",
 ]
 
 # kiểu 4 — SUY DIỄN THẨM QUYỀN / HIỆU LỰC mà nguồn không hề nói
@@ -82,6 +102,12 @@ _SUY_DIEN = [
     "cơ quan thuế có trách nhiệm tự động áp dụng ưu đãi này",
     "doanh nghiệp được truy lĩnh phần hỗ trợ của các năm trước",
     "mức hỗ trợ này được cộng dồn với các chương trình khác",
+    "văn bản này có giá trị thay thế mọi quy định trước đó cùng lĩnh vực",
+    "địa phương buộc phải bố trí ngân sách chi trả ngay trong quý",
+    "khoản hỗ trợ này được bảo đảm bằng cam kết của Chính phủ",
+    "doanh nghiệp có quyền khởi kiện nếu chưa được giải ngân đúng hạn",
+    "ưu đãi tự động gia hạn thêm một chu kỳ mà không cần xét lại",
+    "quy định này còn cho phép chuyển nhượng phần hỗ trợ cho bên thứ ba",
 ]
 
 _KIEU_NGU_NGHIA = [
@@ -90,6 +116,13 @@ _KIEU_NGU_NGHIA = [
     ("bia_bo_rang_buoc", _BO_RANG_BUOC),
     ("bia_suy_dien", _SUY_DIEN),
 ]
+_KHO_KIEU = dict(_KIEU_NGU_NGHIA)
+
+# ── LEAVE-TEMPLATES-OUT: chia 4 kiểu thành 2 nửa RỜI NHAU ──
+# train/calib chỉ học 2 kiểu; test hỏi 2 kiểu CHƯA TỪNG THẤY → đo tổng quát hoá
+# sang cách bịa mới, không phải tra bảng câu đã thuộc. (Finegan-Dollak 2018).
+LTO_TRAIN_KIEU = {"bia_tong_quat_hoa", "bia_tu_du_dieu_kien"}
+LTO_TEST_KIEU = {"bia_bo_rang_buoc", "bia_suy_dien"}
 
 
 @dataclass(frozen=True)
@@ -218,6 +251,52 @@ def bia_so_trong_cau(cau: str, rng: random.Random) -> tuple[str, str, str, str] 
     return cau[: s.bat_dau] + thay + cau[s.ket_thuc :], loai, s.raw, thay
 
 
+# ── trục PHÁ-CUE ngữ nghĩa TẠI CHỖ ────────────────────────────────
+# Vì sao: probe hypothesis-only đạt 1.000 chứng minh lối tắt "body của
+# hypothesis có phải TRÍCH NGUYÊN VĂN premise không". Giết nó bằng negative
+# CŨNG trích gần nguyên văn premise (từ vựng trùng cao) nhưng LẬT NGHĨA ngay
+# tại câu. probe_artifact.py là CỔNG KIỂM: hyp-only phải KHÔNG giải được trục này.
+# ⚠️ Trộn nhiều phép lật để "không" KHÔNG trở thành cue mới cho hyp-only:
+#    nửa số phép đảo trần↔sàn / thu hẹp↔mở rộng, không thêm "không".
+_LAT_TAI_CHO = [
+    (r"\bphải\b", "không bắt buộc phải"),
+    (r"\bbắt buộc\b", "không bắt buộc"),
+    (r"\bkhông được\b", "được phép"),
+    (r"\bchỉ\b", "bất kỳ"),            # thu hẹp → mở rộng
+    (r"\bmột số\b", "toàn bộ"),
+    (r"\btối đa\b", "tối thiểu"),       # đảo trần ↔ sàn (không thêm 'không')
+    (r"\btối thiểu\b", "tối đa"),
+    (r"\btrở lên\b", "trở xuống"),
+    (r"\bkhông quá\b", "ít nhất"),
+    (r"\bđược hỗ trợ\b", "phải tự chi trả"),
+    (r"\bđược miễn\b", "không được miễn"),
+]
+
+
+def bia_ngu_nghia_tai_cho(
+    khoan_text: str, cit: TrichDan, doc_id: str, rng: random.Random
+) -> Cap | None:
+    """Negative TRÙNG-TỪ-VỰNG cao: chép 1 câu premise rồi lật nghĩa tại chỗ."""
+    cau = [c.strip() for c in re.split(r"(?<=[.;])\s+", khoan_text)
+           if 40 < len(c.strip()) < 400]
+    rng.shuffle(cau)
+    phep = list(_LAT_TAI_CHO)
+    rng.shuffle(phep)
+    for c in cau:
+        for pat, thay in phep:
+            if re.search(pat, c):
+                c_lat = re.sub(pat, thay, c, count=1)
+                if c_lat != c:
+                    return Cap(
+                        premise=khoan_text,
+                        hypothesis=f"Theo {cit}, {c_lat}",
+                        label=0,
+                        corruption_type="bia_ngu_nghia_tai_cho",
+                        doc_id=doc_id,
+                    )
+    return None
+
+
 # ── sinh cặp ──────────────────────────────────────────────────────
 
 
@@ -225,7 +304,11 @@ MAX_POS = 4  # số câu thật tối đa lấy làm positive từ 1 khoản
 
 
 def sinh_cap(
-    khoan_text: str, cit: TrichDan, doc_id: str, rng: random.Random
+    khoan_text: str,
+    cit: TrichDan,
+    doc_id: str,
+    rng: random.Random,
+    kieu_cho_phep: set[str] | None = None,
 ) -> list[Cap]:
     """1 khoản → NHIỀU positive (mỗi câu thật 1 cái) + hard-negative đủ các trục.
 
@@ -308,15 +391,26 @@ def sinh_cap(
             break
 
     # ── trục NGỮ NGHĨA (#8) — không số nào sai, nhưng nguồn không hề nói vậy ──
-    # Đa dạng hoá: 4 kiểu × 5 cách mở câu → model không học thuộc được template.
-    ten_kieu, kho_cau = rng.choice(_KIEU_NGU_NGHIA)
-    ra.append(
-        Cap(
-            premise=khoan_text,
-            hypothesis=rng.choice(_MO).format(cit=cit, noi_dung=rng.choice(kho_cau)),
-            label=0,
-            corruption_type=ten_kieu,
-            doc_id=doc_id,
+    # kieu_cho_phep: LEAVE-TEMPLATES-OUT — train chỉ sinh kiểu train-side, test
+    # sinh kiểu test-side (chưa từng thấy) → đo tổng quát hoá, không tra bảng.
+    kieu_dung = [
+        (t, k) for t, k in _KIEU_NGU_NGHIA
+        if kieu_cho_phep is None or t in kieu_cho_phep
+    ]
+    if kieu_dung:
+        ten_kieu, kho_cau = rng.choice(kieu_dung)
+        ra.append(
+            Cap(
+                premise=khoan_text,
+                hypothesis=rng.choice(_MO).format(cit=cit, noi_dung=rng.choice(kho_cau)),
+                label=0,
+                corruption_type=ten_kieu,
+                doc_id=doc_id,
+            )
         )
-    )
+
+    # ── trục PHÁ-CUE — LUÔN đẻ (giết lối tắt copy-vs-generic) ──
+    tc = bia_ngu_nghia_tai_cho(khoan_text, cit, doc_id, rng)
+    if tc:
+        ra.append(tc)
     return ra

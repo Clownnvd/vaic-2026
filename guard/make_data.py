@@ -19,14 +19,21 @@ import pyarrow.parquet as pq
 
 sys.path.insert(0, ".")
 from corpus.parse_dieu import parse  # noqa: E402
-from guard.corrupt import TrichDan, sinh_cap  # noqa: E402
+from guard.corrupt import (  # noqa: E402
+    LTO_TEST_KIEU,
+    LTO_TRAIN_KIEU,
+    TrichDan,
+    sinh_cap,
+)
 
 IN = Path("./data/splits_dn")
 OUT = Path("./data/guard")
 SEED = 7
 
 
-def sinh_cho_phia(ten: str, gioi_han_vb: int | None = None) -> list:
+def sinh_cho_phia(
+    ten: str, gioi_han_vb: int | None = None, kieu_cho_phep: set[str] | None = None
+) -> list:
     tbl = pq.read_table(
         IN / f"{ten}.parquet",
         columns=["item_id", "doc_number_str", "issuing_authority", "markdown"],
@@ -48,7 +55,7 @@ def sinh_cho_phia(ten: str, gioi_han_vb: int | None = None) -> list:
                 if not (60 < len(k.text) < 3000):
                     continue
                 cit = TrichDan(so_vb, co_quan, d.so, k.so)
-                ra.extend(sinh_cap(k.text, cit, doc_id, rng))
+                ra.extend(sinh_cap(k.text, cit, doc_id, rng, kieu_cho_phep))
     return ra
 
 
@@ -56,7 +63,17 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--xem", action="store_true", help="chỉ in mẫu, không ghi file")
     ap.add_argument("--gioi-han", type=int, default=None, help="giới hạn số văn bản/phía")
+    ap.add_argument("--lto", choices=("off", "kieu"), default="off",
+                    help="kieu = Leave-Templates-Out: train học 2 kiểu ngữ nghĩa, test 2 kiểu khác")
     args = ap.parse_args()
+
+    # LTO: chia kiểu ngữ nghĩa RỜI train/test. calib theo train-side (chọn T/ngưỡng
+    # không được rò template test-side vào). off → None (mọi kiểu, đường cũ tái lập).
+    kieu_phia = (
+        {"train": LTO_TRAIN_KIEU, "calib": LTO_TRAIN_KIEU, "test": LTO_TEST_KIEU}
+        if args.lto == "kieu"
+        else {"train": None, "calib": None, "test": None}
+    )
 
     if args.xem:
         cap = sinh_cho_phia("test", gioi_han_vb=12)
@@ -89,7 +106,10 @@ def main() -> None:
     tong = Counter()
 
     # sinh cả 3 phía TRƯỚC, rồi mới dọn — vì dọn cần biết test có gì.
-    kho = {ten: sinh_cho_phia(ten, args.gioi_han) for ten in ("train", "calib", "test")}
+    kho = {
+        ten: sinh_cho_phia(ten, args.gioi_han, kieu_phia[ten])
+        for ten in ("train", "calib", "test")
+    }
 
     # ── GỠ RÒ RỈ PREMISE ────────────────────────────────────────
     # soi_data.py bắt: 9 đoạn nguồn nằm ở CẢ train lẫn test dù doc_id đã tách.
@@ -154,6 +174,22 @@ def main() -> None:
     print(f"\n  positive:negative = 1 : {n_neg / max(n_pos, 1):.1f}")
     if n_neg / max(n_pos, 1) > 6:
         print("  ⚠ lệch nhiều — cân lại lúc train (undersample negative).")
+
+    # ── MANIFEST LTO cho giám khảo: chứng minh KHÔNG tra bảng ──
+    if args.lto == "kieu":
+        def kieu_trong(ten: str) -> set:
+            return {c.corruption_type for c in kho[ten]
+                    if c.corruption_type in (LTO_TRAIN_KIEU | LTO_TEST_KIEU)}
+        k_tr, k_te = kieu_trong("train"), kieu_trong("test")
+        giao = k_tr & k_te
+        print("\n=== MANIFEST LEAVE-TEMPLATES-OUT ===")
+        print(f"  kiểu ngữ nghĩa TRAIN-side: {sorted(k_tr)}")
+        print(f"  kiểu ngữ nghĩa TEST-side : {sorted(k_te)}")
+        print(f"  GIAO train∩test          : {sorted(giao)}  {'✓ RỖNG' if not giao else '✗ RÒ!'}")
+        assert not giao, "LTO hỏng: kiểu ngữ nghĩa train và test trùng nhau"
+        for ten in ("train", "test"):
+            n_tc = sum(1 for c in kho[ten] if c.corruption_type == "bia_ngu_nghia_tai_cho")
+            print(f"  trục phá-cue (bia_ngu_nghia_tai_cho) ở {ten}: {n_tc:,} cặp")
 
 
 if __name__ == "__main__":
