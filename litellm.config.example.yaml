@@ -14,34 +14,48 @@
 #
 # Version: litellm >= 1.90.0  (CVE-2026-12773 auth-bypass o ban <= 1.59.8)
 
+# ============================================================================
+# CHOT MODEL - theo cau hinh DA DO THAT trong kho (BATTLE-NOTES 16/07):
+#   REAL_MODEL=openai:gpt-4o  va  FAST_MODEL=openai:gpt-4o   <- CA HAI deu gpt-4o
+#
+# Vi sao KHONG dung con khac lam duong chinh:
+#   x gpt-5.1     : chat nhung compose ~20s -> QUA SLA 15s
+#   x gpt-4o-mini : nhanh nhung DONG BONG - luc goi 6 tool thrash/27s, luc bia
+#                   ngay (so du dung ma dao-han sai) -> guard chan.
+#                   KHONG dung cho cau can chuan.
+#   -> gpt-4o = diem ngot: compose 9s, lookup ~12s, tieng Viet chuan, tool-calling on dinh
+#
+# FALLBACK khong phai de thay CHAT LUONG - de KHONG CHET khi OpenAI sap/throttle.
+# Rang buoc I2: 'Cam phu thuoc 1 LLM provider khong fallback - chi phi va
+# availability risk khong kha thi cho ngan hang'.
+# Kho canh bao: 'Claude bi throttle luc demo -> fallback PHAI TEST TRUOC'.
+# ============================================================================
+
 model_list:
   # ---- task-deep: suy luan / soan ho so ----
   - model_name: task-deep
     litellm_params:
-      model: openai/gpt-4o          # diem ngot: chat luong + toc do. gpt-5.1 compose ~20s -> qua SLA
+      model: openai/gpt-4o
       api_key: os.environ/OPENAI_API_KEY
     model_info:
       mode: chat
 
-  - model_name: task-deep
-    litellm_params:
-      model: anthropic/claude-sonnet-4-5   # fallback 1
-      api_key: os.environ/ANTHROPIC_API_KEY
-
-  - model_name: task-deep
-    litellm_params:
-      model: gemini/gemini-2.5-pro         # fallback 2
-      api_key: os.environ/GEMINI_API_KEY
-
   # ---- task-fast: slot-filling / phan loai intent ----
+  # VAN LA gpt-4o (khong phai mini) - dung cau hinh da do thang trong kho.
   - model_name: task-fast
     litellm_params:
-      model: openai/gpt-4o-mini
+      model: openai/gpt-4o
       api_key: os.environ/OPENAI_API_KEY
 
-  - model_name: task-fast
+  # ---- FALLBACK: chi no khi primary CHET. Khong phai duong chinh. ----
+  - model_name: fallback-1
     litellm_params:
-      model: gemini/gemini-2.5-flash
+      model: anthropic/claude-sonnet-4-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: fallback-2
+    litellm_params:
+      model: gemini/gemini-2.5-pro
       api_key: os.environ/GEMINI_API_KEY
 
   # ---- task-vn: duong chu quyen du lieu (data khong roi VN) ----
@@ -54,10 +68,12 @@ model_list:
       api_key: os.environ/FPT_API_KEY
 
 router_settings:
-  # I2: fallback da provider - cam phu thuoc 1 nha cung cap
+  # I2: fallback DA PROVIDER (khac nha cung cap - khong phai model khac cung OpenAI,
+  # vi OpenAI sap thi ca 2 cung chet -> khong thoa I2).
+  # Thu tu: gpt-4o -> Claude -> Gemini. Chi no khi primary CHET.
   fallbacks:
-    - task-deep: ["task-fast"]
-    - task-fast: ["task-deep"]
+    - task-deep: ["fallback-1", "fallback-2"]
+    - task-fast: ["fallback-1", "fallback-2"]
   num_retries: 2
   timeout: 30
   allowed_fails: 2
