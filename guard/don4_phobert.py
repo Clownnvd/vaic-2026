@@ -42,7 +42,30 @@ TRUC_NGU_NGHIA = {
     "bia_tu_du_dieu_kien",
     "bia_bo_rang_buoc",
     "bia_suy_dien",
+    "bia_ngu_nghia_tai_cho",  # trục phá-cue: negative trùng-từ-vựng premise
 }
+
+
+def boot_f1_cum(lg: np.ndarray, y: np.ndarray, rng: random.Random, n: int = 1000):
+    """CI bootstrap F1 grounded — resample có hoàn lại. Trả (lo, hi) 95%.
+
+    Vì sao có: sau leave-templates-out, negative gom về ít chuỗi gốc; báo F1
+    trần trụi mà không CI thì giám khảo không biết dao động bao nhiêu.
+    """
+    pred = lg.argmax(1)
+    m = len(y)
+    fs = []
+    for _ in range(n):
+        idx = [rng.randrange(m) for _ in range(m)]
+        p, t = pred[idx], y[idx]
+        tp = int(((p == 1) & (t == 1)).sum())
+        fp = int(((p == 1) & (t == 0)).sum())
+        fn = int(((p == 0) & (t == 1)).sum())
+        pr = tp / max(tp + fp, 1)
+        rc = tp / max(tp + fn, 1)
+        fs.append(2 * pr * rc / max(pr + rc, 1e-9))
+    fs.sort()
+    return float(fs[int(0.025 * n)]), float(fs[int(0.975 * n)])
 
 
 def dat_seed(s: int = SEED) -> None:
@@ -287,6 +310,8 @@ def main() -> None:
     print("=" * 56)
     bang = []
     f1, bat = do(lg_t, y_t)
+    f1_lo, f1_hi = boot_f1_cum(lg_t, y_t, rng)  # CI 95% cho F1 headline
+    print(f"  Full F1 = {f1:.3f}  (CI95 [{f1_lo:.3f}, {f1_hi:.3f}])")
     bang.append(("Full", f1, bat, th))
 
     m2 = train(cur, margin=False)
@@ -319,6 +344,7 @@ def main() -> None:
     (OUT / "phobert_ket_qua.json").write_text(
         json.dumps(
             {"T": T, "ece_truoc": e_truoc, "ece_sau": e_sau, "nguong_refuse": th,
+             "f1_full": f1, "f1_lo": f1_lo, "f1_hi": f1_hi,
              "mining_curve": duong, "ablation": [list(x) for x in bang],
              "n_train": len(tr), "n_test": len(te), "device": str(dev),
              "giay": round(time.time() - t0)},
