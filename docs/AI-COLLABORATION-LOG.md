@@ -267,14 +267,17 @@ Sidebar 3 mục kiểu Claude (Chat · Danh sách luật · Lịch sử), trình
 | # | Việc | Trạng thái |
 |---|---|---|
 | 1 | ~~Python 3.14 chạy được pyarrow?~~ | ✅ đóng — KHÔNG. Dùng `uv run --python 3.11` |
-| 1b | Python 3.14 chạy được torch/transformers? | ❓ chưa verify — sẽ chặn guard |
-| 2 | Thay seed bằng dữ liệu sinh từ corpus vbpl-vn | 🔴 bắt buộc trước demo |
-| 3 | Join API vbpl.vn lấy trạng thái hiệu lực | 🔴 chưa làm |
-| 4 | Wire frontend → BFF (hiện bóc hồ sơ bằng regex ở client) | 🔴 tạm |
+| 1b | ~~Python 3.14 chạy được torch/transformers?~~ | ✅ đóng — torch cu124 chạy trên FPT H100 + nạp local OK |
+| 2 | ~~Thay seed bằng dữ liệu corpus~~ | 🟡 một phần — `kho_mau` giờ chép nguyên văn corpus (2 chương trình flagship); `seed.ts` còn là scaffolding, cần curate thêm chương trình |
+| 3 | ~~Join API vbpl.vn lấy trạng thái hiệu lực~~ | ✅ đóng — cache-only ở BFF, badge "✓ Còn hiệu lực" cho 2 flagship (CHL) |
+| 4 | Wire frontend → BFF slot-filling (client vẫn bóc regex, đã vá gõ-không-dấu) | 🟡 tạm — /chat đã nối, nhưng bóc hồ sơ vẫn ở client |
 | 5 | ~~Corpus có field hiệu lực không?~~ | ✅ đóng — **KHÔNG CÓ** → **phép nhiễu #7 BỊ LOẠI** |
 | 6 | ~~Chốt `max_len`~~ | ✅ đóng — **256** (đo thật: 25,9% khoản vượt 128) |
 | 7 | Parser: tiêu đề Điều nuốt nhầm số khoản, có điều tiêu đề rỗng | 🟡 chưa chặn train |
 | 8 | 10,3% khoản vượt 256 token (trần PhoBERT) → cần cửa sổ trượt | 🟡 chưa làm |
+| 9 | Model guard train xong (450MB) chưa wire vào /chat (BFF vẫn lớp tất định) | 🟡 checkpoint đã tải + verify; wire PhoBERT vào rail là bước tiếp |
+| 10 | 10 chương trình flagship (hiện mới 2) | 🔴 curate thêm từ corpus |
+| 11 | **Rotate OpenAI key** — đã dán vào transcript chat | 🔴 người dùng phải làm |
 
 ---
 
@@ -305,3 +308,5 @@ Sidebar 3 mục kiểu Claude (Chat · Danh sách luật · Lịch sử), trình
 | 19 | **Người** ↔ AI | *"vốn chưa bắt được kìa"* | bóc hồ sơ không xử gõ-không-dấu → vi phạm H1 chính mình đặt ra |
 | 20 | **Người** ↔ AI | *"bạn năm nay bao tuổi"* → ra kết quả | bot không hiểu context — hồ sơ đầy thì câu nào cũng chạy matcher |
 | 21 | **Người** ↔ AI | *"nho in ('sieu_nho','nho','vua')"* | in biểu thức Python thô lên UI cho người dùng đọc |
+| 22 | AI ↔ **AI** | train H100 lần 1 crash | `NameError: r_bia` — lúc viết lại eval bỏ biến nhưng còn dòng in cũ → eval xong nhưng **chưa lưu model**. Sửa + train lại (130s, rẻ). Bug của chính mình |
+| 23 | AI ↔ **máy** | `.gitignore` PowerShell ghi hỏng (UTF-16) | suýt commit **token container + tarball 450MB** — `git check-ignore` bắt kịp trước commit |
