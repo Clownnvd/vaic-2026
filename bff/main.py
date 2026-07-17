@@ -28,6 +28,8 @@ from fastapi import FastAPI  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from pydantic import BaseModel  # noqa: E402
 
+from ho_so.mau import TAT_CA  # noqa: E402
+from ho_so.sinh import checklist, render_text  # noqa: E402
 from matcher.match import diff_ket_qua, quet_nguoc  # noqa: E402
 from matcher.schema import Profile  # noqa: E402
 from vn.context import che_pii, format_vnd, no_viet_tat  # noqa: E402
@@ -180,3 +182,79 @@ def monitoring(truoc: dict, sau: dict) -> dict:
     p1 = Profile(**{k: v for k, v in truoc.items() if k in PROFILE_FIELDS})
     p2 = Profile(**{k: v for k, v in sau.items() if k in PROFILE_FIELDS})
     return diff_ket_qua(quet_nguoc(p1, KHO), quet_nguoc(p2, KHO))
+
+
+class YeuCauHoSo(BaseModel):
+    chuong_trinh: str
+    ho_so: dict[str, Any] = {}
+
+
+@app.get("/ho-so/mau")
+def danh_sach_mau() -> dict:
+    """③ — biểu mẫu nào đang dùng được, căn cứ nào."""
+    return {
+        "so_mau": len(TAT_CA),
+        "mau": [
+            {
+                "ma": m.ma,
+                "ten": m.ten,
+                "nhom": m.nhom,
+                "can_cu": m.can_cu,
+                "co_quan_nhan": m.co_quan_nhan,
+                "han_nop": m.han_nop,
+                "dn_tu_nop": m.dn_tu_nop,
+            }
+            for m in TAT_CA
+        ],
+    }
+
+
+@app.post("/ho-so/sinh")
+def sinh_ho_so(r: YeuCauHoSo) -> dict:
+    """③ — sinh khung hồ sơ. AI KHÔNG gõ ô nào; CODE điền, DN tự khai phần còn lại.
+
+    Write-gate: hồ sơ là hành động GHI → requires_approval=True, bản nháp chờ duyệt.
+    """
+    t0 = time.perf_counter()
+    ks = checklist(r.chuong_trinh, r.ho_so)
+    if not ks:
+        return {
+            "text": f"Chưa có biểu mẫu nào gắn với chương trình '{r.chuong_trinh}'.",
+            "grounded": False,
+            "citations": [],
+            "requires_approval": False,
+            "ms": int((time.perf_counter() - t0) * 1000),
+        }
+
+    return {
+        "text": f"Đã dựng {len(ks)} khung hồ sơ. Phần số liệu do hệ thống điền từ hồ sơ "
+        f"doanh nghiệp — bản nháp, bạn duyệt trước khi nộp.",
+        "grounded": True,
+        "requires_approval": True,  # write-gate — LUÔN True
+        "citations": [{"hien_thi": k.mau.can_cu, "khoa": k.mau.can_cu} for k in ks],
+        "khung": [
+            {
+                "ma": k.mau.ma,
+                "ten": k.mau.ten,
+                "can_cu": k.mau.can_cu,
+                "co_quan_nhan": k.mau.co_quan_nhan,
+                "han_nop": k.mau.han_nop,
+                "ghi_chu": k.mau.ghi_chu,
+                "phan_tram_day": k.phan_tram_day,
+                "thieu": k.thieu,
+                "o": [
+                    {
+                        "nhan": o.nhan,
+                        "gia_tri": o.gia_tri,
+                        "nguon": o.nguon,
+                        "da_dien": o.da_dien,
+                        "ai_duoc_go": o.ai_duoc_go,  # luôn False — bằng chứng AI không chạm
+                    }
+                    for o in k.o
+                ],
+                "van_ban": render_text(k),
+            }
+            for k in ks
+        ],
+        "ms": int((time.perf_counter() - t0) * 1000),
+    }

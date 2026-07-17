@@ -47,7 +47,12 @@ KEYWORDS = [
     "khoa học và công nghệ",
 ]
 
-DOC_TYPES = ["nghi_dinh", "thong_tu", "quyet_dinh", "nghi_quyet"]
+# ⚠️ SỬA 17/07: THÊM "luat".
+# Bản đầu chỉ có 4 loại → tự tay loại bỏ LUẬT, văn bản có hiệu lực CAO NHẤT.
+# Hậu quả thật: Luật CNC 133/2025, Luật Đầu tư 143/2025, Luật TNDN 67/2025,
+# Luật KH,CN&ĐMST 93/2025 đều "không có trong corpus" — nhưng là do MÌNH loại,
+# không phải dump thiếu. Matcher không trích được Luật = trích thiếu tầng cao nhất.
+DOC_TYPES = ["luat", "nghi_dinh", "thong_tu", "quyet_dinh", "nghi_quyet"]
 NAM_TOI_THIEU = 2018
 
 # Cột đọc từ shard (đọc thừa = tốn RAM vì markdown rất nặng)
