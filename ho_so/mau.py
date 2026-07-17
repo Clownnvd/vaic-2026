@@ -163,8 +163,9 @@ THUE = [
         dn_tu_nop=True,
         ghi_chu=(
             "Cơ chế TỰ KHAI — không nộp hồ sơ xin ưu đãi trước. "
-            "Biểu mẫu không đổi, nhưng ĐIỀU KIỆN ưu đãi tính theo Luật TNDN 67/2025 "
-            "(⚠️ văn bản này KHÔNG có trong corpus → không trích được, phải nói rõ)"
+            "Biểu mẫu theo TT 80/2021/TT-BTC (không đổi), nhưng ĐIỀU KIỆN ưu đãi "
+            "tính theo Luật TNDN 67/2025/QH15 — văn bản này ĐÃ có trong corpus "
+            "(sau khi thêm doc_type='luat'), nên trích được điều khoản thật."
         ),
         truong=[
             Truong("ten_to_chuc", "Tên người nộp thuế", "ho_so"),

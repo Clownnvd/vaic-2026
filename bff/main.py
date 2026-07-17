@@ -30,7 +30,14 @@ from pydantic import BaseModel  # noqa: E402
 
 from ho_so.mau import TAT_CA  # noqa: E402
 from ho_so.sinh import checklist, render_text  # noqa: E402
+from matcher.kiem_ho_so import kiem, mo_ta_loi  # noqa: E402
 from matcher.match import diff_ket_qua, quet_nguoc  # noqa: E402
+from matcher.pham_vi import (  # noqa: E402
+    cau_tu_choi_linh_vuc,
+    cau_tu_choi_van_ban,
+    hoi_van_ban_ngoai_kho,
+    ngoai_pham_vi,
+)
 from matcher.schema import Profile  # noqa: E402
 from vn.context import che_pii, format_vnd, no_viet_tat  # noqa: E402
 
@@ -117,7 +124,53 @@ def chat(r: YeuCau) -> dict:
     # ── H2: che PII TRƯỚC khi câu này có thể đi ra LLM ────────
     cau_an_toan, da_che = che_pii(cau)
 
+    # ── HỎI NGOÀI PHẠM VI → nói thẳng, không trả đồ khác ──────
+    # (bộ ca đối kháng bắt: hỏi "ưu đãi nông nghiệp" → trả ưu đãi công nghệ cao)
+    vb = hoi_van_ban_ngoai_kho(cau)
+    if vb:
+        return {
+            "dang": "van_ban",
+            "text": cau_tu_choi_van_ban(vb),
+            "noi_dung": cau_tu_choi_van_ban(vb),
+            "grounded": False,  # KHÔNG có căn cứ → nói thẳng
+            "citations": [],
+            "requires_approval": False,
+            "pii_da_che": list(da_che.keys()),
+            "ms": int((time.perf_counter() - t0) * 1000),
+        }
+
+    lv = ngoai_pham_vi(cau)
+    if lv:
+        return {
+            "dang": "van_ban",
+            "text": cau_tu_choi_linh_vuc(lv),
+            "noi_dung": cau_tu_choi_linh_vuc(lv),
+            "grounded": False,
+            "citations": [],
+            "requires_approval": False,
+            "pii_da_che": list(da_che.keys()),
+            "ms": int((time.perf_counter() - t0) * 1000),
+        }
+
     p = Profile(**{k: v for k, v in r.ho_so.items() if k in PROFILE_FIELDS})
+
+    # ── SỐ VÔ LÝ → KHÔNG đối chiếu ────────────────────────────
+    # (bộ ca đối kháng bắt: vốn -5 tỷ → "ĐỦ điều kiện" vì -5 tỷ ≤ 100 tỷ = True)
+    # Đối chiếu rác ra kết luận rác — mà kết luận rác lại trông rất tự tin.
+    loi_hs = kiem(p)
+    if loi_hs:
+        return {
+            "dang": "van_ban",
+            "text": mo_ta_loi(loi_hs),
+            "noi_dung": mo_ta_loi(loi_hs),
+            "grounded": False,
+            "citations": [],
+            "requires_approval": False,
+            "loi_ho_so": [{"field": x.field, "gia_tri": x.gia_tri, "ly_do": x.ly_do} for x in loi_hs],
+            "pii_da_che": list(da_che.keys()),
+            "ms": int((time.perf_counter() - t0) * 1000),
+        }
+
     thieu = [f for f in PROFILE_FIELDS if getattr(p, f) is None]
 
     # ── thiếu hồ sơ → HỎI, không đoán ─────────────────────────
