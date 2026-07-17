@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ChatInput } from "@/components/ChatInput";
 import { ChatMessage } from "@/components/ChatMessage";
 import { DanhSachLuat } from "@/components/DanhSachLuat";
+import { GiamSat } from "@/components/GiamSat";
 import { ProfilePanel } from "@/components/ProfilePanel";
 import { Sidebar, type Khung } from "@/components/Sidebar";
 import { SoanHoSo } from "@/components/SoanHoSo";
@@ -281,14 +282,18 @@ export default function Page() {
                 ? "Danh sách luật"
                 : khung === "hoso"
                   ? "Soạn hồ sơ xin tài trợ"
-                  : "Trợ lý tư vấn chính sách"}
+                  : khung === "giamsat"
+                    ? "Giám sát chính sách"
+                    : "Trợ lý tư vấn chính sách"}
             </h1>
             <p className="mt-1 truncate text-[11px] leading-none text-text-muted">
               {khung === "luat"
                 ? "Tra cứu văn bản trong corpus — tìm kiếm, lọc theo tiêu chí"
                 : khung === "hoso"
                   ? "Dựng khung hồ sơ, điền sẵn từ hồ sơ DN — bản nháp chờ duyệt"
-                  : "Tìm đúng chính sách bạn đủ điều kiện — có căn cứ tới từng điều khoản"}
+                  : khung === "giamsat"
+                    ? "Theo dõi hiệu lực + văn bản liên quan, đối chiếu vbpl.vn"
+                    : "Tìm đúng chính sách bạn đủ điều kiện — có căn cứ tới từng điều khoản"}
             </p>
           </div>
           {khung === "chat" && treMs !== null && (
@@ -305,6 +310,8 @@ export default function Page() {
           <DanhSachLuat />
         ) : khung === "hoso" ? (
           <SoanHoSo profile={profile} />
+        ) : khung === "giamsat" ? (
+          <GiamSat />
         ) : (
           <div className="flex min-h-0 flex-1">
             {/* cột chat */}

@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { Logo } from "@/components/Logo";
 import { type CuocTroChuyen, nhomTheoThoiGian } from "@/lib/lichsu";
 
-export type Khung = "chat" | "luat" | "hoso";
+export type Khung = "chat" | "luat" | "hoso" | "giamsat";
 
 export function Sidebar({
   khung,
@@ -60,13 +60,17 @@ export function Sidebar({
       <RailBtn active={khung === "chat"} onClick={() => onKhung("chat")} label="Trợ lý tư vấn">
         <path d="M4 5h12v8H8l-4 3V5Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
       </RailBtn>
-      <RailBtn active={khung === "luat"} onClick={() => onKhung("luat")} label="Danh sách luật">
-        <path d="M5 4h10v12H5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-        <path d="M8 8h4M8 11h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-      </RailBtn>
       <RailBtn active={khung === "hoso"} onClick={() => onKhung("hoso")} label="Soạn hồ sơ">
         <path d="M6 3h5l3 3v11H6z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
         <path d="M11 3v3h3M8 11h4M8 14h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </RailBtn>
+      <RailBtn active={khung === "giamsat"} onClick={() => onKhung("giamsat")} label="Giám sát">
+        <path d="M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14Z" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M10 6v4l2.5 2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      </RailBtn>
+      <RailBtn active={khung === "luat"} onClick={() => onKhung("luat")} label="Danh sách luật">
+        <path d="M5 4h10v12H5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+        <path d="M8 8h4M8 11h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
       </RailBtn>
       <div className="mt-auto">
         <span className="flex size-8 items-center justify-center rounded-full bg-brand-600 text-[12px] font-semibold text-white" title="Doanh nghiệp">
@@ -123,17 +127,10 @@ export function Sidebar({
         </div>
 
         <nav className="mt-3 px-3">
-          <MucNav active={khung === "chat"} onClick={() => onKhung("chat")} nhan="Trợ lý tư vấn">
-            <path d="M4 5h12v8H8l-4 3V5Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-          </MucNav>
-          <MucNav active={khung === "luat"} onClick={() => onKhung("luat")} nhan="Danh sách luật">
-            <path d="M5 4h10v12H5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-            <path d="M8 8h4M8 11h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-          </MucNav>
-          <MucNav active={khung === "hoso"} onClick={() => onKhung("hoso")} nhan="Soạn hồ sơ">
-            <path d="M6 3h5l3 3v11H6z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-            <path d="M11 3v3h3M8 11h4M8 14h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </MucNav>
+          <MucNav active={khung === "chat"} onClick={() => onKhung("chat")} nhan="Trợ lý tư vấn" />
+          <MucNav active={khung === "hoso"} onClick={() => onKhung("hoso")} nhan="Soạn hồ sơ" />
+          <MucNav active={khung === "giamsat"} onClick={() => onKhung("giamsat")} nhan="Giám sát chính sách" />
+          <MucNav active={khung === "luat"} onClick={() => onKhung("luat")} nhan="Danh sách luật" />
         </nav>
 
         <div className="mt-4 flex-1 overflow-y-auto px-2 pb-3">
@@ -224,22 +221,20 @@ function MucNav({
   active,
   onClick,
   nhan,
-  children,
 }: {
   active: boolean;
   onClick: () => void;
   nhan: string;
-  children: React.ReactNode;
 }) {
+  // text-only cho gọn, chuyên nghiệp (icon giữ ở rail lúc thu gọn)
   return (
     <button
       onClick={onClick}
       className={
-        "mb-0.5 flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors " +
+        "mb-0.5 flex w-full items-center rounded-lg px-3 py-2 text-[13px] font-medium transition-colors " +
         (active ? "bg-brand-600 text-white" : "text-text hover:bg-surface")
       }
     >
-      <svg viewBox="0 0 20 20" className="size-4">{children}</svg>
       {nhan}
     </button>
   );

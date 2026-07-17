@@ -48,7 +48,9 @@ class VanBan:
 class LuatIndex:
     def __init__(self, thu_muc: Path = SPLITS):
         self.ds: list[VanBan] = []
+        self._facets: dict | None = None
         self._nap(thu_muc)
+        self._facets = self._tinh_facets()  # tính SẴN lúc nạp, khỏi tính lại mỗi request
 
     def _nap(self, thu_muc: Path) -> None:
         import pyarrow.parquet as pq
@@ -80,7 +82,10 @@ class LuatIndex:
         self.ds.sort(key=lambda v: (v.nam or 0), reverse=True)
 
     def facets(self) -> dict:
-        """Giá trị lọc + số lượng mỗi giá trị — cho dropdown lọc."""
+        """Giá trị lọc + số lượng — trả bản đã tính sẵn (không tính lại mỗi request)."""
+        return self._facets if self._facets is not None else self._tinh_facets()
+
+    def _tinh_facets(self) -> dict:
         def dem(lay):
             d: dict[str, int] = {}
             for v in self.ds:

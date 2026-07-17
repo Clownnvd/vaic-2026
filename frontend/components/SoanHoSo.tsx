@@ -102,7 +102,7 @@ export function SoanHoSo({ profile }: { profile: Profile }) {
           </p>
         )}
 
-        {kq && (
+        {kq && (kq.khung?.length ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2 rounded-lg border border-caution-300 bg-caution-50 px-3.5 py-2.5 text-[12.5px] text-caution-800 dark:border-caution-700 dark:bg-caution-500/10 dark:text-caution-200">
               <svg viewBox="0 0 16 16" className="size-4 shrink-0" fill="none">
@@ -119,7 +119,11 @@ export function SoanHoSo({ profile }: { profile: Profile }) {
               <KhungCard key={k.ma} k={k} />
             ))}
           </div>
-        )}
+        ) : (
+          <p className="rounded-lg border border-border-subtle bg-surface px-4 py-3 text-[13px] text-text-muted">
+            {kq.text || "Chương trình này chưa gắn biểu mẫu hồ sơ trong kho."}
+          </p>
+        ))}
       </div>
     </div>
   );

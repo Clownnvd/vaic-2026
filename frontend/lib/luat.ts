@@ -1,6 +1,6 @@
 /** API client cho "Danh sách luật" — tra cứu corpus (tìm kiếm + lọc + phân trang). */
 
-const BFF = process.env.NEXT_PUBLIC_BFF_URL ?? "http://localhost:8000";
+const BFF = process.env.NEXT_PUBLIC_BFF_URL ?? "http://127.0.0.1:8000";
 
 export type VanBan = {
   item_id: string;

@@ -10,7 +10,7 @@
 
 import type { Profile } from "./types";
 
-const BFF = process.env.NEXT_PUBLIC_BFF_URL ?? "http://localhost:8000";
+const BFF = process.env.NEXT_PUBLIC_BFF_URL ?? "http://127.0.0.1:8000";
 
 /** Citation trả về từ BFF — đã ràng theo vết tra cứu thật, không phải LLM tự khai. */
 export type ApiCitation = {

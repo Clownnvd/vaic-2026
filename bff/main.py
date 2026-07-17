@@ -51,6 +51,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.on_event("startup")
+def _ham_index() -> None:
+    """Đọc parquet + tính facets LÚC KHỞI ĐỘNG, không đợi user bấm 'Danh sách luật'.
+    Nhờ vậy lần bấm đầu đã có sẵn trong RAM → trả tức thì thay vì đợi đọc 2.669 dòng."""
+    try:
+        from matcher.luat_index import get_index
+
+        idx = get_index()
+        print(f"[startup] đã hâm index luật: {len(idx.ds)} văn bản + facets")
+    except Exception as e:  # noqa: BLE001
+        print(f"[startup] hâm index lỗi (sẽ nạp lười ở request đầu): {type(e).__name__}")
+
 # kho chương trình — TẠM dùng bộ mẫu; sẽ thay bằng 10 flagship curate từ corpus
 # (KHÔNG import từ test_match: import file test = chạy test + sys.exit() → chết server)
 from matcher.kho_mau import KHO  # noqa: E402
@@ -229,6 +242,65 @@ def danh_sach_luat(
     from matcher.luat_index import get_index
 
     return get_index().truy_van(q, doc_type, linh_vuc, co_quan, nam, trang, cs)
+
+
+@app.get("/giam-sat")
+def giam_sat() -> dict:
+    """② — theo dõi hiệu lực + văn bản liên quan (thay thế/sửa đổi) từ vbpl.vn.
+
+    Đây là phần "theo dõi cập nhật chính sách": mỗi văn bản flagship được đối
+    chiếu trạng thái hiệu lực THẬT (Còn/Hết) và liệt kê văn bản liên quan mà
+    vbpl.vn ghi nhận. Nếu một văn bản chuyển sang HẾT hiệu lực → badge đổi, DN
+    được cảnh báo ngay (thay vì trích văn bản chết).
+    """
+    from vbpl.api import quan_he, tra_hieu_luc
+
+    # nhãn loai tham chiếu vbpl (int) — chưa có bảng mã chính thức, để mô tả mềm
+    LOAI = {3: "Căn cứ pháp lý", 4: "Văn bản liên quan / tiền nhiệm"}
+    ra = []
+    for ct in KHO:
+        c = ct.citation_chinh or (ct.dieu_kien[0].citation if ct.dieu_kien else None)
+        if not c or not c.doc_id:
+            continue
+        hl = tra_hieu_luc(c.doc_id, chi_cache=True)
+        qh = quan_he(c.doc_id)
+        # KHỬ TRÙNG: vbpl liệt kê cùng một văn bản nhiều lần (loai khác nhau).
+        # Gộp theo tiêu đề, giữ lần đầu.
+        seen_lq: set[str] = set()
+        lq = []
+        for r in qh:
+            khoa = (r.get("title") or r.get("so_vb") or "").strip().lower()
+            if not khoa or khoa in seen_lq:
+                continue
+            seen_lq.add(khoa)
+            lq.append(
+                {
+                    "so_vb": r.get("so_vb"),
+                    "title": (r.get("title") or "")[:120],
+                    "loai": LOAI.get(r.get("loai"), "Liên quan"),
+                }
+            )
+        ra.append(
+            {
+                "id": ct.id,
+                "ten": ct.ten,
+                "so_hieu": c.so_vb,
+                "co_quan": ct.co_quan,
+                "hieu_luc": {
+                    "da_doi_chieu": hl.loi is None,
+                    "con_hieu_luc": hl.con_hieu_luc,
+                    "nhan": hl.nhan,
+                    "ma": hl.ma,
+                },
+                "so_lien_quan": len(lq),
+                "lien_quan": lq[:10],
+            }
+        )
+    return {
+        "chuong_trinh": ra,
+        "nguon": "vbpl.vn (Bộ Tư pháp)",
+        "cap_nhat": "đối chiếu khi tải trang; cache đĩa để không đơ",
+    }
 
 
 @app.get("/chuong-trinh")

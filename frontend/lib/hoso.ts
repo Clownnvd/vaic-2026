@@ -1,6 +1,6 @@
 /** API client cho ③ — soạn hồ sơ xin tài trợ (structure-then-fill). */
 
-const BFF = process.env.NEXT_PUBLIC_BFF_URL ?? "http://localhost:8000";
+const BFF = process.env.NEXT_PUBLIC_BFF_URL ?? "http://127.0.0.1:8000";
 
 export type OHoSo = {
   nhan: string;
@@ -28,7 +28,8 @@ export type KetQuaHoSo = {
   grounded: boolean;
   requires_approval: boolean;
   citations: { hien_thi: string; khoa: string }[];
-  khung: KhungHoSo[];
+  // BFF BỎ field này khi chương trình chưa gắn biểu mẫu nào → phải optional.
+  khung?: KhungHoSo[];
   ms?: number;
 };
 
