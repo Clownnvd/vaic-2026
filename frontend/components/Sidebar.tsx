@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { Logo } from "@/components/Logo";
 import { type CuocTroChuyen, nhomTheoThoiGian } from "@/lib/lichsu";
 
-export type Khung = "chat" | "luat";
+export type Khung = "chat" | "luat" | "hoso";
 
 export function Sidebar({
   khung,
@@ -63,6 +63,10 @@ export function Sidebar({
       <RailBtn active={khung === "luat"} onClick={() => onKhung("luat")} label="Danh sách luật">
         <path d="M5 4h10v12H5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
         <path d="M8 8h4M8 11h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      </RailBtn>
+      <RailBtn active={khung === "hoso"} onClick={() => onKhung("hoso")} label="Soạn hồ sơ">
+        <path d="M6 3h5l3 3v11H6z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+        <path d="M11 3v3h3M8 11h4M8 14h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       </RailBtn>
       <div className="mt-auto">
         <span className="flex size-8 items-center justify-center rounded-full bg-brand-600 text-[12px] font-semibold text-white" title="Doanh nghiệp">
@@ -125,6 +129,10 @@ export function Sidebar({
           <MucNav active={khung === "luat"} onClick={() => onKhung("luat")} nhan="Danh sách luật">
             <path d="M5 4h10v12H5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
             <path d="M8 8h4M8 11h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          </MucNav>
+          <MucNav active={khung === "hoso"} onClick={() => onKhung("hoso")} nhan="Soạn hồ sơ">
+            <path d="M6 3h5l3 3v11H6z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+            <path d="M11 3v3h3M8 11h4M8 14h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
           </MucNav>
         </nav>
 

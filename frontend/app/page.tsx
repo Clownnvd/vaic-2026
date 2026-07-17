@@ -6,6 +6,7 @@ import { ChatMessage } from "@/components/ChatMessage";
 import { DanhSachLuat } from "@/components/DanhSachLuat";
 import { ProfilePanel } from "@/components/ProfilePanel";
 import { Sidebar, type Khung } from "@/components/Sidebar";
+import { SoanHoSo } from "@/components/SoanHoSo";
 import { BffLoi, hoiBff } from "@/lib/api";
 import { bocHoSo } from "@/lib/extract";
 import {
@@ -276,12 +277,18 @@ export default function Page() {
           )}
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-[15px] font-semibold leading-none text-text">
-              {khung === "luat" ? "Danh sách luật" : "Trợ lý tư vấn chính sách"}
+              {khung === "luat"
+                ? "Danh sách luật"
+                : khung === "hoso"
+                  ? "Soạn hồ sơ xin tài trợ"
+                  : "Trợ lý tư vấn chính sách"}
             </h1>
             <p className="mt-1 truncate text-[11px] leading-none text-text-muted">
               {khung === "luat"
                 ? "Tra cứu văn bản trong corpus — tìm kiếm, lọc theo tiêu chí"
-                : "Tìm đúng chính sách bạn đủ điều kiện — có căn cứ tới từng điều khoản"}
+                : khung === "hoso"
+                  ? "Dựng khung hồ sơ, điền sẵn từ hồ sơ DN — bản nháp chờ duyệt"
+                  : "Tìm đúng chính sách bạn đủ điều kiện — có căn cứ tới từng điều khoản"}
             </p>
           </div>
           {khung === "chat" && treMs !== null && (
@@ -296,6 +303,8 @@ export default function Page() {
 
         {khung === "luat" ? (
           <DanhSachLuat />
+        ) : khung === "hoso" ? (
+          <SoanHoSo profile={profile} />
         ) : (
           <div className="flex min-h-0 flex-1">
             {/* cột chat */}
