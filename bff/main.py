@@ -48,7 +48,9 @@ from vn.context import che_pii, format_vnd, no_viet_tat  # noqa: E402
 app = FastAPI(title="PolicyRadar BFF")
 app.add_middleware(
     CORSMiddleware,
+    # dev: localhost; deploy: mọi domain *.up.railway.app (frontend Railway).
     allow_origins=["http://localhost:3002", "http://localhost:3000"],
+    allow_origin_regex=r"https://.*\.up\.railway\.app",
     allow_methods=["*"],
     allow_headers=["*"],
 )
