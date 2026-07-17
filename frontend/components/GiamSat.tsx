@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useI18n } from "@/lib/i18n";
-import { type CtGiamSat, type KetQuaGiamSat, type QuetHieuLuc, traGiamSat } from "@/lib/giamsat";
+import { type CtGiamSat, type KetQuaGiamSat, type QuetHieuLuc, type VanBanHet, traGiamSat } from "@/lib/giamsat";
 
 /**
  * ② GIÁM SÁT chính sách — đối chiếu hiệu lực THẬT (vbpl.vn) + văn bản liên quan.
@@ -101,35 +101,56 @@ function QuetKho({ q }: { q: QuetHieuLuc }) {
       </button>
 
       {moHet && (
-        <div className="max-h-96 divide-y divide-border-subtle overflow-y-auto border-t border-border-subtle">
-          {q.het.map((v, i) => {
-            const Bọc = v.url ? "a" : "div";
-            const props = v.url ? { href: v.url, target: "_blank", rel: "noreferrer" } : {};
-            return (
-              <Bọc
-                key={i}
-                {...props}
-                className={
-                  "flex items-start gap-2.5 px-4 py-2.5 " +
-                  (v.url ? "cursor-pointer hover:bg-blocked-50/40 dark:hover:bg-blocked-500/5" : "")
-                }
-              >
-                <span className="mt-0.5 shrink-0 rounded-md border border-blocked-300 bg-blocked-50 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-blocked-700 dark:border-blocked-700 dark:bg-blocked-500/10 dark:text-blocked-300">
-                  ⛔ {v.so_hieu || "—"}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[12.5px] leading-snug text-text">{v.tieu_de}</span>
-                  <span className="text-[11px] text-text-muted">
-                    {v.co_quan}
-                    {v.nam ? ` · ${v.nam}` : ""} · {v.nhan}
-                  </span>
-                </span>
-              </Bọc>
-            );
-          })}
+        <div className="max-h-[30rem] space-y-2 overflow-y-auto border-t border-border-subtle bg-surface-2/30 p-3">
+          {q.het.map((v, i) => (
+            <TheVanBanHet key={i} v={v} />
+          ))}
         </div>
       )}
     </div>
+  );
+}
+
+/** Thẻ 1 văn bản hết hiệu lực — GIAO DIỆN như thẻ Danh sách luật, badge đỏ. */
+function TheVanBanHet({ v }: { v: VanBanHet }) {
+  const { t } = useI18n();
+  const Bọc = v.url ? "a" : "div";
+  const props = v.url ? { href: v.url, target: "_blank", rel: "noreferrer" } : {};
+  return (
+    <Bọc
+      {...props}
+      className={
+        "group block rounded-xl border border-border-subtle bg-surface px-4 py-3 transition-colors " +
+        (v.url ? "cursor-pointer hover:border-blocked-400 hover:bg-blocked-50/40 dark:hover:bg-blocked-500/10" : "")
+      }
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="rounded-md bg-blocked-50 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-blocked-700 dark:bg-blocked-500/15 dark:text-blocked-300">
+          {v.so_hieu || "—"}
+        </span>
+        <span className="inline-flex items-center gap-1 rounded-md border border-blocked-300 bg-blocked-50 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-blocked-700 dark:border-blocked-700 dark:bg-blocked-500/10 dark:text-blocked-300">
+          <span className="size-1.5 rounded-full bg-blocked-500" />
+          {v.nhan}
+        </span>
+        {v.nam && <span className="text-[11px] text-text-muted">{v.nam}</span>}
+        {v.url && (
+          <span className="ml-auto text-[11px] text-blocked-600 opacity-0 transition-opacity group-hover:opacity-100 dark:text-blocked-300">
+            {t("Mở trên vbpl.vn ↗")}
+          </span>
+        )}
+      </div>
+      <h3 className="mt-1.5 text-[13.5px] font-medium leading-snug text-text group-hover:text-blocked-800 dark:group-hover:text-blocked-100">
+        {v.tieu_de}
+      </h3>
+      {v.co_quan && (
+        <div className="mt-1.5 flex items-center gap-1 text-[11px] text-text-muted">
+          <svg viewBox="0 0 16 16" className="size-3.5 shrink-0" fill="none">
+            <path d="M2 6l6-3 6 3M3 6v6M13 6v6M2 13h12M6 8v3M10 8v3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          {v.co_quan}
+        </div>
+      )}
+    </Bọc>
   );
 }
 
