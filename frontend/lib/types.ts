@@ -149,7 +149,8 @@ export type Message =
       vaiTro: "tro-ly";
       dang: "van-ban";
       noiDung: string;
-      grounding: TrangThaiGrounding;
+      /** Không đặt = câu trò chuyện/chuyển hướng (không badge). Đặt = câu có phán quyết. */
+      grounding?: TrangThaiGrounding;
       citations?: Citation[];
       /** Đoạn bị guard tô đỏ (số/điều luật không có căn cứ) */
       canhBao?: string;

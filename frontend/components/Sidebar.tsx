@@ -17,6 +17,7 @@ export function Sidebar({
   mocNgay,
   mo,
   onDong,
+  onMo,
 }: {
   khung: Khung;
   onKhung: (k: Khung) => void;
@@ -28,39 +29,59 @@ export function Sidebar({
   mocNgay: number;
   mo: boolean;
   onDong: () => void;
+  onMo: () => void;
 }) {
-  // chỉ hiện hội thoại ĐÃ có tin người dùng (như Claude — chat rỗng chưa vào lịch sử)
   const daDung = useMemo(
     () => lichSu.filter((c) => c.messages.some((m) => m.vaiTro === "nguoi-dung")),
     [lichSu],
   );
   const nhom = useMemo(() => nhomTheoThoiGian(daDung, mocNgay), [daDung, mocNgay]);
 
+  // ── RAIL (thu gọn): học từ mẫu Aceternity — collapse về thanh icon,
+  //    KHÔNG ẩn hẳn. Mượt hơn, vẫn bấm được nav. (CSS transition, khỏi framer-motion.)
+  const Rail = (
+    <div className="hidden h-full w-14 shrink-0 flex-col items-center border-r border-border-subtle bg-surface-2 py-3 md:flex">
+      <button onClick={onMo} title="Mở rộng" className="mb-2 rounded-lg p-1 hover:bg-surface">
+        <Logo size={28} />
+      </button>
+      <RailBtn onClick={() => { onMoi(); onKhung("chat"); }} label="Cuộc trò chuyện mới">
+        <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      </RailBtn>
+      <RailBtn active={khung === "chat"} onClick={() => onKhung("chat")} label="Trợ lý tư vấn">
+        <path d="M4 5h12v8H8l-4 3V5Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      </RailBtn>
+      <RailBtn active={khung === "luat"} onClick={() => onKhung("luat")} label="Danh sách luật">
+        <path d="M5 4h10v12H5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+        <path d="M8 8h4M8 11h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      </RailBtn>
+      <div className="mt-auto">
+        <span className="flex size-8 items-center justify-center rounded-full bg-brand-600 text-[12px] font-semibold text-white" title="Doanh nghiệp">
+          DN
+        </span>
+      </div>
+    </div>
+  );
+
   return (
     <>
-      {/* nền mờ khi mở trên mobile */}
-      {mo && (
-        <div
-          onClick={onDong}
-          className="fixed inset-0 z-20 bg-black/40 md:hidden"
-          aria-hidden
-        />
-      )}
+      {/* nền mờ khi mở overlay trên mobile */}
+      {mo && <div onClick={onDong} className="fixed inset-0 z-20 bg-black/40 md:hidden" aria-hidden />}
 
+      {/* RAIL desktop khi thu gọn */}
+      {!mo && Rail}
+
+      {/* SIDEBAR đầy đủ */}
       <aside
         className={
           "fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-border-subtle bg-surface-2 transition-transform md:static " +
           (mo ? "translate-x-0" : "-translate-x-full md:hidden")
         }
       >
-        {/* thương hiệu + nút thu gọn */}
         <div className="flex items-center gap-2.5 px-4 py-4">
           <Logo size={32} />
           <div className="min-w-0 flex-1">
             <div className="text-[14px] font-semibold leading-tight text-text">PolicyRadar</div>
-            <div className="text-[10.5px] leading-tight text-text-muted">
-              Trợ lý chính sách · NIC
-            </div>
+            <div className="text-[10.5px] leading-tight text-text-muted">Trợ lý chính sách · NIC</div>
           </div>
           <button
             onClick={onDong}
@@ -75,13 +96,9 @@ export function Sidebar({
           </button>
         </div>
 
-        {/* cuộc trò chuyện mới */}
         <div className="px-3">
           <button
-            onClick={() => {
-              onMoi();
-              onKhung("chat");
-            }}
+            onClick={() => { onMoi(); onKhung("chat"); }}
             className="flex w-full items-center gap-2 rounded-lg border border-border-strong bg-surface px-3 py-2 text-[13px] font-medium text-text transition-colors hover:border-brand-400 hover:bg-brand-50 dark:hover:bg-brand-900/30"
           >
             <svg viewBox="0 0 20 20" className="size-4" fill="none">
@@ -91,35 +108,16 @@ export function Sidebar({
           </button>
         </div>
 
-        {/* điều hướng */}
         <nav className="mt-3 px-3">
-          <MucNav
-            active={khung === "chat"}
-            onClick={() => onKhung("chat")}
-            icon={
-              <path
-                d="M4 5h12v8H8l-4 3V5Z"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinejoin="round"
-              />
-            }
-            nhan="Trợ lý tư vấn"
-          />
-          <MucNav
-            active={khung === "luat"}
-            onClick={() => onKhung("luat")}
-            icon={
-              <>
-                <path d="M5 4h10v12H5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-                <path d="M8 8h4M8 11h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-              </>
-            }
-            nhan="Danh sách luật"
-          />
+          <MucNav active={khung === "chat"} onClick={() => onKhung("chat")} nhan="Trợ lý tư vấn">
+            <path d="M4 5h12v8H8l-4 3V5Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+          </MucNav>
+          <MucNav active={khung === "luat"} onClick={() => onKhung("luat")} nhan="Danh sách luật">
+            <path d="M5 4h10v12H5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+            <path d="M8 8h4M8 11h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          </MucNav>
         </nav>
 
-        {/* lịch sử chat */}
         <div className="mt-4 flex-1 overflow-y-auto px-2 pb-3">
           <div className="px-2 pb-1 text-[10.5px] font-semibold uppercase tracking-wide text-text-muted">
             Lịch sử
@@ -135,10 +133,7 @@ export function Sidebar({
               {g.items.map((c) => (
                 <button
                   key={c.id}
-                  onClick={() => {
-                    onChon(c.id);
-                    onKhung("chat");
-                  }}
+                  onClick={() => { onChon(c.id); onKhung("chat"); }}
                   className={
                     "group flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-[12.5px] transition-colors " +
                     (c.id === convId && khung === "chat"
@@ -150,26 +145,13 @@ export function Sidebar({
                   <span
                     role="button"
                     tabIndex={0}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onXoa(c.id);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.stopPropagation();
-                        onXoa(c.id);
-                      }
-                    }}
+                    onClick={(e) => { e.stopPropagation(); onXoa(c.id); }}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); onXoa(c.id); } }}
                     className="hidden shrink-0 rounded p-0.5 text-text-muted hover:text-blocked-600 group-hover:block"
                     aria-label="Xoá cuộc trò chuyện"
                   >
                     <svg viewBox="0 0 16 16" className="size-3.5" fill="none">
-                      <path
-                        d="M4 4l8 8M12 4l-8 8"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                      />
+                      <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
                     </svg>
                   </span>
                 </button>
@@ -178,23 +160,15 @@ export function Sidebar({
           ))}
         </div>
 
-        {/* chân — khu tài khoản kiểu Claude */}
         <div className="border-t border-border-subtle p-2">
           <button className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left transition-colors hover:bg-surface">
             <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-600 text-[13px] font-semibold text-white">
               DN
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-[12.5px] font-medium text-text">
-                Doanh nghiệp
-              </span>
-              <span className="block truncate text-[10.5px] text-text-muted">
-                Gói tra cứu chính sách
-              </span>
+              <span className="block truncate text-[12.5px] font-medium text-text">Doanh nghiệp</span>
+              <span className="block truncate text-[10.5px] text-text-muted">Gói tra cứu chính sách</span>
             </span>
-            <svg viewBox="0 0 20 20" className="size-4 shrink-0 text-text-muted" fill="none">
-              <path d="M7 8l3 3 3-3M7 12l3-3 3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
           </button>
         </div>
       </aside>
@@ -202,30 +176,52 @@ export function Sidebar({
   );
 }
 
+function RailBtn({
+  active,
+  onClick,
+  label,
+  children,
+}: {
+  active?: boolean;
+  onClick: () => void;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      title={label}
+      aria-label={label}
+      className={
+        "mb-1 flex size-9 items-center justify-center rounded-lg transition-colors " +
+        (active ? "bg-brand-600 text-white" : "text-text-muted hover:bg-surface hover:text-text")
+      }
+    >
+      <svg viewBox="0 0 20 20" className="size-[18px]">{children}</svg>
+    </button>
+  );
+}
+
 function MucNav({
   active,
   onClick,
-  icon,
   nhan,
+  children,
 }: {
   active: boolean;
   onClick: () => void;
-  icon: React.ReactNode;
   nhan: string;
+  children: React.ReactNode;
 }) {
   return (
     <button
       onClick={onClick}
       className={
         "mb-0.5 flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors " +
-        (active
-          ? "bg-brand-600 text-white"
-          : "text-text hover:bg-surface")
+        (active ? "bg-brand-600 text-white" : "text-text hover:bg-surface")
       }
     >
-      <svg viewBox="0 0 20 20" className="size-4">
-        {icon}
-      </svg>
+      <svg viewBox="0 0 20 20" className="size-4">{children}</svg>
       {nhan}
     </button>
   );

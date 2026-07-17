@@ -16,48 +16,81 @@ function DienGiaiGuard({ dg }: { dg: DienGiai }) {
   }
   doan.push({ t: dg.text.slice(i), do: false });
 
+  const ok = dg.grounded;
   return (
     <div
       className={
-        "mt-2.5 rounded-xl border px-3.5 py-3 " +
-        (dg.grounded
-          ? "border-eligible-300 bg-eligible-50/60 dark:border-eligible-800 dark:bg-eligible-500/5"
-          : "border-blocked-300 bg-blocked-50 dark:border-blocked-700 dark:bg-blocked-500/10")
+        "mt-2.5 overflow-hidden rounded-xl border bg-surface shadow-sm " +
+        (ok
+          ? "border-eligible-200 dark:border-eligible-900"
+          : "border-blocked-300 dark:border-blocked-800")
       }
     >
-      <div className="mb-1.5 flex items-center gap-1.5">
+      {/* thanh tiêu đề guard */}
+      <div
+        className={
+          "flex items-center gap-2 px-3.5 py-2 " +
+          (ok
+            ? "bg-eligible-50/70 dark:bg-eligible-500/10"
+            : "bg-blocked-50 dark:bg-blocked-500/10")
+        }
+      >
         <span
           className={
-            "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold " +
-            (dg.grounded
-              ? "bg-eligible-100 text-eligible-700 dark:bg-eligible-500/15 dark:text-eligible-300"
-              : "bg-blocked-100 text-blocked-700 dark:bg-blocked-500/15 dark:text-blocked-300")
+            "flex size-5 items-center justify-center rounded-full " +
+            (ok
+              ? "bg-eligible-500 text-white"
+              : "bg-blocked-500 text-white")
           }
         >
-          {dg.grounded ? "✓ Guard: số bám nguồn" : `⛔ Guard chặn: ${dg.soBia.length} số bịa`}
-        </span>
-        <span className="text-[10.5px] text-text-muted">LLM diễn giải · kiểm bằng lớp số tất định</span>
-      </div>
-      <p className="text-[13.5px] leading-relaxed text-text">
-        {doan.map((d, k) =>
-          d.do ? (
-            <mark
-              key={k}
-              className="rounded bg-blocked-200 px-0.5 font-semibold text-blocked-800 line-through dark:bg-blocked-500/30 dark:text-blocked-200"
-              title="Số này KHÔNG có trong căn cứ — guard tô đỏ"
-            >
-              {d.t}
-            </mark>
+          {ok ? (
+            <svg viewBox="0 0 16 16" className="size-3" fill="none">
+              <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           ) : (
-            <VietTat key={k}>{d.t}</VietTat>
-          ),
-        )}
-      </p>
-      {dg.canhBao && (
-        <p className="mt-1.5 text-[11.5px] font-medium text-blocked-700 dark:text-blocked-300">
-          {dg.canhBao}
+            <svg viewBox="0 0 16 16" className="size-3" fill="none">
+              <path d="M8 5v4M8 11.5v.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          )}
+        </span>
+        <span className={"text-[12px] font-semibold " + (ok ? "text-eligible-800 dark:text-eligible-200" : "text-blocked-800 dark:text-blocked-200")}>
+          {ok ? "Đã kiểm chứng — số liệu bám nguồn" : `Guard chặn — ${dg.soBia.length} số không có căn cứ`}
+        </span>
+        <span className="ml-auto flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-text-muted">
+          <svg viewBox="0 0 16 16" className="size-3.5" fill="none">
+            <path d="M8 1.5l5 2v4c0 3-2.2 5.3-5 6.5-2.8-1.2-5-3.5-5-6.5v-4l5-2Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+          </svg>
+          Guard
+        </span>
+      </div>
+
+      {/* nội dung diễn giải */}
+      <div className="px-3.5 py-3">
+        <p className="text-[10px] font-medium uppercase tracking-wide text-text-muted">
+          AI diễn giải · kiểm bằng lớp số tất định (đối chiếu nguyên văn corpus)
         </p>
-      )}
+        <p className="mt-1.5 text-[13.5px] leading-relaxed text-text">
+          {doan.map((d, k) =>
+            d.do ? (
+              <mark
+                key={k}
+                className="rounded bg-blocked-200 px-1 font-semibold text-blocked-800 line-through decoration-blocked-500 dark:bg-blocked-500/30 dark:text-blocked-100"
+                title="Số này KHÔNG có trong căn cứ — guard tô đỏ"
+              >
+                {d.t}
+              </mark>
+            ) : (
+              <VietTat key={k}>{d.t}</VietTat>
+            ),
+          )}
+        </p>
+        {dg.canhBao && (
+          <p className="mt-2 flex items-start gap-1.5 rounded-lg bg-blocked-50 px-2.5 py-1.5 text-[11.5px] font-medium leading-snug text-blocked-700 dark:bg-blocked-500/10 dark:text-blocked-300">
+            <span>⚠</span>
+            <span>{dg.canhBao}</span>
+          </p>
+        )}
+      </div>
     </div>
   );
 }
@@ -111,9 +144,11 @@ export function ChatMessage({ m }: { m: Message }) {
     return (
       <div className="max-w-[92%]">
         <BongBong>
-          <div className="mb-2">
-            <BadgeGrounding tt={m.grounding} />
-          </div>
+          {m.grounding && (
+            <div className="mb-2">
+              <BadgeGrounding tt={m.grounding} />
+            </div>
+          )}
           <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-text">
             {m.noiDung}
           </p>

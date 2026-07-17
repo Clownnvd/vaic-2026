@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ChatInput } from "@/components/ChatInput";
 import { ChatMessage } from "@/components/ChatMessage";
 import { DanhSachLuat } from "@/components/DanhSachLuat";
-import { ProfileRibbon } from "@/components/ProfileRibbon";
+import { ProfilePanel } from "@/components/ProfilePanel";
 import { Sidebar, type Khung } from "@/components/Sidebar";
 import { BffLoi, hoiBff } from "@/lib/api";
 import { bocHoSo } from "@/lib/extract";
@@ -148,7 +148,17 @@ export default function Page() {
       const d = await hoiBff(text, hoSoMoi);
       setTreMs(d.ms);
 
-      if (d.dang === "hoi_ho_so") {
+      if (d.dang === "van_ban") {
+        // câu meta/lạc đề, ngoài phạm vi, hồ sơ vô lý → trả lời văn bản THẲNG,
+        // KHÔNG phải lỗi, KHÔNG gắn badge "chưa đủ căn cứ" (đây là câu trò chuyện,
+        // không phải phán quyết về một điều luật).
+        themTin(id, {
+          id: nextId(),
+          vaiTro: "tro-ly",
+          dang: "van-ban",
+          noiDung: d.noi_dung,
+        });
+      } else if (d.dang === "hoi_ho_so") {
         themTin(id, {
           id: nextId(),
           vaiTro: "tro-ly",
@@ -246,20 +256,24 @@ export default function Page() {
         mocNgay={mocNgay}
         mo={sidebarMo}
         onDong={() => setSidebarMo(false)}
+        onMo={() => setSidebarMo(true)}
       />
 
       <main className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center gap-2 border-b border-border-subtle bg-surface px-4 py-2.5">
-          <button
-            onClick={() => setSidebarMo((v) => !v)}
-            className="rounded-md p-1.5 text-text-muted hover:bg-surface-2"
-            aria-label={sidebarMo ? "Đóng thanh bên" : "Mở thanh bên"}
-            title={sidebarMo ? "Đóng thanh bên" : "Mở thanh bên"}
-          >
-            <svg viewBox="0 0 20 20" className="size-5" fill="none">
-              <path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-            </svg>
-          </button>
+          {/* ☰ chỉ MOBILE (desktop thu gọn đã có RAIL icon để mở lại) */}
+          {!sidebarMo && (
+            <button
+              onClick={() => setSidebarMo(true)}
+              className="-ml-1 rounded-md p-1.5 text-text-muted hover:bg-surface-2 md:hidden"
+              aria-label="Mở thanh bên"
+              title="Mở thanh bên"
+            >
+              <svg viewBox="0 0 20 20" className="size-5" fill="none">
+                <path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+              </svg>
+            </button>
+          )}
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-[15px] font-semibold leading-none text-text">
               {khung === "luat" ? "Danh sách luật" : "Trợ lý tư vấn chính sách"}
@@ -283,21 +297,26 @@ export default function Page() {
         {khung === "luat" ? (
           <DanhSachLuat />
         ) : (
-          <>
-            <ProfileRibbon profile={profile} />
-            <div className="flex-1 overflow-y-auto">
-              <div className="mx-auto flex max-w-3xl flex-col gap-3 px-4 py-4">
-                {messages.map((m) => (
-                  <ChatMessage key={m.id} m={m} />
-                ))}
-                {dangBan && (
-                  <p className="text-[12px] text-text-muted">Đang quét kho văn bản…</p>
-                )}
-                <div ref={cuoiRef} />
+          <div className="flex min-h-0 flex-1">
+            {/* cột chat */}
+            <div className="flex min-w-0 flex-1 flex-col">
+              <div className="flex-1 overflow-y-auto">
+                <div className="mx-auto flex max-w-3xl flex-col gap-3 px-4 py-4">
+                  {messages.map((m) => (
+                    <ChatMessage key={m.id} m={m} />
+                  ))}
+                  {dangBan && (
+                    <p className="text-[12px] text-text-muted">Đang quét kho văn bản…</p>
+                  )}
+                  <div ref={cuoiRef} />
+                </div>
               </div>
+              <ChatInput onGui={xuLy} dangBan={dangBan} goiY={chuaHoi ? GOI_Y : []} />
             </div>
-            <ChatInput onGui={xuLy} dangBan={dangBan} goiY={chuaHoi ? GOI_Y : []} />
-          </>
+
+            {/* panel hồ sơ dọc bên phải */}
+            <ProfilePanel profile={profile} />
+          </div>
         )}
       </main>
     </div>

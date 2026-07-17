@@ -54,6 +54,14 @@ export type ApiChuongTrinh = {
 
 export type ApiTraLoi =
   | {
+      dang: "van_ban";
+      noi_dung: string;
+      text?: string;
+      grounded?: boolean;
+      pii_da_che: string[];
+      ms: number;
+    }
+  | {
       dang: "hoi_ho_so";
       noi_dung: string;
       dang_hoi: string[];
