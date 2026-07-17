@@ -38,11 +38,57 @@ CO_QUAN_GIA = [
     "Bộ Thông tin và Truyền thông",
 ]
 
-# câu khẳng định điều kiện — trục ngữ nghĩa (#8)
-MAU_DU_DIEU_KIEN = [
-    "Doanh nghiệp thuộc trường hợp này đủ điều kiện được hưởng ưu đãi theo {cit}.",
-    "Theo {cit}, doanh nghiệp được hưởng toàn bộ mức hỗ trợ tối đa mà không cần thêm điều kiện nào.",
-    "Căn cứ {cit}, mọi doanh nghiệp nhỏ và vừa đều mặc nhiên đủ điều kiện nhận hỗ trợ.",
+# ── trục NGỮ NGHĨA (#8) ───────────────────────────────────────────
+# ⚠️ BÀI HỌC ĐẮT: bản đầu chỉ có 3 template CỐ ĐỊNH → model học thuộc câu chữ,
+#    bắt bịa ra 1.000 nhưng là số GIẢ (nó nhận diện template, không hiểu grounding).
+#    Kho cảnh báo: "F1=1.00 = data synthetic quá dễ, đừng khoe".
+# → Sinh đa dạng: 4 kiểu bịa × nhiều cách diễn đạt × nội dung LẤY TỪ CHÍNH KHOẢN.
+
+_MO = [
+    "Theo {cit}, {noi_dung}",
+    "Căn cứ {cit}, {noi_dung}",
+    "{cit} quy định {noi_dung}",
+    "Đối chiếu {cit} thì {noi_dung}",
+    "Như {cit} đã nêu, {noi_dung}",
+]
+
+# kiểu 1 — TỔNG QUÁT HOÁ QUÁ ĐÀ: bỏ hết điều kiện ràng buộc
+_TONG_QUAT = [
+    "mọi doanh nghiệp nhỏ và vừa đều mặc nhiên đủ điều kiện nhận hỗ trợ",
+    "tất cả doanh nghiệp trong ngành đều được hưởng, không cần điều kiện gì thêm",
+    "doanh nghiệp nào nộp hồ sơ cũng sẽ được duyệt",
+    "quy định này áp dụng cho toàn bộ doanh nghiệp trên cả nước",
+]
+
+# kiểu 2 — TỰ KHẲNG ĐỊNH ĐỦ ĐIỀU KIỆN (anti-sycophancy)
+_DU_DK = [
+    "doanh nghiệp của bạn đã đủ điều kiện, có thể nộp hồ sơ ngay",
+    "hồ sơ bạn mô tả hoàn toàn đáp ứng, không thiếu tiêu chí nào",
+    "trường hợp này chắc chắn được chấp thuận",
+    "bạn đủ điều kiện hưởng mức hỗ trợ cao nhất",
+]
+
+# kiểu 3 — BỎ RÀNG BUỘC / PHỦ ĐỊNH ĐIỀU KIỆN
+_BO_RANG_BUOC = [
+    "doanh nghiệp không cần đáp ứng thêm tiêu chí nào khác",
+    "không có giới hạn về thời gian nộp hồ sơ",
+    "không yêu cầu giấy chứng nhận nào kèm theo",
+    "việc thẩm định là thủ tục hình thức, không ảnh hưởng kết quả",
+]
+
+# kiểu 4 — SUY DIỄN THẨM QUYỀN / HIỆU LỰC mà nguồn không hề nói
+_SUY_DIEN = [
+    "quy định này vẫn còn hiệu lực và được áp dụng thống nhất toàn quốc",
+    "cơ quan thuế có trách nhiệm tự động áp dụng ưu đãi này",
+    "doanh nghiệp được truy lĩnh phần hỗ trợ của các năm trước",
+    "mức hỗ trợ này được cộng dồn với các chương trình khác",
+]
+
+_KIEU_NGU_NGHIA = [
+    ("bia_tong_quat_hoa", _TONG_QUAT),
+    ("bia_tu_du_dieu_kien", _DU_DK),
+    ("bia_bo_rang_buoc", _BO_RANG_BUOC),
+    ("bia_suy_dien", _SUY_DIEN),
 ]
 
 
@@ -243,12 +289,14 @@ def sinh_cap(
             break
 
     # ── trục NGỮ NGHĨA (#8) — không số nào sai, nhưng nguồn không hề nói vậy ──
+    # Đa dạng hoá: 4 kiểu × 5 cách mở câu → model không học thuộc được template.
+    ten_kieu, kho_cau = rng.choice(_KIEU_NGU_NGHIA)
     ra.append(
         Cap(
             premise=khoan_text,
-            hypothesis=rng.choice(MAU_DU_DIEU_KIEN).format(cit=cit),
+            hypothesis=rng.choice(_MO).format(cit=cit, noi_dung=rng.choice(kho_cau)),
             label=0,
-            corruption_type="bia_dieu_kien_thu_huong",
+            corruption_type=ten_kieu,
             doc_id=doc_id,
         )
     )

@@ -57,6 +57,32 @@ def can_bang(rows: list[dict], rng: random.Random) -> list[dict]:
     return ra
 
 
+def can_bang_giu_hard(
+    rows: list[dict], hard: list[dict], rng: random.Random
+) -> list[dict]:
+    """Cân 1:1 nhưng GIỮ BẰNG ĐƯỢC đám hard-negative vừa đào.
+
+    🐛 BUG ĐÃ SỬA: bản đầu gọi thẳng can_bang(cur + them) → can_bang thấy neg>pos
+    nên sample NGẪU NHIÊN neg xuống → vứt gần hết hard-negative vừa đào.
+    Đào xong ném đi → đường mining dao động 55→24→36→73%, và ablation cho thấy
+    BỎ mining lại tốt hơn. Đó là hệ quả của bug, không phải mining vô dụng.
+
+    Sửa: hard-negative được ưu tiên giữ; chỉ loại bớt negative THƯỜNG để lấp chỗ.
+    """
+    pos = [r for r in rows if r["label"] == 1]
+    thuong = [r for r in rows if r["label"] == 0]
+    can = len(pos)
+
+    giu = hard[:can]  # hard vào trước
+    thieu = can - len(giu)
+    if thieu > 0 and thuong:
+        giu += rng.sample(thuong, min(thieu, len(thuong)))
+
+    ra = pos + giu
+    rng.shuffle(ra)
+    return ra
+
+
 def vec_hoa(rows: list[dict]) -> tuple[torch.Tensor, torch.Tensor]:
     X = np.stack([featurize(r["premise"], r["hypothesis"]) for r in rows])
     y = np.array([r["label"] for r in rows], dtype=np.int64)
@@ -192,6 +218,7 @@ def main() -> None:
     print("=" * 58)
     pool = [r for r in nap("train") if r["label"] == 0]
     cur = list(tr)
+    hard_tich: list[dict] = []  # hard-negative TÍCH LUỸ qua các vòng, không được rơi
     duong: list[float] = []
 
     for vong in range(4):
@@ -200,7 +227,10 @@ def main() -> None:
         _, bat = do_f1(lg, y)
         bi_lua = 1 - bat
         duong.append(bi_lua)
-        print(f"  vòng {vong}: bị lừa {bi_lua * 100:5.1f}%  (train {len(cur):,} cặp)")
+        print(
+            f"  vòng {vong}: bị lừa {bi_lua * 100:5.1f}%  "
+            f"(train {len(cur):,} cặp, hard giữ {len(hard_tich):,})"
+        )
 
         if vong == 3:
             break
@@ -213,7 +243,8 @@ def main() -> None:
         if not them:
             print("  (không đào được thêm — dừng)")
             break
-        cur = can_bang(cur + them, rng)
+        hard_tich.extend(them)
+        cur = can_bang_giu_hard(tr, hard_tich, rng)  # GIỮ hard, chỉ loại neg thường
 
     # ═══ ĐÒN #3 — calibration ════════════════════════════════════
     print("\n" + "=" * 58)
