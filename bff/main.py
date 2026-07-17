@@ -35,6 +35,8 @@ from matcher.match import diff_ket_qua, quet_nguoc  # noqa: E402
 from matcher.pham_vi import (  # noqa: E402
     cau_chuyen_huong,
     cau_meta_lac_de,
+    cau_moi_tra_cuu,
+    cau_tra_cuu_chung,
     cau_tu_choi_linh_vuc,
     cau_tu_choi_van_ban,
     hoi_van_ban_ngoai_kho,
@@ -406,6 +408,20 @@ def chat(r: YeuCau) -> dict:
             "dang": "van_ban",
             "text": cau_chuyen_huong(),
             "noi_dung": cau_chuyen_huong(),
+            "grounded": False,
+            "citations": [],
+            "requires_approval": False,
+            "pii_da_che": list(da_che.keys()),
+            "ms": int((time.perf_counter() - t0) * 1000),
+        }
+
+    # ── TRA CỨU CHUNG (muốn duyệt luật, KHÔNG xét điều kiện) → hướng Danh sách luật
+    # Bug thật: "tôi muốn tìm hiểu thêm về luật" → bot đòi hồ sơ DN. Sai ý.
+    if cau_tra_cuu_chung(cau):
+        return {
+            "dang": "van_ban",
+            "text": cau_moi_tra_cuu(),
+            "noi_dung": cau_moi_tra_cuu(),
             "grounded": False,
             "citations": [],
             "requires_approval": False,

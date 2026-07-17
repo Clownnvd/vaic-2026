@@ -117,6 +117,43 @@ def cau_chuyen_huong() -> str:
     )
 
 
+# ── câu TRA CỨU CHUNG (muốn xem/tìm hiểu luật, KHÔNG phải xét điều kiện) ──
+# Bug thật: "tôi muốn tìm hiểu thêm về luật" → bot đòi hồ sơ DN như thể xét
+# điều kiện. Nhưng ý người dùng là DUYỆT/TRA luật. Phải phân biệt:
+#   • tra cứu chung  → chỉ sang "Danh sách luật" (2.669 văn bản) / hỏi chủ đề
+#   • xét điều kiện  → mới cần hồ sơ DN
+# ⚠️ VIẾT KHÔNG DẤU — vì khớp trên chuỗi đã bo_dau (lỗi cũ: viết có dấu → trượt
+#    đúng câu "tìm hiểu thêm về luật" mà người dùng báo).
+_TRA_CUU = [
+    r"\btim hieu\b.*\b(luat|van ban|chinh sach|nghi dinh|thong tu)\b",
+    r"\btra cuu\b",
+    r"\b(xem|coi|doc)\b.*\b(luat|van ban|nghi dinh|chinh sach)\b",
+    r"\bco\b.*\b(luat|chinh sach|van ban|uu dai)\b.*\b(gi|nao)\b",
+    r"\bdanh sach\b.*\b(luat|van ban)\b",
+    r"\btim\b.*\b(van ban|luat|nghi dinh)\b",
+]
+
+
+def cau_tra_cuu_chung(cau: str) -> bool:
+    """True nếu là câu muốn DUYỆT/TRA luật chung (không kèm thông tin DN cụ thể)."""
+    c = bo_dau(cau).strip().lower()
+    # có số/thông tin DN (tỷ, triệu, lao động, %) → là mô tả DN, KHÔNG phải tra cứu chung
+    if re.search(r"\d+\s*(t[yỷ]|tri[eệ]u|%|lao [dđ][oộ]ng|nh[aâ]n s[uự]|ng[uư][oờ]i)", c):
+        return False
+    return any(re.search(p, c) for p in _TRA_CUU)
+
+
+def cau_moi_tra_cuu() -> str:
+    """Hướng người dùng sang tra cứu luật — không đòi hồ sơ."""
+    return (
+        "Bạn muốn tra cứu văn bản đúng không? Mình có **kho 2.669 văn bản** (luật, "
+        "nghị định, thông tư) — mở mục **“Danh sách luật”** ở thanh bên để tìm kiếm và "
+        "lọc theo loại / lĩnh vực / cơ quan / năm.\n\n"
+        "Hoặc nói rõ bạn quan tâm **chủ đề gì** (vd: ưu đãi thuế cho doanh nghiệp KH&CN, "
+        "hỗ trợ doanh nghiệp nhỏ và vừa…) để mình tra thẳng vào điều–khoản giúp bạn."
+    )
+
+
 def hoi_van_ban_ngoai_kho(cau: str) -> str | None:
     """Hỏi đích danh văn bản KHÔNG có trong corpus → trả tên văn bản.
 
