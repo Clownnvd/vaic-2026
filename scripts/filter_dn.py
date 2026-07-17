@@ -23,6 +23,7 @@ import pyarrow.parquet as pq
 
 sys.path.insert(0, ".")
 from corpus.parse_dieu import don_vi_trich_dan  # noqa: E402
+from matcher.loc_dieu6 import nhay_cam  # noqa: E402
 from scripts.split_corpus import bucket  # noqa: E402
 
 # chủ đề DN/đầu tư/công nghệ — cùng regex đã dùng lúc audit
@@ -39,9 +40,28 @@ def main() -> None:
     tbl = pq.read_table(IN)
     print(f"corpus đầy đủ: {tbl.num_rows:,} văn bản")
 
-    giu = [bool(RE_DN.search((t or "").lower())) for t in tbl["title"].to_pylist()]
-    dn = tbl.filter(pa.array(giu))
-    print(f"chủ đề DN/đầu tư/công nghệ: {dn.num_rows:,} ({dn.num_rows / tbl.num_rows * 100:.1f}%)\n")
+    titles = tbl["title"].to_pylist()
+    giu_chu_de = [bool(RE_DN.search((t or "").lower())) for t in titles]
+    dn = tbl.filter(pa.array(giu_chu_de))
+    print(f"chủ đề DN/đầu tư/công nghệ: {dn.num_rows:,} ({dn.num_rows / tbl.num_rows * 100:.1f}%)")
+
+    # ── ĐIỀU 6 luật thi: loại văn bản nhạy cảm khỏi phạm vi matcher ──
+    # "Đội thi có trách nhiệm KIỂM TRA KỸ... không chứa nội dung sai lệch hoặc không
+    #  phù hợp liên quan đến chính trị, biên giới, lãnh thổ, chủ quyền quốc gia và biển đảo"
+    # Đây là KIỂM TRA CHỦ ĐỘNG. Mấy văn bản này lọt vào vì đúng chủ đề kinh tế, nhưng
+    # không liên quan ưu đãi DN → loại đi mất 0 giá trị, bớt 100% rủi ro.
+    t_dn = dn["title"].to_pylist()
+    d_dn = dn["doc_number_str"].to_pylist()
+    mask6 = [not nhay_cam(t) for t in t_dn]
+    bo6 = [(d_dn[i], t_dn[i]) for i, ok in enumerate(mask6) if not ok]
+
+    dn = dn.filter(pa.array(mask6))
+    print(f"sau lọc điều 6            : {dn.num_rows:,}  (loại {len(bo6)} văn bản nhạy cảm)")
+    if bo6:
+        print("  ĐÃ LOẠI theo điều 6 — ghi ra để GIẢI TRÌNH, không giấu:")
+        for d, t in bo6:
+            print(f"    • {str(d)[:22]:24} {(t or '')[:56]}")
+    print()
 
     OUT.mkdir(parents=True, exist_ok=True)
     phia = [bucket(i) for i in dn["item_id"].to_pylist()]
