@@ -260,86 +260,34 @@ def danh_sach_luat(
 
 @app.get("/giam-sat")
 def giam_sat() -> dict:
-    """② — theo dõi hiệu lực + văn bản liên quan (thay thế/sửa đổi) từ vbpl.vn.
+    """② — theo dõi hiệu lực: MỘT bảng văn bản kho + trạng thái THẬT (vbpl.vn).
 
-    Đây là phần "theo dõi cập nhật chính sách": mỗi văn bản flagship được đối
-    chiếu trạng thái hiệu lực THẬT (Còn/Hết) và liệt kê văn bản liên quan mà
-    vbpl.vn ghi nhận. Nếu một văn bản chuyển sang HẾT hiệu lực → badge đổi, DN
-    được cảnh báo ngay (thay vì trích văn bản chết).
+    Trả toàn bộ văn bản đã đối chiếu (scripts/cron_giam_sat.py quét vbpl.vn, cache
+    đĩa) — mỗi dòng có trạng thái Còn/Hết. Frontend là 1 bảng + tìm kiếm + lọc.
     """
-    from vbpl.api import quan_he, tra_hieu_luc
-
-    # nhãn loai tham chiếu vbpl (int) — chưa có bảng mã chính thức, để mô tả mềm
-    LOAI = {3: "Căn cứ pháp lý", 4: "Văn bản liên quan / tiền nhiệm"}
-    ra = []
-    for ct in KHO:
-        c = ct.citation_chinh or (ct.dieu_kien[0].citation if ct.dieu_kien else None)
-        if not c or not c.doc_id:
-            continue
-        hl = tra_hieu_luc(c.doc_id, chi_cache=True)
-        qh = quan_he(c.doc_id)
-        # KHỬ TRÙNG: vbpl liệt kê cùng một văn bản nhiều lần (loai khác nhau).
-        # Gộp theo tiêu đề, giữ lần đầu.
-        seen_lq: set[str] = set()
-        lq = []
-        for r in qh:
-            khoa = (r.get("title") or r.get("so_vb") or "").strip().lower()
-            if not khoa or khoa in seen_lq:
-                continue
-            seen_lq.add(khoa)
-            lq.append(
-                {
-                    "so_vb": r.get("so_vb"),
-                    "title": (r.get("title") or "")[:120],
-                    "loai": LOAI.get(r.get("loai"), "Liên quan"),
-                }
-            )
-        ra.append(
-            {
-                "id": ct.id,
-                "ten": ct.ten,
-                "so_hieu": c.so_vb,
-                "co_quan": ct.co_quan,
-                "url": _url_van_ban(c.doc_id),  # bấm số hiệu mở bài gốc
-                "hieu_luc": {
-                    "da_doi_chieu": hl.loi is None,
-                    "con_hieu_luc": hl.con_hieu_luc,
-                    "nhan": hl.nhan,
-                    "ma": hl.ma,
-                },
-                "so_lien_quan": len(lq),
-                "lien_quan": lq[:10],
-            }
-        )
-
-    # ── QUÉT KHO: bằng chứng giám sát BẮT ĐƯỢC thay đổi, không chỉ 2 flagship ──
-    # scripts/quet_hieu_luc.py đối chiếu vbpl.vn N văn bản kho → lưu trạng thái.
-    # Giám sát mà văn bản nào cũng "Còn hiệu lực" thì chưa chứng minh gì; đây là
-    # phần bắt VĂN BẢN ĐÃ HẾT HIỆU LỰC (nếu matcher lỡ trích → DN nộp văn bản chết).
     quet = _nap_quet()
-    het = [r for r in quet if r.get("con_hieu_luc") is False]
-    con = [r for r in quet if r.get("con_hieu_luc") is True]
-    quet_out = {
-        "n": len(quet),
-        "n_het": len(het),
-        "n_con": len(con),
-        "tong_kho": 2669,
-        "het": [
-            {
-                "so_hieu": r.get("so_hieu"),
-                "tieu_de": r.get("tieu_de"),
-                "nam": r.get("nam"),
-                "co_quan": r.get("co_quan"),
-                "url": r.get("url"),
-                "nhan": r.get("nhan"),
-            }
-            for r in sorted(het, key=lambda x: -(x.get("nam") or 0))[:40]
-        ],
-    }
+    van_ban = [
+        {
+            "so_hieu": r.get("so_hieu"),
+            "tieu_de": r.get("tieu_de"),
+            "nam": r.get("nam"),
+            "co_quan": r.get("co_quan"),
+            "url": r.get("url"),
+            "nhan": r.get("nhan"),
+            "con_hieu_luc": r.get("con_hieu_luc"),
+        }
+        for r in quet
+        if r.get("con_hieu_luc") is not None  # chỉ dòng có kết luận rõ Còn/Hết
+    ]
+    # hết hiệu lực trước, rồi mới nhất trước
+    van_ban.sort(key=lambda x: (x["con_hieu_luc"] is not False, -(x.get("nam") or 0)))
+    n_het = sum(1 for v in van_ban if v["con_hieu_luc"] is False)
 
     return {
-        "chuong_trinh": ra,
-        "quet": quet_out,
+        "van_ban": van_ban,
+        "n_het": n_het,
+        "n_con": len(van_ban) - n_het,
+        "tong_kho": 2669,
         "nguon": "vbpl.vn (Bộ Tư pháp)",
         "cap_nhat": "đối chiếu trực tiếp vbpl.vn, cache đĩa",
     }
