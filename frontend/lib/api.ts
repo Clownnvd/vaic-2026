@@ -53,12 +53,16 @@ export type ApiChuongTrinh = {
   hieu_luc?: ApiHieuLuc;
 };
 
+/** Hồ sơ backend trích được (GPT) — snake_case, gửi kèm mọi phản hồi để UI đồng bộ. */
+export type ApiHoSoMoi = Record<string, unknown>;
+
 export type ApiTraLoi =
   | {
       dang: "van_ban";
       noi_dung: string;
       text?: string;
       grounded?: boolean;
+      ho_so_moi?: ApiHoSoMoi;
       pii_da_che: string[];
       ms: number;
     }
@@ -66,6 +70,7 @@ export type ApiTraLoi =
       dang: "hoi_ho_so";
       noi_dung: string;
       dang_hoi: string[];
+      ho_so_moi?: ApiHoSoMoi;
       pii_da_che: string[];
       ms: number;
     }
@@ -74,9 +79,24 @@ export type ApiTraLoi =
       noi_dung: string;
       chuong_trinh: ApiChuongTrinh[];
       dien_giai?: ApiDienGiai | null;
+      ho_so_moi?: ApiHoSoMoi;
       pii_da_che: string[];
       ms: number;
     };
+
+/** Map hồ sơ backend (snake) → Profile UI (camel) — GPT trích ở server, UI hiện lại. */
+export function sangUI(hs: ApiHoSoMoi): Partial<Profile> {
+  const p: Record<string, unknown> = {};
+  const m: Record<string, string> = {
+    nganh: "nganh", linh_vuc: "linhVuc", von: "von", doanh_thu: "doanhThu",
+    lao_dong_bhxh: "laoDongBhxh", ty_le_dt_khcn: "tyLeDtKhcn",
+    co_gcn_khcn: "coGcnKhcn", nu_lam_chu: "nuLamChu", dia_ban: "diaBan", fdi: "fdi",
+  };
+  for (const [k, v] of Object.entries(hs)) {
+    if (k in m && v !== null && v !== undefined) p[m[k]] = v;
+  }
+  return p as Partial<Profile>;
+}
 
 /** Diễn giải LLM (① interpreting) + phán quyết guard lớp số. */
 export type ApiDienGiai = {

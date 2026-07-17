@@ -403,6 +403,21 @@ def danh_sach_chuong_trinh() -> dict:
     return {"tong": len(ra), "chuong_trinh": ra}
 
 
+def _van_ban(text: str, da_che: dict, t0: float, ho_so: dict) -> dict:
+    """Phản hồi văn bản thuần (chào/tra cứu/lạc đề) — không phán quyết điều luật."""
+    return {
+        "dang": "van_ban",
+        "text": text,
+        "noi_dung": text,
+        "grounded": False,
+        "citations": [],
+        "requires_approval": False,
+        "ho_so_moi": ho_so,  # đồng bộ hồ sơ GPT trích được về frontend
+        "pii_da_che": list(da_che.keys()),
+        "ms": int((time.perf_counter() - t0) * 1000),
+    }
+
+
 @app.post("/chat")
 def chat(r: YeuCau) -> dict:
     t0 = time.perf_counter()
@@ -413,64 +428,47 @@ def chat(r: YeuCau) -> dict:
     # ── H2: che PII TRƯỚC khi câu này có thể đi ra LLM ────────
     cau_an_toan, da_che = che_pii(cau)
 
-    # ── HỎI NGOÀI PHẠM VI → nói thẳng, không trả đồ khác ──────
-    # (bộ ca đối kháng bắt: hỏi "ưu đãi nông nghiệp" → trả ưu đãi công nghệ cao)
+    ho_so = dict(r.ho_so)  # sẽ gộp thêm field GPT trích được
+
+    # ── SAFETY NET (luôn chạy, KHÔNG phải intent routing): scope honesty ──
+    # Giữ tất định 2 net này vì chúng bảo đảm TRUNG THỰC về phạm vi kho,
+    # thứ GPT có thể lỡ bịa. (bộ ca đối kháng: "ưu đãi nông nghiệp" → không bịa)
     vb = hoi_van_ban_ngoai_kho(cau)
     if vb:
-        return {
-            "dang": "van_ban",
-            "text": cau_tu_choi_van_ban(vb),
-            "noi_dung": cau_tu_choi_van_ban(vb),
-            "grounded": False,  # KHÔNG có căn cứ → nói thẳng
-            "citations": [],
-            "requires_approval": False,
-            "pii_da_che": list(da_che.keys()),
-            "ms": int((time.perf_counter() - t0) * 1000),
-        }
-
+        return _van_ban(cau_tu_choi_van_ban(vb), da_che, t0, ho_so)
     lv = ngoai_pham_vi(cau)
     if lv:
-        return {
-            "dang": "van_ban",
-            "text": cau_tu_choi_linh_vuc(lv),
-            "noi_dung": cau_tu_choi_linh_vuc(lv),
-            "grounded": False,
-            "citations": [],
-            "requires_approval": False,
-            "pii_da_che": list(da_che.keys()),
-            "ms": int((time.perf_counter() - t0) * 1000),
-        }
+        return _van_ban(cau_tu_choi_linh_vuc(lv), da_che, t0, ho_so)
 
-    # ── CÂU META / LẠC ĐỀ → hiểu context, KHÔNG chạy matcher ──────
-    # Bug thật: hồ sơ đầy từ lượt trước → "bạn bao tuổi" cũng ra kết quả đủ
-    # điều kiện. Bot phải nhận ra câu KHÔNG hỏi chính sách và chuyển hướng.
-    if cau_meta_lac_de(cau):
-        return {
-            "dang": "van_ban",
-            "text": cau_chuyen_huong(),
-            "noi_dung": cau_chuyen_huong(),
-            "grounded": False,
-            "citations": [],
-            "requires_approval": False,
-            "pii_da_che": list(da_che.keys()),
-            "ms": int((time.perf_counter() - t0) * 1000),
-        }
+    # ── TẦNG HỘI THOẠI GPT: hiểu ý + trích hồ sơ + trả lời tự nhiên ──
+    # Thay routing regex cứng. GPT KHÔNG quyết eligibility/số — chỉ dẫn hội thoại.
+    tra_loi_gpt: str | None = None
+    gpt_yd: str | None = None
+    if _cho_dien_giai():  # có key + USE_LLM
+        try:
+            from bff.hoi_thoai import hieu
 
-    # ── TRA CỨU CHUNG (muốn duyệt luật, KHÔNG xét điều kiện) → hướng Danh sách luật
-    # Bug thật: "tôi muốn tìm hiểu thêm về luật" → bot đòi hồ sơ DN. Sai ý.
-    if cau_tra_cuu_chung(cau):
-        return {
-            "dang": "van_ban",
-            "text": cau_moi_tra_cuu(),
-            "noi_dung": cau_moi_tra_cuu(),
-            "grounded": False,
-            "citations": [],
-            "requires_approval": False,
-            "pii_da_che": list(da_che.keys()),
-            "ms": int((time.perf_counter() - t0) * 1000),
-        }
+            hk = hieu(cau_an_toan, ho_so)
+        except Exception:  # noqa: BLE001
+            hk = None
+        if hk:
+            ho_so = {**ho_so, **hk["ho_so"]}  # gộp field GPT trích
+            gpt_yd = hk["y_dinh"]
+            tra_loi_gpt = hk["tra_loi"]
+            if gpt_yd == "tro_chuyen":
+                return _van_ban(tra_loi_gpt or cau_chuyen_huong(), da_che, t0, ho_so)
+            if gpt_yd == "tra_cuu":
+                return _van_ban(tra_loi_gpt or cau_moi_tra_cuu(), da_che, t0, ho_so)
+            # gpt_yd == "ket_qua" → xuống lõi tất định với ho_so đã gộp
 
-    p = Profile(**{k: v for k, v in r.ho_so.items() if k in PROFILE_FIELDS})
+    # ── FALLBACK RULE (GPT tắt/lỗi): intent routing cũ trên câu gốc ──
+    if gpt_yd is None:
+        if cau_meta_lac_de(cau):
+            return _van_ban(cau_chuyen_huong(), da_che, t0, ho_so)
+        if cau_tra_cuu_chung(cau):
+            return _van_ban(cau_moi_tra_cuu(), da_che, t0, ho_so)
+
+    p = Profile(**{k: v for k, v in ho_so.items() if k in PROFILE_FIELDS})
 
     # ── SỐ VÔ LÝ → KHÔNG đối chiếu ────────────────────────────
     # (bộ ca đối kháng bắt: vốn -5 tỷ → "ĐỦ điều kiện" vì -5 tỷ ≤ 100 tỷ = True)
@@ -485,20 +483,25 @@ def chat(r: YeuCau) -> dict:
             "citations": [],
             "requires_approval": False,
             "loi_ho_so": [{"field": x.field, "gia_tri": x.gia_tri, "ly_do": x.ly_do} for x in loi_hs],
+            "ho_so_moi": ho_so,
             "pii_da_che": list(da_che.keys()),
             "ms": int((time.perf_counter() - t0) * 1000),
         }
 
     thieu = [f for f in FIELD_CAN_HOI if getattr(p, f) is None]
 
-    # ── thiếu hồ sơ → HỎI, không đoán ─────────────────────────
+    # ── thiếu hồ sơ → HỎI, không đoán. Dùng câu hỏi TỰ NHIÊN của GPT nếu có ──
     if len(thieu) > 2:
+        hoi = tra_loi_gpt or (
+            "Để quét đúng chính sách bạn đủ điều kiện, cho mình biết thêm: "
+            + ", ".join(_nhan(f) for f in thieu[:3])
+            + "?"
+        )
         return {
             "dang": "hoi_ho_so",
-            "noi_dung": "Để quét đúng chính sách bạn đủ điều kiện, cho mình biết thêm: "
-            + ", ".join(_nhan(f) for f in thieu[:3])
-            + "?",
+            "noi_dung": hoi,
             "dang_hoi": thieu,
+            "ho_so_moi": ho_so,
             "pii_da_che": list(da_che.keys()),
             "ms": int((time.perf_counter() - t0) * 1000),
         }
@@ -559,6 +562,7 @@ def chat(r: YeuCau) -> dict:
         f"/{len(kq)} chương trình bạn đủ điều kiện.",
         "chuong_trinh": the,
         "dien_giai": dg,  # {text, grounded, so_bia, canh_bao} hoặc None
+        "ho_so_moi": ho_so,  # đồng bộ hồ sơ GPT trích được về frontend
         "pii_da_che": list(da_che.keys()),
         "ms": int((time.perf_counter() - t0) * 1000),
     }

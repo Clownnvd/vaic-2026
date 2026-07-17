@@ -9,7 +9,7 @@ import { ProfilePanel } from "@/components/ProfilePanel";
 import { Sidebar, type Khung } from "@/components/Sidebar";
 import { SoanHoSo } from "@/components/SoanHoSo";
 import { LangToggle, useI18n } from "@/lib/i18n";
-import { BffLoi, hoiBff } from "@/lib/api";
+import { BffLoi, hoiBff, sangUI } from "@/lib/api";
 import { bocHoSo } from "@/lib/extract";
 import {
   type CuocTroChuyen,
@@ -161,6 +161,12 @@ export default function Page() {
     try {
       const d = await hoiBff(text, hoSoMoi);
       setTreMs(d.ms);
+
+      // GPT trích hồ sơ ở server (chính xác hơn regex) → đồng bộ vào panel
+      if (d.ho_so_moi) {
+        const hsGPT = sangUI(d.ho_so_moi);
+        capNhat(id, (c) => ({ ...c, profile: { ...c.profile, ...hsGPT } }));
+      }
 
       if (d.dang === "van_ban") {
         // câu meta/lạc đề, ngoài phạm vi, hồ sơ vô lý → trả lời văn bản THẲNG,

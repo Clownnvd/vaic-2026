@@ -133,7 +133,7 @@ def cau_chuyen_huong() -> str:
 # ⚠️ VIẾT KHÔNG DẤU — vì khớp trên chuỗi đã bo_dau (lỗi cũ: viết có dấu → trượt
 #    đúng câu "tìm hiểu thêm về luật" mà người dùng báo).
 _TRA_CUU = [
-    r"\btim hieu\b.*\b(luat|van ban|chinh sach|nghi dinh|thong tu)\b",
+    r"\b(tim hieu|hieu them|muon hieu|xem them|doc them)\b.*\b(luat|van ban|chinh sach|nghi dinh|thong tu|quy dinh)\b",
     r"\btra cuu\b",
     r"\b(xem|coi|doc)\b.*\b(luat|van ban|nghi dinh|chinh sach)\b",
     r"\bco\b.*\b(luat|chinh sach|van ban|uu dai|nghi dinh|thong tu|quyet dinh)\b.*\b(gi|nao)\b",
