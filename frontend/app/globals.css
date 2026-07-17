@@ -1,0 +1,147 @@
+@import "tailwindcss";
+
+/* =========================================================
+   PolicyRadar — design tokens
+   Tông: chính xác, đáng tin, hơi "công vụ" nhưng hiện đại.
+   Màu mang nghĩa: xanh dương = hệ thống, xanh lá = đủ điều kiện,
+   hổ phách = cần kiểm chứng, đỏ = guard chặn (số/điều luật bịa).
+   ========================================================= */
+
+@theme {
+  /* thang xám lạnh */
+  --color-ink-50: #f6f7f9;
+  --color-ink-100: #eceef2;
+  --color-ink-200: #d9dde5;
+  --color-ink-300: #b9c0cd;
+  --color-ink-400: #8b95a8;
+  --color-ink-500: #667085;
+  --color-ink-600: #4c5567;
+  --color-ink-700: #3a4252;
+  --color-ink-800: #232936;
+  --color-ink-900: #151922;
+  --color-ink-950: #0c0f16;
+
+  /* brand — xanh thể chế */
+  --color-brand-50: #eef4ff;
+  --color-brand-100: #dae6ff;
+  --color-brand-200: #bcd3ff;
+  --color-brand-300: #8eb5ff;
+  --color-brand-400: #598cff;
+  --color-brand-500: #3364f5;
+  --color-brand-600: #1f47e0;
+  --color-brand-700: #1a37b5;
+  --color-brand-800: #1b3190;
+  --color-brand-900: #1c2f72;
+
+  /* đủ điều kiện */
+  --color-eligible-50: #ecfdf3;
+  --color-eligible-100: #d1fae2;
+  --color-eligible-300: #6ee7a8;
+  --color-eligible-500: #12b76a;
+  --color-eligible-600: #039855;
+  --color-eligible-700: #027a48;
+
+  /* cần kiểm chứng */
+  --color-caution-50: #fffaeb;
+  --color-caution-100: #fef0c7;
+  --color-caution-300: #fec84b;
+  --color-caution-500: #f79009;
+  --color-caution-600: #dc6803;
+  --color-caution-700: #b54708;
+
+  /* guard chặn */
+  --color-blocked-50: #fef3f2;
+  --color-blocked-100: #fee4e2;
+  --color-blocked-300: #fda29b;
+  --color-blocked-500: #f04438;
+  --color-blocked-600: #d92d20;
+  --color-blocked-700: #b42318;
+
+  --font-sans: var(--font-be-vietnam), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", monospace;
+
+  --radius-card: 0.75rem;
+
+  /* motion: chỉ opacity/transform — không animate layout */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* màu ngữ nghĩa theo theme */
+:root {
+  --bg: #f4f6fa;
+  --surface: #ffffff;
+  --surface-2: #f9fafc;
+  --border: #e3e7ee;
+  --border-strong: #cdd4e0;
+  --text: #151922;
+  --text-muted: #667085;
+}
+
+/* dark: theo hệ thống, trừ khi người dùng ghim sáng */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c0f16;
+    --surface: #151922;
+    --surface-2: #1b2029;
+    --border: #2a313e;
+    --border-strong: #3a4252;
+    --text: #eceef2;
+    --text-muted: #8b95a8;
+  }
+}
+
+/* dark: người dùng ghim tối — phải thắng cả 2 chiều */
+:root[data-theme="dark"] {
+  --bg: #0c0f16;
+  --surface: #151922;
+  --surface-2: #1b2029;
+  --border: #2a313e;
+  --border-strong: #3a4252;
+  --text: #eceef2;
+  --text-muted: #8b95a8;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border-subtle: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* focus ring nhất quán — a11y */
+:where(button, a, input, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-card-in {
+  animation: card-in 0.32s var(--ease-out-soft) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-card-in {
+    animation: none;
+  }
+}
