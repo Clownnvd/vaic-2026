@@ -19,7 +19,10 @@ COT = [
     "item_id", "doc_number_str", "title", "doc_type", "legal_area",
     "issuing_authority", "issue_date", "year", "summary", "source_url",
 ]
-SPLITS = Path("./data/splits_dn")
+# Deploy: data/splits_dn (156MB, có markdown) bị gitignore. LuatIndex chỉ đọc
+# METADATA (10 cột COT) → data/corpus_slim (0.27MB, không markdown) đủ dùng.
+# Ưu tiên splits_dn khi có (dev), fallback corpus_slim (deploy).
+SPLITS = Path("./data/splits_dn") if Path("./data/splits_dn/train.parquet").exists() else Path("./data/corpus_slim")
 
 
 def _bo_dau(s: str) -> str:

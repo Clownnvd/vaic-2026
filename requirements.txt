@@ -1,0 +1,7 @@
+# BFF (FastAPI) — deploy Railway. LuatIndex đọc corpus_slim (metadata, 0.27MB).
+fastapi==0.135.3
+uvicorn[standard]==0.44.0
+pyarrow>=17,<21
+openai>=1.40
+pydantic>=2,<3
+truststore>=0.9
