@@ -28,7 +28,7 @@ from fastapi import FastAPI  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from pydantic import BaseModel  # noqa: E402
 
-from ho_so.mau import TAT_CA  # noqa: E402
+from ho_so.mau import TAT_CA, THEO_CHUONG_TRINH  # noqa: E402
 from ho_so.sinh import checklist, render_text  # noqa: E402
 from matcher.kiem_ho_so import kiem, mo_ta_loi  # noqa: E402
 from matcher.match import diff_ket_qua, quet_nguoc  # noqa: E402
@@ -353,6 +353,8 @@ def danh_sach_chuong_trinh() -> dict:
                 "so_hieu_chinh": ct.citation_chinh.so_vb if ct.citation_chinh else None,
                 "hieu_luc": _hieu_luc_the(ct),
                 "can_cu": cits,
+                # số biểu mẫu — đếm từ mapping, KHÔNG sinh form → hiện được ngay lúc vào
+                "so_bieu_mau": len(THEO_CHUONG_TRINH.get(ct.id, [])),
             }
         )
     return {"tong": len(ra), "chuong_trinh": ra}
@@ -516,6 +518,28 @@ def monitoring(truoc: dict, sau: dict) -> dict:
 class YeuCauHoSo(BaseModel):
     chuong_trinh: str
     ho_so: dict[str, Any] = {}
+
+
+@app.get("/ho-so/chuong-trinh")
+def ho_so_chuong_trinh() -> dict:
+    """Chương trình CÓ bộ hồ sơ (cho picker Soạn hồ sơ) + số biểu mẫu — hiện ngay.
+
+    Gồm cả NAFOSTED (tài trợ nghiên cứu) — chương trình này KHÔNG nằm trong KHO
+    matcher (tài trợ xét theo nhiệm vụ, không theo điều kiện DN đơn thuần) nhưng
+    có bộ biểu mẫu thật từ 44/2025/TT-BKHCN.
+    """
+    ten_kho = {ct.id: (ct.ten, ct.co_quan) for ct in KHO}
+    ten_ngoai = {
+        "nafosted": (
+            "Tài trợ nghiên cứu khoa học và công nghệ (NAFOSTED)",
+            "Quỹ Phát triển KH&CN Quốc gia",
+        ),
+    }
+    ra = []
+    for cid, ma_list in THEO_CHUONG_TRINH.items():
+        ten, co_quan = ten_kho.get(cid) or ten_ngoai.get(cid, (cid, ""))
+        ra.append({"id": cid, "ten": ten, "co_quan": co_quan, "so_bieu_mau": len(ma_list)})
+    return {"chuong_trinh": ra}
 
 
 @app.get("/ho-so/mau")

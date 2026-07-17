@@ -12,7 +12,7 @@ import type { Profile } from "@/lib/types";
 
 const BFF = process.env.NEXT_PUBLIC_BFF_URL ?? "http://127.0.0.1:8000";
 
-type CtItem = { id: string; ten: string; co_quan: string };
+type CtItem = { id: string; ten: string; co_quan: string; so_bieu_mau?: number };
 
 /** UI Profile (camelCase) → khoá backend (snake) khi sinh hồ sơ. */
 function sangBackend(p: Profile): Record<string, unknown> {
@@ -39,7 +39,9 @@ export function SoanHoSo({ profile }: { profile: Profile }) {
   const [dangTai, setDangTai] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    fetch(`${BFF}/chuong-trinh`)
+    // dùng /ho-so/chuong-trinh (gồm NAFOSTED + số biểu mẫu hiện ngay), không phải
+    // /chuong-trinh (chỉ 2 chương trình matcher).
+    fetch(`${BFF}/ho-so/chuong-trinh`)
       .then((r) => r.json())
       .then((d) => setCt(d.chuong_trinh ?? []))
       .catch(() => {});
@@ -91,9 +93,10 @@ export function SoanHoSo({ profile }: { profile: Profile }) {
                     <div className="text-[14px] font-semibold text-text">{c.ten}</div>
                     <div className="text-[11.5px] text-text-muted">{c.co_quan}</div>
                   </div>
-                  {kq?.khung && (
+                  {/* số biểu mẫu HIỆN NGAY (từ so_bieu_mau, không đợi mở) */}
+                  {(c.so_bieu_mau ?? kq?.khung?.length) !== undefined && (
                     <span className="shrink-0 rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700 dark:bg-brand-900/40 dark:text-brand-200">
-                      {kq.khung.length} văn bản
+                      {kq?.khung?.length ?? c.so_bieu_mau} văn bản
                     </span>
                   )}
                 </button>

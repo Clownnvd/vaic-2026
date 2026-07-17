@@ -84,6 +84,58 @@ NAFOSTED = [
             Truong("san_pham", "Sản phẩm dự kiến", "nguoi"),
         ],
     ),
+    # ── BM-02, BM-05, BM-06: bóc TIÊU ĐỀ THẬT từ nguyên văn 44/2025 trong corpus
+    #    (pattern "<tiêu đề> (Biểu mẫu BM-XX)"). Field là ô nhập tối thiểu — chỗ nào
+    #    corpus không cho biết field thì để DN tự khai (nguon="nguoi"), KHÔNG bịa.
+    MauHoSo(
+        ma="BM-02",
+        ten="Đơn đăng ký chủ trì thực hiện cụm nhiệm vụ, chuỗi nhiệm vụ",
+        nhom="NAFOSTED",
+        can_cu="44/2025/TT-BKHCN",
+        co_quan_nhan="NAFOSTED",
+        dn_tu_nop=True,
+        han_nop="14/08/2026",
+        ghi_chu="Chỉ nộp nếu đăng ký CỤM/CHUỖI nhiệm vụ",
+        truong=[
+            Truong("ten_to_chuc", "Tên tổ chức chủ trì", "ho_so"),
+            Truong("mst", "Mã số thuế", "ho_so"),
+            Truong("ten_cum", "Tên cụm/chuỗi nhiệm vụ", "nguoi"),
+            Truong("so_nhiem_vu", "Số nhiệm vụ thành phần", "nguoi"),
+            Truong("chu_nhiem", "Họ tên chủ nhiệm", "nguoi"),
+        ],
+    ),
+    MauHoSo(
+        ma="BM-05",
+        ten="Thuyết minh tổng quát đối với chuỗi nhiệm vụ",
+        nhom="NAFOSTED",
+        can_cu="44/2025/TT-BKHCN",
+        co_quan_nhan="NAFOSTED",
+        dn_tu_nop=True,
+        han_nop="14/08/2026",
+        ghi_chu="Chỉ nộp nếu đăng ký CHUỖI nhiệm vụ",
+        truong=[
+            Truong("ten_to_chuc", "Tên tổ chức chủ trì", "ho_so"),
+            Truong("ten_chuoi", "Tên chuỗi nhiệm vụ", "nguoi"),
+            Truong("muc_tieu_chung", "Mục tiêu tổng quát", "nguoi"),
+            Truong("lo_trinh", "Lộ trình các nhiệm vụ thành phần", "nguoi"),
+        ],
+    ),
+    MauHoSo(
+        ma="BM-06",
+        ten="Lý lịch cá nhân đăng ký chủ nhiệm và thành viên nghiên cứu",
+        nhom="NAFOSTED",
+        can_cu="44/2025/TT-BKHCN",
+        co_quan_nhan="NAFOSTED",
+        dn_tu_nop=True,
+        han_nop="14/08/2026",
+        truong=[
+            Truong("ho_ten", "Họ và tên", "nguoi"),
+            Truong("hoc_vi", "Học hàm, học vị", "nguoi"),
+            Truong("chuyen_mon", "Chuyên môn / lĩnh vực nghiên cứu", "nguoi"),
+            Truong("cong_trinh", "Công trình khoa học tiêu biểu (5 năm gần nhất)", "nguoi"),
+            Truong("vai_tro", "Vai trò trong nhiệm vụ (chủ nhiệm/thành viên)", "nguoi"),
+        ],
+    ),
     MauHoSo(
         ma="BM-07",
         ten="Năng lực và cơ sở vật chất của tổ chức chủ trì",
@@ -194,5 +246,8 @@ TAT_CA: list[MauHoSo] = [*NAFOSTED, *DNNVV, *THUE]
 THEO_CHUONG_TRINH: dict[str, list[str]] = {
     "khcn-thue": ["03-3A/TNDN"],
     "dnnvv-tuvan": ["TK-DNNVV", "PL3.3-M1"],
-    "nafosted": ["BM-03", "BM-04", "BM-07", "BM-09"],
+    # bộ hồ sơ ĐĂNG KÝ NAFOSTED (44/2025/TT-BKHCN) — 7 biểu mẫu, tiêu đề bóc từ corpus.
+    # (Doc có tới 21 mã BM nhưng phần lớn là biểu mẫu cho hội đồng/hợp đồng/báo cáo,
+    #  không phải hồ sơ người nộp — chỉ lấy đúng bộ đăng ký.)
+    "nafosted": ["BM-02", "BM-03", "BM-04", "BM-05", "BM-06", "BM-07", "BM-09"],
 }

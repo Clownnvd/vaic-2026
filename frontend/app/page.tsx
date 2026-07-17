@@ -57,8 +57,18 @@ function hoiThoaiMoi(): CuocTroChuyen {
 export default function Page() {
   const [lichSu, setLichSu] = useState<CuocTroChuyen[]>([]);
   const [convId, setConvId] = useState<string | null>(null);
-  const [khung, setKhung] = useState<Khung>("chat");
+  const [khung, setKhungRaw] = useState<Khung>("chat");
   const [sidebarMo, setSidebarMo] = useState(true); // mở mặc định (desktop); toggle được như Claude
+
+  // giữ trang đang xem qua refresh (F5 không nhảy về chat)
+  const setKhung = (k: Khung) => {
+    setKhungRaw(k);
+    if (typeof window !== "undefined") localStorage.setItem("policyradar.khung", k);
+  };
+  useEffect(() => {
+    const k = typeof window !== "undefined" ? localStorage.getItem("policyradar.khung") : null;
+    if (k === "chat" || k === "luat" || k === "hoso" || k === "giamsat") setKhungRaw(k);
+  }, []);
   const [dangBan, setDangBan] = useState(false);
   const [treMs, setTreMs] = useState<number | null>(null);
   const [mocNgay, setMocNgay] = useState(0);
