@@ -72,6 +72,28 @@ export default function Page() {
     // "luat" đã ẩn khỏi nav → không khôi phục từ localStorage nữa (tránh mở lại)
     if (k === "chat" || k === "hoso" || k === "giamsat") setKhungRaw(k);
   }, []);
+
+  // gói nào CÓ bộ biểu mẫu → hiện nút "Điền hồ sơ" trên thẻ (chưa có thì ẩn).
+  // hoSoMoId = gói cần mở sẵn khi bấm nút → nhảy sang tab Soạn hồ sơ.
+  const [idCoHoSo, setIdCoHoSo] = useState<Set<string>>(new Set());
+  const [hoSoMoId, setHoSoMoId] = useState("");
+  useEffect(() => {
+    const BFF = process.env.NEXT_PUBLIC_BFF_URL ?? "http://127.0.0.1:8000";
+    fetch(`${BFF}/ho-so/chuong-trinh`)
+      .then((r) => r.json())
+      .then((d) =>
+        setIdCoHoSo(
+          new Set(
+            ((d.chuong_trinh ?? []) as { id: string; so_bieu_mau?: number }[])
+              .filter((c) => (c.so_bieu_mau ?? 0) > 0)
+              .map((c) => c.id),
+          ),
+        ),
+      )
+      .catch(() => {});
+  }, []);
+  const moHoSo = (id: string) => { setHoSoMoId(id); setKhung("hoso"); };
+
   const [dangBan, setDangBan] = useState(false);
   const [treMs, setTreMs] = useState<number | null>(null);
   const [mocNgay, setMocNgay] = useState(0);
@@ -334,7 +356,7 @@ export default function Page() {
         {khung === "luat" ? (
           <DanhSachLuat />
         ) : khung === "hoso" ? (
-          <SoanHoSo profile={profile} />
+          <SoanHoSo profile={profile} moId={hoSoMoId} />
         ) : khung === "giamsat" ? (
           <GiamSat />
         ) : (
@@ -344,7 +366,7 @@ export default function Page() {
               <div className="flex-1 overflow-y-auto">
                 <div className="mx-auto flex max-w-3xl flex-col gap-3 px-4 py-4">
                   {messages.map((m) => (
-                    <ChatMessage key={m.id} m={m} />
+                    <ChatMessage key={m.id} m={m} idCoHoSo={idCoHoSo} onMoHoSo={moHoSo} />
                   ))}
                   {dangBan && (
                     <p className="text-[12px] text-text-muted">{t("Đang quét kho văn bản…")}</p>

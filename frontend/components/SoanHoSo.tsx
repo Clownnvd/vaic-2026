@@ -33,7 +33,7 @@ function sangBackend(p: Profile): Record<string, unknown> {
  * CODE điền sẵn phần biết chắc (từ hồ sơ DN), người dùng sửa/khai nốt.
  * Luôn là bản nháp chờ duyệt (write-gate).
  */
-export function SoanHoSo({ profile }: { profile: Profile }) {
+export function SoanHoSo({ profile, moId }: { profile: Profile; moId?: string }) {
   const { t } = useI18n();
   const [ct, setCt] = useState<CtItem[]>([]);
   const [moCt, setMoCt] = useState<string>(""); // chương trình đang mở
@@ -64,6 +64,15 @@ export function SoanHoSo({ profile }: { profile: Profile }) {
       }
     }
   }
+
+  // Mở SẴN gói được chỉ định (bấm "Điền hồ sơ" từ thẻ chương trình) khi danh
+  // sách đã tải. Chỉ mở, không đóng — nên gate bằng moCt !== moId.
+  useEffect(() => {
+    if (moId && ct.some((c) => c.id === moId) && moCt !== moId) {
+      moChuongTrinh(moId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [moId, ct]);
 
   return (
     <div className="flex-1 overflow-y-auto">

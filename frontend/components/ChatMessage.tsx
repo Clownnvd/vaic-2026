@@ -133,7 +133,17 @@ function BongBong({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function ChatMessage({ m }: { m: Message }) {
+export function ChatMessage({
+  m,
+  idCoHoSo,
+  onMoHoSo,
+}: {
+  m: Message;
+  /** id gói có bộ biểu mẫu — để hiện nút "Điền hồ sơ" trên thẻ */
+  idCoHoSo?: Set<string>;
+  /** bấm "Điền hồ sơ" → mở tab Soạn hồ sơ với gói này */
+  onMoHoSo?: (id: string) => void;
+}) {
   if (m.vaiTro === "nguoi-dung") {
     return (
       <div className="flex justify-end">
@@ -180,7 +190,7 @@ export function ChatMessage({ m }: { m: Message }) {
   }
 
   // dang === "ket-qua" — khoảnh khắc bung thẻ xếp hạng
-  return <KetQua m={m} />;
+  return <KetQua m={m} idCoHoSo={idCoHoSo} onMoHoSo={onMoHoSo} />;
 }
 
 function HoiHoSo({ m }: { m: Extract<Message, { dang: "hoi-ho-so" }> }) {
@@ -195,7 +205,15 @@ function HoiHoSo({ m }: { m: Extract<Message, { dang: "hoi-ho-so" }> }) {
   );
 }
 
-function KetQua({ m }: { m: Extract<Message, { dang: "ket-qua" }> }) {
+function KetQua({
+  m,
+  idCoHoSo,
+  onMoHoSo,
+}: {
+  m: Extract<Message, { dang: "ket-qua" }>;
+  idCoHoSo?: Set<string>;
+  onMoHoSo?: (id: string) => void;
+}) {
   const { t } = useI18n();
   return (
     <div className="max-w-[92%]">
@@ -210,7 +228,13 @@ function KetQua({ m }: { m: Extract<Message, { dang: "ket-qua" }> }) {
 
       <div className="mt-2.5 space-y-2.5">
         {m.chuongTrinh.map((ct, i) => (
-          <ProgramCard key={ct.id} ct={ct} hang={i} />
+          <ProgramCard
+            key={ct.id}
+            ct={ct}
+            hang={i}
+            coHoSo={idCoHoSo?.has(ct.id) ?? false}
+            onMoHoSo={onMoHoSo}
+          />
         ))}
       </div>
     </div>

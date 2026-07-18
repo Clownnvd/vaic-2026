@@ -146,6 +146,9 @@ export function GiamSat() {
             <span>
               {dangTai ? t("Đang đối chiếu vbpl.vn…") : `${loc.length.toLocaleString("vi-VN")} ${t("văn bản")}`}
               {!dangTai && data && (
+                <span className="ml-2 text-eligible-600 dark:text-eligible-300">· {data.n_con} {t("còn hiệu lực")}</span>
+              )}
+              {!dangTai && data && (
                 <span className="ml-2 text-blocked-600 dark:text-blocked-300">· {data.n_het} {t("đã hết hiệu lực")}</span>
               )}
               {sao.size > 0 && (
@@ -161,7 +164,7 @@ export function GiamSat() {
 
           {!loi && (
             <div className="overflow-x-auto rounded-xl border border-border-subtle">
-              <table className="w-full border-collapse text-left">
+              <table className="w-full border-collapse text-left [&_td]:border-border-subtle/60 [&_th]:border-border-subtle [&_td:not(:last-child)]:border-r [&_th:not(:last-child)]:border-r">
                 <thead className="bg-surface-2">
                   <tr className="text-[10.5px] uppercase tracking-wide text-text-muted">
                     <th className="w-9 border-b border-border-subtle px-2 py-2.5 text-center font-semibold" aria-label={t("Ghim")}></th>

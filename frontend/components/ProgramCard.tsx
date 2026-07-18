@@ -63,9 +63,15 @@ function DongDieuKien({ dk }: { dk: DieuKien }) {
 export function ProgramCard({
   ct,
   hang,
+  coHoSo,
+  onMoHoSo,
 }: {
   ct: ChuongTrinh;
   hang: number;
+  /** gói này có bộ biểu mẫu trong kho → hiện nút "Điền hồ sơ" */
+  coHoSo?: boolean;
+  /** bấm "Điền hồ sơ" → mở tab Soạn hồ sơ với đúng gói này */
+  onMoHoSo?: (id: string) => void;
 }) {
   const { t } = useI18n();
   // 3 trạng thái tất định — thiếu-tin KHÔNG được gộp vào "đủ". Ưu tiên xacQuyet
@@ -174,6 +180,21 @@ export function ProgramCard({
       )}
 
       <p className="mt-2.5 text-[13px] leading-relaxed text-text-muted">{ct.giaTri}</p>
+
+      {/* Điền hồ sơ cho ĐÚNG gói này — chỉ hiện khi gói có bộ biểu mẫu trong kho
+          (coHoSo) và DN không bị loại (tt !== "khong"). Chưa có biểu mẫu thì thôi. */}
+      {coHoSo && onMoHoSo && tt !== "khong" && (
+        <button
+          onClick={() => onMoHoSo(ct.id)}
+          className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-[12.5px] font-medium text-white transition-colors hover:bg-brand-700"
+        >
+          <svg viewBox="0 0 16 16" className="size-3.5" fill="none">
+            <path d="M4.5 2.5h5l3 3v8h-8z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+            <path d="M9.5 2.5v3h3M6 9h4M6 11.5h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+          </svg>
+          {t("Điền hồ sơ cho gói này")}
+        </button>
+      )}
 
       {ct.hanNop && (
         <p className="mt-1.5 flex items-center gap-1.5 text-[12px] text-text-muted">
