@@ -2,9 +2,13 @@
 
 Hai service trên Railway từ cùng repo (monorepo).
 
+## 🔗 Bản LIVE (đang chạy)
+- **Ứng dụng**: https://vaic-2026-production.up.railway.app
+- **BFF**: https://web-production-db4aa.up.railway.app — `GET /health` → `{"ok":true,"service":"policyradar-bff","so_chuong_trinh":7}`
+
 ## Service 1 — BFF (FastAPI, Python)
 - **Root Directory**: `.` (gốc repo)
-- **Build**: tự nhận `requirements.txt` + `runtime.txt` (Python 3.11)
+- **Build**: tự nhận `requirements.txt` + `.python-version` (Python 3.11)
 - **Start**: `Procfile` → `uvicorn bff.main:app --host 0.0.0.0 --port $PORT`
 - **Biến môi trường**:
   - `OPENAI_API_KEY` = key OpenAI (⚠️ key cũ đã lộ trong chat — **rotate key mới**)
@@ -37,6 +41,6 @@ Hai service trên Railway từ cùng repo (monorepo).
 - KHÔNG cào real-time 24/7 (không cần + tốn); API vbpl.vn nhanh (~300 VB/12s).
 
 ## Kiểm nhanh sau deploy
-- `GET {BFF}/health` → `{"ok":true,"so_chuong_trinh":2}`
-- Mở Frontend → chat "công ty phần mềm Hà Nội 45 lao động doanh thu 50 tỷ..." → ra 2 chương trình.
-- Trang Giám sát → thấy mục "156 hết hiệu lực".
+- `GET {BFF}/health` → `{"ok":true,"service":"policyradar-bff","so_chuong_trinh":7}`
+- Mở Frontend → chat "doanh nghiệp sản xuất, 45 lao động, doanh thu 50 tỷ, vốn 20 tỷ, có GCN DN KH&CN, doanh thu KH&CN 45%" → ra 7 chương trình.
+- Trang Giám sát → 949 văn bản đối chiếu vbpl.vn (598 còn / 290 hết / 61 chưa xác định), lọc Miền/Tỉnh + ghim.
