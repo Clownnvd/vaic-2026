@@ -33,7 +33,7 @@ P_THIEU_TIN = 0.5
 
 def _so_sanh(dk: DieuKien, gt) -> tuple[TrangThai, str]:
     if gt is None:
-        return TrangThai.THIEU_TIN, "hồ sơ chưa khai"
+        return TrangThai.THIEU_TIN, "chưa khai"
 
     t = dk.toan_tu
     try:
@@ -71,18 +71,22 @@ _NHAN_GT = {
 
 
 def _loi_giai(gt, t: ToanTu, nguong, dat: bool) -> str:
-    """Câu đối chiếu cho NGƯỜI ĐỌC — không phải biểu thức Python thô."""
+    """Câu đối chiếu cho NGƯỜI ĐỌC — không phải biểu thức Python thô.
+
+    KHÔNG kèm tiền tố "Hồ sơ:" — nhãn đó do frontend (DongDieuKien) tự thêm.
+    Kèm ở đây nữa thì thẻ hiện "Hồ sơ: Hồ sơ: có" (lặp nhãn).
+    """
     v = _NHAN_GT.get(gt, gt)
     if t in (ToanTu.IN, ToanTu.NOT_IN):
-        return f"Hồ sơ: {v}" if dat else f"Hồ sơ: {v} — chưa thuộc diện áp dụng"
+        return f"{v}" if dat else f"{v} — chưa thuộc diện áp dụng"
     if t is ToanTu.EQ:
-        return f"Hồ sơ: {v}" if dat else f"Hồ sơ: {v} (cần: {_NHAN_GT.get(nguong, nguong)})"
+        return f"{v}" if dat else f"{v} (cần: {_NHAN_GT.get(nguong, nguong)})"
     # so sánh số (>=, <=)
     don = "%" if isinstance(nguong, float) else ""
     return (
-        f"Hồ sơ: {gt}{don} (đạt ngưỡng {t.value} {nguong}{don})"
+        f"{gt}{don} (đạt ngưỡng {t.value} {nguong}{don})"
         if dat
-        else f"Hồ sơ: {gt}{don} — chưa đạt ngưỡng {t.value} {nguong}{don}"
+        else f"{gt}{don} — chưa đạt ngưỡng {t.value} {nguong}{don}"
     )
 
 

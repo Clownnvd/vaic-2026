@@ -43,9 +43,11 @@ export type ApiChuongTrinh = {
   co_quan: string;
   loai: string; // "ho_tro_chi_phi" | "uu_dai_thue" ... (gạch dưới, đổi sang gạch ngang ở UI)
   gia_tri: string;
-  gia_tri_ky_vong: string;
+  gia_tri_ky_vong: string | null; // null = chưa lượng hoá được giá trị (không hiện ô số)
+  gia_tri_nhan?: string | null; // nhãn mức hỗ trợ khi không có số đồng (100%/miễn phí/…)
   han_nop: string | null;
   du_dieu_kien: boolean;
+  xac_quyet?: "du" | "khong" | "gan_dat"; // 3 trạng thái — thiếu-tin KHÔNG gộp vào đủ
   do_tin_cay: number;
   thieu: string[];
   can_hoi_them: string[];

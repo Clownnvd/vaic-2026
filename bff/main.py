@@ -519,9 +519,18 @@ def chat(r: YeuCau) -> dict:
                 "co_quan": k.chuong_trinh.co_quan,
                 "loai": k.chuong_trinh.loai,  # E2E bắt: thiếu field này → frontend hardcode "uu-dai-thue" → thẻ gắn nhãn SAI
                 "gia_tri": k.chuong_trinh.gia_tri_mo_ta,
-                "gia_tri_ky_vong": format_vnd(int(k.gia_tri_ky_vong)),
+                # None khi chương trình CHƯA LƯỢNG HOÁ được giá trị (gia_tri_uoc=None):
+                # gửi "0 đ" sẽ hiểu nhầm là giá trị bằng 0. Ẩn hẳn ô số, để mô tả chữ nói.
+                "gia_tri_ky_vong": (
+                    format_vnd(int(k.gia_tri_ky_vong))
+                    if k.chuong_trinh.gia_tri_uoc is not None
+                    else None
+                ),
+                # nhãn mức hỗ trợ khi không có số đồng (100%/miễn phí/≤50% lãi suất…)
+                "gia_tri_nhan": k.chuong_trinh.gia_tri_nhan,
                 "han_nop": k.chuong_trinh.han_nop,
                 "du_dieu_kien": k.du_dieu_kien,
+                "xac_quyet": k.xac_quyet,  # 'du' | 'khong' | 'gan_dat' — 3 trạng thái, KHÔNG gộp thiếu-tin vào đủ
                 "do_tin_cay": k.diem_phu_hop,
                 "thieu": k.thieu,  # tên ĐÍCH DANH điều kiện chưa đạt
                 "can_hoi_them": k.can_hoi_them,
@@ -558,10 +567,16 @@ def chat(r: YeuCau) -> dict:
         except Exception:  # noqa: BLE001
             dg = None  # không bao giờ làm hỏng /chat vì diễn giải
 
+    n_du = sum(1 for k in kq if k.xac_quyet == "du")
+    n_gan = sum(1 for k in kq if k.xac_quyet == "gan_dat")
+    tom_tat = f"Với hồ sơ này, mình tìm thấy {n_du} chương trình bạn đủ điều kiện"
+    if n_gan:
+        tom_tat += f", {n_gan} chương trình gần đạt (cần bổ sung thông tin)"
+    tom_tat += "."
+
     return {
         "dang": "ket_qua",
-        "noi_dung": f"Với hồ sơ này, mình tìm thấy {sum(1 for k in kq if k.du_dieu_kien)}"
-        f"/{len(kq)} chương trình bạn đủ điều kiện.",
+        "noi_dung": tom_tat,
         "chuong_trinh": the,
         "dien_giai": dg,  # {text, grounded, so_bia, canh_bao} hoặc None
         "ho_so_moi": ho_so,  # đồng bộ hồ sơ GPT trích được về frontend

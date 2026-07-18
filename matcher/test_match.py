@@ -84,6 +84,13 @@ eq(d["vua_mat"], ["hu-cau-1"], "phát hiện chương trình VỪA MẤT điều
 # ══════════════════════════════════════════════════════════════
 from matcher.kho_mau import KHO  # noqa: E402
 
+
+def ct_id(cid: str) -> ChuongTrinh:
+    """Lấy chương trình theo ID — KHÔNG theo chỉ số. Kho nở thêm chương trình thì
+    thứ tự đổi; test bám chỉ số KHO[1] sẽ đối chiếu nhầm chương trình."""
+    return next(c for c in KHO if c.id == cid)
+
+
 print("\n=== KHO THẬT: mọi citation phải có nguyên văn, không placeholder ===")
 for ct in KHO:
     cits = [dk.citation for dk in ct.dieu_kien] + (
@@ -110,24 +117,31 @@ for r in kq:
     ev = f"{r.gia_tri_ky_vong/1e6:8.1f}tr" if r.gia_tri_ky_vong else "  chưa lượng hoá"
     print(f"  {r.chuong_trinh.ten[:46]:48} EV={ev}  P={r.diem_phu_hop:.2f}  "
           f"{'ĐỦ' if r.du_dieu_kien else 'CHƯA'}")
-eq(all(r.du_dieu_kien for r in kq), True, "cả 2 chương trình đủ điều kiện")
+eq(all(r.du_dieu_kien for r in kq), True, f"cả {len(kq)} chương trình đủ điều kiện")
+eq(all(r.xac_quyet == "du" for r in kq), True, "hồ sơ đủ field → xác quyết 'du', không 'gần đạt'")
 
 print("\n=== KHO THẬT: cùng hồ sơ nhưng THƯƠNG MẠI-DỊCH VỤ → mất DNNVV ===")
 print("  (150 LĐ vượt ngưỡng 100 của TM-DV — bản cũ phẳng hoá '≤200' nên bỏ lọt)")
 p_tm = Profile(**{**p.__dict__, "linh_vuc": "thuong_mai_dich_vu"})
-r_tm = doi_chieu(p_tm, KHO[0])
+r_tm = doi_chieu(p_tm, ct_id("dnnvv-tuvan"))
 eq(r_tm.du_dieu_kien, False, "→ KHÔNG đủ điều kiện DNNVV")
 eq(r_tm.thieu, ["Thuộc diện doanh nghiệp nhỏ và vừa theo Điều 5"], "→ nêu đích danh")
 
 print("\n=== KHO THẬT: DN KH&CN doanh thu KH&CN chỉ 20% (<30%) ===")
 p_20 = Profile(**{**p.__dict__, "ty_le_dt_khcn": 20.0})
-r_20 = doi_chieu(p_20, KHO[1])
+r_20 = doi_chieu(p_20, ct_id("khcn-thue"))
 eq(r_20.du_dieu_kien, False, "→ KHÔNG được ưu đãi thuế (Điều 12 K3)")
 eq(
     r_20.thieu,
     ["Doanh thu sản phẩm hình thành từ kết quả KH&CN đạt tối thiểu 30% tổng doanh thu"],
     "→ nêu đích danh, đúng ngưỡng 30% của luật (không phải 'R&D 1%' bịa)",
 )
+# 30% CHỈ áp cho ưu đãi THUẾ (13/2019 Đ12 K3). Đất đai (Đ13) và tín dụng (Đ14)
+# chỉ đòi 'là DN KH&CN' (có GCN) → ty_le 20% vẫn đủ. Không được áp nhầm 30% sang.
+eq(doi_chieu(p_20, ct_id("khcn-datdai")).du_dieu_kien, True,
+   "→ tiền thuê đất KHÔNG đòi 30% doanh thu KH&CN — vẫn đủ với GCN")
+eq(doi_chieu(p_20, ct_id("khcn-tindung")).du_dieu_kien, True,
+   "→ tín dụng KHÔNG đòi 30% doanh thu KH&CN — vẫn đủ với GCN")
 
 print("\n" + "=" * 58)
 print("TẤT CẢ PASS ✓" if loi == 0 else f"{loi} TEST HỎNG ✗")

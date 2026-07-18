@@ -71,7 +71,10 @@ class ChuongTrinh:
     dieu_kien: list[DieuKien]
     gia_tri_mo_ta: str  # "Miễn 4 năm, giảm 50% trong 9 năm tiếp theo"
     gia_tri_uoc: int | None  # VND — dùng cho xếp hạng. None = chưa lượng hoá được
-    han_nop: str | None
+    # nhãn NGẮN cho ô góc phải khi KHÔNG có số đồng (luật ghi %/miễn phí/…).
+    # Chép ý từ nguyên văn quyền lợi — KHÔNG bịa số. None = dùng số gia_tri_uoc.
+    gia_tri_nhan: str | None = None
+    han_nop: str | None = None
     giay_to: list[str] = field(default_factory=list)
     citation_chinh: Citation | None = None
 
@@ -132,3 +135,21 @@ class KetQuaKhop:
     @property
     def citations(self) -> list[Citation]:
         return [c.dieu_kien.citation for c in self.chi_tiet]
+
+    @property
+    def xac_quyet(self) -> str:
+        """Phán quyết 3 trạng thái — KHÔNG gộp 'thiếu tin' vào 'đủ'.
+
+        du_dieu_kien (bool) chỉ nói "không bị loại". Nhưng "không bị loại" ≠
+        "đủ điều kiện": một chương trình mà điều kiện bắt buộc còn THIẾU TIN thì
+        chưa kết luận được — tô xanh 'Đủ điều kiện' là overclaim. Tách hẳn:
+          • khong    — có điều kiện bắt buộc KHÔNG ĐẠT (chắc chắn không)
+          • gan_dat  — không cái nào KHÔNG ĐẠT, nhưng còn THIẾU TIN (chưa rõ)
+          • du       — mọi điều kiện bắt buộc ĐẠT (chắc chắn có)
+        """
+        bb = [c for c in self.chi_tiet if c.dieu_kien.bat_buoc]
+        if any(c.trang_thai is TrangThai.KHONG_DAT for c in bb):
+            return "khong"
+        if any(c.trang_thai is TrangThai.THIEU_TIN for c in bb):
+            return "gan_dat"
+        return "du"

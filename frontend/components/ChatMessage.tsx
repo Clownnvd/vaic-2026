@@ -59,7 +59,7 @@ function DienGiaiGuard({ dg }: { dg: DienGiai }) {
         </span>
         <span className={"text-[12px] font-semibold " + (ok ? "text-eligible-800 dark:text-eligible-200" : "text-blocked-800 dark:text-blocked-200")}>
           {ok
-            ? t("Đã kiểm chứng — số liệu bám nguồn")
+            ? t("Đã kiểm chứng")
             : `${t("Guard chặn")} — ${dg.soBia.length} ${t("số không có căn cứ")}`}
         </span>
         <span className="ml-auto flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-text-muted">
@@ -72,10 +72,7 @@ function DienGiaiGuard({ dg }: { dg: DienGiai }) {
 
       {/* nội dung diễn giải */}
       <div className="px-3.5 py-3">
-        <p className="text-[10px] font-medium uppercase tracking-wide text-text-muted">
-          {t("AI diễn giải · kiểm bằng lớp số tất định (đối chiếu nguyên văn corpus)")}
-        </p>
-        <p className="mt-1.5 text-[13.5px] leading-relaxed text-text">
+        <p className="text-[13.5px] leading-relaxed text-text">
           {doan.map((d, k) =>
             d.do ? (
               <mark

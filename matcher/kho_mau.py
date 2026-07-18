@@ -120,7 +120,9 @@ C_13_D6_K1 = Citation(
         "Doanh nghiệp được cấp Giấy chứng nhận doanh nghiệp khoa học và công nghệ khi "
         "đáp ứng các điều kiện sau: a) Được thành lập và họat động theo Luật doanh nghiệp; "
         "b) Có khả năng tạo ra hoặc ứng dụng kết quả khoa học và công nghệ được cơ quan "
-        "có thẩm quyền đánh giá, thẩm định, công nhận theo quy định tại khỏan 2"
+        "có thẩm quyền đánh giá, thẩm định, công nhận theo quy định tại khỏan 2 Điều 7 "
+        "của Nghị định này; c) Có doanh thu từ việc sản xuất, kinh doanh sản phẩm hình "
+        "thành từ kết quả khoa học và công nghệ đạt tỷ lệ tối thiểu 30% trên tổng doanh thu."
     ),
     doc_id="134061",
 )
@@ -164,6 +166,7 @@ CT_KHCN_THUE = ChuongTrinh(
     # từng DN — không biết thì KHÔNG ĐƯỢC bịa một con số cho đẹp bảng xếp hạng.
     # (Bản cũ ghi 3,4 tỷ — không có căn cứ nào trong văn bản.)
     gia_tri_uoc=None,
+    gia_tri_nhan="Miễn 4 năm",  # Đ12 K1: miễn 4 năm + giảm 50% trong 9 năm tiếp theo
     han_nop=None,
     giay_to=[
         "Giấy chứng nhận doanh nghiệp khoa học và công nghệ",
@@ -188,4 +191,241 @@ CT_KHCN_THUE = ChuongTrinh(
     ],
 )
 
-KHO: list[ChuongTrinh] = [CT_DNNVV_TU_VAN, CT_KHCN_THUE]
+# ══════════════════════════════════════════════════════════════════
+#  80/2021/NĐ-CP — thêm các nội dung hỗ trợ khác (cùng điều kiện DNNVV)
+#  Điều kiện thụ hưởng vẫn là "thuộc diện DNNVV" (Điều 5) → dùng lại
+#  C_80_D5_K3 + field dẫn xuất quy_mo_dnnvv. Chỉ QUYỀN LỢI đổi (điều khác).
+# ══════════════════════════════════════════════════════════════════
+
+C_80_D11_K1 = Citation(
+    so_vb="80/2021/NĐ-CP",
+    co_quan="Chính phủ",
+    dieu=11,
+    khoan=1,
+    trich=(
+        "Hỗ trợ tối đa 50% giá trị hợp đồng tư vấn giải pháp chuyển đổi số cho doanh "
+        "nghiệp về quy trình kinh doanh, quy trình quản trị, quy trình sản xuất, quy trình "
+        "công nghệ và chuyển đổi mô hình kinh doanh nhưng không quá 50 triệu đồng/hợp "
+        "đồng/năm đối với doanh nghiệp nhỏ và không quá 100 triệu đồng/hợp đồng/năm đối "
+        "với doanh nghiệp vừa."
+    ),
+    doc_id="158783",
+)
+
+CT_DNNVV_CONGNGHE = ChuongTrinh(
+    id="dnnvv-congnghe",
+    ten="Hỗ trợ công nghệ, chuyển đổi số cho doanh nghiệp nhỏ và vừa",
+    co_quan="Chính phủ",
+    loai="ho_tro_chi_phi",
+    gia_tri_mo_ta=(
+        "Hỗ trợ tối đa 50% hợp đồng tư vấn giải pháp chuyển đổi số (≤50 triệu/năm với DN "
+        "nhỏ, ≤100 triệu/năm với DN vừa); ≤50% chi phí thuê/mua giải pháp chuyển đổi số "
+        "(≤20–100 triệu/năm tuỳ quy mô); ≤50% hợp đồng tư vấn sở hữu trí tuệ / chuyển "
+        "giao công nghệ (≤100 triệu/hợp đồng/năm)."
+    ),
+    gia_tri_uoc=100_000_000,  # trần cao nhất Điều 11 K1 (DN vừa)
+    han_nop=None,
+    giay_to=[
+        "Giấy chứng nhận đăng ký doanh nghiệp",
+        "Hợp đồng tư vấn / hợp đồng thuê, mua giải pháp chuyển đổi số",
+        "Tờ khai xác định DNNVV",
+    ],
+    citation_chinh=C_80_D11_K1,
+    dieu_kien=[
+        DieuKien(
+            "quy_mo_dnnvv",
+            ToanTu.IN,
+            ("sieu_nho", "nho", "vua"),
+            "Thuộc diện doanh nghiệp nhỏ và vừa theo Điều 5",
+            C_80_D5_K3,
+        ),
+    ],
+)
+
+C_80_D14_K1 = Citation(
+    so_vb="80/2021/NĐ-CP",
+    co_quan="Chính phủ",
+    dieu=14,
+    khoan=1,
+    trich=(
+        "Hỗ trợ đào tạo trực tiếp về khởi sự kinh doanh và quản trị doanh nghiệp a) Hỗ trợ "
+        "100% tổng chi phí của một khóa đào tạo về khởi sự kinh doanh và tối đa 70% tổng "
+        "chi phí của một khóa quản trị doanh nghiệp cho doanh nghiệp nhỏ và vừa; b) Miễn "
+        "học phí cho học viên của doanh nghiệp nhỏ và vừa thuộc địa bàn kinh tế - xã hội "
+        "đặc biệt khó khăn, doanh nghiệp nhỏ và vừa do phụ nữ làm chủ, doanh nghiệp nhỏ và "
+        "vừa sử dụng nhiều lao động nữ và doanh nghiệp nhỏ và vừa là doanh nghiệp xã hội "
+        "khi tham gia khóa đào tạo quản trị doanh nghiệp."
+    ),
+    doc_id="158783",
+)
+
+CT_DNNVV_NHANLUC = ChuongTrinh(
+    id="dnnvv-nhanluc",
+    ten="Hỗ trợ đào tạo, phát triển nguồn nhân lực cho doanh nghiệp nhỏ và vừa",
+    co_quan="Chính phủ",
+    loai="ho_tro_chi_phi",
+    gia_tri_mo_ta=(
+        "Hỗ trợ 100% chi phí một khóa đào tạo khởi sự kinh doanh và tối đa 70% chi phí một "
+        "khóa quản trị doanh nghiệp; miễn học phí khóa quản trị cho DN do phụ nữ làm chủ / "
+        "nhiều lao động nữ / DN xã hội / địa bàn đặc biệt khó khăn."
+    ),
+    # 100% / 70% CHI PHÍ KHÓA HỌC — văn bản không nêu mức tiền tuyệt đối, không bịa.
+    gia_tri_uoc=None,
+    gia_tri_nhan="≤100% chi phí",  # 100% khởi sự KD / 70% quản trị DN (Đ14 K1)
+    han_nop=None,
+    giay_to=["Giấy chứng nhận đăng ký doanh nghiệp", "Đơn đăng ký khóa đào tạo", "Tờ khai xác định DNNVV"],
+    citation_chinh=C_80_D14_K1,
+    dieu_kien=[
+        DieuKien(
+            "quy_mo_dnnvv",
+            ToanTu.IN,
+            ("sieu_nho", "nho", "vua"),
+            "Thuộc diện doanh nghiệp nhỏ và vừa theo Điều 5",
+            C_80_D5_K3,
+        ),
+    ],
+)
+
+C_80_D12_K1 = Citation(
+    so_vb="80/2021/NĐ-CP",
+    co_quan="Chính phủ",
+    dieu=12,
+    khoan=1,
+    trich=(
+        "Doanh nghiệp nhỏ và vừa được miễn phí truy cập các thông tin quy định tại khỏan 1 "
+        "Điều 14 Luật Hỗ trợ doanh nghiệp nhỏ và vừa trên Cổng thông tin và trang thông tin "
+        "điện tử của các bộ, cơ quan ngang bộ, cơ quan thuộc Chính phủ và Ủy ban nhân dân "
+        "cấp tỉnh."
+    ),
+    doc_id="158783",
+)
+
+CT_DNNVV_THONGTIN = ChuongTrinh(
+    id="dnnvv-thongtin",
+    ten="Hỗ trợ thông tin cho doanh nghiệp nhỏ và vừa",
+    co_quan="Chính phủ",
+    loai="ho_tro_chi_phi",
+    gia_tri_mo_ta=(
+        "Miễn phí truy cập các thông tin hỗ trợ DNNVV (kế hoạch, chương trình, thị trường, "
+        "tín dụng, tư vấn, công nghệ…) trên Cổng thông tin quốc gia hỗ trợ DNNVV."
+    ),
+    gia_tri_uoc=None,  # miễn phí truy cập — không phải khoản tiền
+    gia_tri_nhan="Miễn phí",  # Đ12 K1: miễn phí truy cập thông tin
+    han_nop=None,
+    giay_to=["Giấy chứng nhận đăng ký doanh nghiệp"],
+    citation_chinh=C_80_D12_K1,
+    dieu_kien=[
+        DieuKien(
+            "quy_mo_dnnvv",
+            ToanTu.IN,
+            ("sieu_nho", "nho", "vua"),
+            "Thuộc diện doanh nghiệp nhỏ và vừa theo Điều 5",
+            C_80_D5_K3,
+        ),
+    ],
+)
+
+# ══════════════════════════════════════════════════════════════════
+#  13/2019/NĐ-CP — thêm ưu đãi khác cho DN KH&CN (cùng điều kiện có GCN)
+# ══════════════════════════════════════════════════════════════════
+
+C_13_D13_K1 = Citation(
+    so_vb="13/2019/NĐ-CP",
+    co_quan="Chính phủ",
+    dieu=13,
+    khoan=1,
+    trich=(
+        "Doanh nghiệp khoa học và công nghệ được miễn, giảm tiền thuê đất, thuê mặt nước "
+        "theo quy định của pháp luật về đất đai."
+    ),
+    doc_id="134061",
+)
+
+CT_KHCN_DATDAI = ChuongTrinh(
+    id="khcn-datdai",
+    ten="Miễn, giảm tiền thuê đất, thuê mặt nước cho doanh nghiệp khoa học và công nghệ",
+    co_quan="Chính phủ",
+    loai="ho_tro_chi_phi",
+    gia_tri_mo_ta=(
+        "Miễn, giảm tiền thuê đất, thuê mặt nước cho doanh nghiệp khoa học và công nghệ "
+        "theo quy định của pháp luật về đất đai."
+    ),
+    gia_tri_uoc=None,  # theo pháp luật đất đai — không có mức cố định trong nghị định
+    gia_tri_nhan="Miễn / giảm",  # Đ13 K1: miễn, giảm tiền thuê đất, thuê mặt nước
+    han_nop=None,
+    giay_to=[
+        "Giấy chứng nhận doanh nghiệp khoa học và công nghệ",
+        "Hồ sơ đề nghị miễn, giảm tiền thuê đất, thuê mặt nước",
+    ],
+    citation_chinh=C_13_D13_K1,
+    dieu_kien=[
+        DieuKien(
+            "co_gcn_khcn",
+            ToanTu.EQ,
+            True,
+            "Có Giấy chứng nhận doanh nghiệp khoa học và công nghệ",
+            C_13_D6_K1,
+        ),
+    ],
+)
+
+C_13_D14_K2 = Citation(
+    so_vb="13/2019/NĐ-CP",
+    co_quan="Chính phủ",
+    dieu=14,
+    khoan=2,
+    trich=(
+        "Doanh nghiệp khoa học và công nghệ thực hiện các nhiệm vụ khoa học và công nghệ, "
+        "ứng dụng kết quả khoa học và công nghệ, sản xuất, kinh doanh sản phẩm hình thành "
+        "từ kết quả khoa học và công nghệ được Qũy Đổi mới công nghệ quốc gia, Qũy phát "
+        "triển khoa học và công nghệ của bộ, cơ quan ngang bộ, cơ quan thuộc Chính phủ, "
+        "tỉnh, thành phố trực thuộc trung ương tài trợ, cho vay với lãi suất ưu đãi, hỗ trợ "
+        "lãi suất vay và bảo lãnh để vay vốn. a) Đối với doanh nghiệp khoa học và công nghệ "
+        "có tài sản dùng để thế chấp theo quy định của pháp luật được Qũy Đổi mới công nghệ "
+        "quốc gia, Qũy phát triển khoa học và công nghệ của bộ, cơ quan ngang bộ, cơ quan "
+        "thuộc Chính phủ, tỉnh, thành phố trực thuộc trung ương cho vay với lãi suất ưu đãi "
+        "hoặc hỗ trợ lãi suất vay tối đa 50% lãi suất vay vốn tại ngân hàng thương mại thực "
+        "hiện cho vay;"
+    ),
+    doc_id="134061",
+)
+
+CT_KHCN_TINDUNG = ChuongTrinh(
+    id="khcn-tindung",
+    ten="Ưu đãi tín dụng cho doanh nghiệp khoa học và công nghệ",
+    co_quan="Chính phủ",
+    loai="ho_tro_lai_suat",
+    gia_tri_mo_ta=(
+        "Được Quỹ Đổi mới công nghệ quốc gia / Quỹ phát triển KH&CN cho vay lãi suất ưu "
+        "đãi hoặc hỗ trợ lãi suất vay tối đa 50% lãi suất ngân hàng thương mại, được bảo "
+        "lãnh để vay vốn; dự án sản xuất sản phẩm KH&CN được vay vốn tín dụng đầu tư của "
+        "Nhà nước."
+    ),
+    gia_tri_uoc=None,  # phụ thuộc khoản vay của từng DN — không lượng hoá được
+    gia_tri_nhan="≤50% lãi suất",  # Đ14 K2a: hỗ trợ lãi suất tối đa 50% lãi suất NHTM
+    han_nop=None,
+    giay_to=[
+        "Giấy chứng nhận doanh nghiệp khoa học và công nghệ",
+        "Dự án/phương án sản xuất kinh doanh sản phẩm KH&CN",
+    ],
+    citation_chinh=C_13_D14_K2,
+    dieu_kien=[
+        DieuKien(
+            "co_gcn_khcn",
+            ToanTu.EQ,
+            True,
+            "Có Giấy chứng nhận doanh nghiệp khoa học và công nghệ",
+            C_13_D6_K1,
+        ),
+    ],
+)
+
+KHO: list[ChuongTrinh] = [
+    CT_DNNVV_TU_VAN,
+    CT_DNNVV_CONGNGHE,
+    CT_DNNVV_NHANLUC,
+    CT_DNNVV_THONGTIN,
+    CT_KHCN_THUE,
+    CT_KHCN_DATDAI,
+    CT_KHCN_TINDUNG,
+]

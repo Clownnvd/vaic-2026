@@ -113,6 +113,8 @@ export type ChuongTrinh = {
   giaTriKyVong: number | null;
   /** Giá trị kỳ vọng đã format sẵn ở backend ("3,4 tỷ đ") — dùng khi có. */
   giaTriHienThi?: string;
+  /** Nhãn mức hỗ trợ khi không có số đồng (100% / miễn phí / ≤50% lãi suất…). */
+  giaTriNhan?: string;
   hanNop?: string;
   /** Vì sao DN đủ điều kiện — từng dòng có citation riêng */
   dieuKien: DieuKien[];
@@ -120,6 +122,8 @@ export type ChuongTrinh = {
   doTinCay: number;
   /** Backend đã kết luận đủ điều kiện chưa (tất định, không phải LLM đoán) */
   duDieuKien?: boolean;
+  /** Phán quyết 3 trạng thái: 'du' chắc đủ · 'khong' chắc không · 'gan_dat' còn thiếu tin */
+  xacQuyet?: "du" | "khong" | "gan_dat";
   /** Tên ĐÍCH DANH điều kiện chưa đạt — "chưa, vì thiếu Y" */
   thieu?: string[];
   /** Field người dùng cần khai để nâng độ tin cậy → 100% */

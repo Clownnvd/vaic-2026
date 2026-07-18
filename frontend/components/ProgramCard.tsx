@@ -68,6 +68,15 @@ export function ProgramCard({
   hang: number;
 }) {
   const { t } = useI18n();
+  // 3 trạng thái tất định — thiếu-tin KHÔNG được gộp vào "đủ". Ưu tiên xacQuyet
+  // của backend; fallback cho dữ liệu cũ chưa có field này.
+  const tt: "du" | "khong" | "gan_dat" =
+    ct.xacQuyet ??
+    (ct.duDieuKien === false
+      ? "khong"
+      : ct.doTinCay < 1 && ct.canBoSung && ct.canBoSung.length > 0
+        ? "gan_dat"
+        : "du");
   return (
     <article
       className="animate-card-in rounded-card border border-border-subtle bg-surface p-4 shadow-sm transition-shadow hover:shadow-md"
@@ -90,59 +99,77 @@ export function ProgramCard({
           </h3>
         </div>
 
-        {(ct.giaTriHienThi || ct.giaTriKyVong !== null) && (
-          <div className="shrink-0 text-right">
-            <div
-              className={`font-mono text-base font-bold leading-none ${
-                ct.duDieuKien === false
-                  ? "text-ink-400 line-through dark:text-ink-500"
-                  : "text-eligible-600 dark:text-eligible-300"
-              }`}
-            >
-              ~{ct.giaTriHienThi ?? dinhDangVND(ct.giaTriKyVong ?? 0)}
+        {(() => {
+          // Ô góc phải: ưu tiên SỐ ĐỒNG (lượng hoá được) → "giá trị kỳ vọng".
+          // Không có số thì hiện NHÃN MỨC HỖ TRỢ lấy từ nguyên văn (100%/miễn phí/
+          // ≤50% lãi suất…) — KHÔNG bịa số, cũng KHÔNG để trống.
+          const coSo = ct.giaTriHienThi || ct.giaTriKyVong !== null;
+          if (!coSo && !ct.giaTriNhan) return null;
+          const bituoc = ct.duDieuKien === false;
+          return (
+            <div className="shrink-0 text-right">
+              <div
+                className={`font-mono font-bold leading-none ${coSo ? "text-base" : "text-[15px]"} ${
+                  bituoc
+                    ? "text-ink-400 line-through dark:text-ink-500"
+                    : "text-eligible-600 dark:text-eligible-300"
+                }`}
+              >
+                {coSo ? `~${ct.giaTriHienThi ?? dinhDangVND(ct.giaTriKyVong ?? 0)}` : ct.giaTriNhan}
+              </div>
+              <div className="mt-1 text-[10px] uppercase tracking-wide text-text-muted">
+                {coSo ? t("giá trị kỳ vọng") : t("mức hỗ trợ")}
+              </div>
             </div>
-            <div className="mt-1 text-[10px] uppercase tracking-wide text-text-muted">
-              {t("giá trị kỳ vọng")}
-            </div>
-          </div>
-        )}
+          );
+        })()}
       </header>
 
-      {/* Kết luận đủ / chưa đủ — TẤT ĐỊNH, không phải LLM đoán.
-          Chưa đủ thì phải nêu ĐÍCH DANH điều kiện thiếu, không nói chung chung. */}
-      {ct.duDieuKien !== undefined && (
-        <div
-          className={`mt-2.5 rounded-md border px-2.5 py-1.5 text-[12px] leading-snug ${
-            ct.duDieuKien
-              ? "border-eligible-300 bg-eligible-50 text-eligible-700 dark:border-eligible-700 dark:bg-eligible-500/10 dark:text-eligible-300"
-              : "border-caution-300 bg-caution-50 text-caution-700 dark:border-caution-700 dark:bg-caution-500/10 dark:text-caution-300"
-          }`}
-        >
-          {ct.duDieuKien ? (
-            <>
-              <span className="font-semibold">{t("Đủ điều kiện")}</span> —{" "}
-              {t("hồ sơ hiện tại thoả toàn bộ tiêu chí bắt buộc")}
-            </>
-          ) : (
-            <>
-              <span className="font-semibold">{t("Chưa đủ điều kiện")}</span>
-              {ct.thieu?.length ? <> — {t("thiếu:")} {ct.thieu.join(" · ")}</> : null}
-            </>
-          )}
+      {/* Phán quyết TẤT ĐỊNH — 3 trạng thái, KHÔNG gộp "thiếu tin" vào "đủ".
+          • đủ    → thoả toàn bộ tiêu chí bắt buộc
+          • chưa  → có điều kiện bắt buộc KHÔNG ĐẠT (nêu ĐÍCH DANH)
+          • gần   → còn THIẾU TIN → liệt kê thứ cần bổ sung thành gạch đầu dòng */}
+      {tt === "du" && (
+        <div className="mt-2.5 rounded-md border border-eligible-300 bg-eligible-50 px-2.5 py-1.5 text-[12px] leading-snug text-eligible-700 dark:border-eligible-700 dark:bg-eligible-500/10 dark:text-eligible-300">
+          <span className="font-semibold">{t("Đủ điều kiện")}</span> —{" "}
+          {t("hồ sơ hiện tại thoả toàn bộ tiêu chí bắt buộc")}
         </div>
       )}
 
-      {/* Vì sao chưa 100% + khai gì để lên 100% (tất định, từ matcher) */}
-      {ct.doTinCay < 1 && ct.canBoSung && ct.canBoSung.length > 0 && (
-        <div className="mt-1.5 flex items-start gap-1.5 rounded-md border border-caution-200 bg-caution-50/70 px-2.5 py-1.5 text-[11.5px] leading-snug text-caution-800 dark:border-caution-800 dark:bg-caution-500/10 dark:text-caution-200">
-          <svg viewBox="0 0 16 16" className="mt-0.5 size-3.5 shrink-0" fill="none">
-            <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.3" />
-            <path d="M8 7.2v3.4M8 5.2v.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
-          <span>
-            {t("Độ tin cậy")} {Math.round(ct.doTinCay * 100)}% {t("— chưa xác nhận hết vì thiếu")}{" "}
-            <b>{ct.canBoSung.map((x) => x.nhan).join(", ")}</b>. {t("Bổ sung để lên 100%.")}
-          </span>
+      {tt === "khong" && (
+        <div className="mt-2.5 rounded-md border border-rose-300 bg-rose-50 px-2.5 py-1.5 text-[12px] leading-snug text-rose-700 dark:border-rose-800 dark:bg-rose-500/10 dark:text-rose-300">
+          <span className="font-semibold">{t("Chưa đủ điều kiện")}</span>
+          {ct.thieu?.length ? <> — {t("thiếu:")} {ct.thieu.join(" · ")}</> : null}
+        </div>
+      )}
+
+      {tt === "gan_dat" && (
+        <div className="mt-2.5 rounded-md border border-caution-300 bg-caution-50 px-2.5 py-2 text-[12px] leading-snug text-caution-700 dark:border-caution-700 dark:bg-caution-500/10 dark:text-caution-300">
+          <div className="flex items-start gap-1.5">
+            <svg viewBox="0 0 16 16" className="mt-0.5 size-3.5 shrink-0" fill="none">
+              <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.3" />
+              <path d="M8 7.2v3.4M8 5.2v.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            <span>
+              <span className="font-semibold">{t("Gần đạt tiêu chí")}</span> —{" "}
+              {t("chưa xác nhận được vì hồ sơ còn thiếu thông tin")}
+            </span>
+          </div>
+          {ct.canBoSung && ct.canBoSung.length > 0 && (
+            <>
+              <div className="mt-2 text-[10px] font-semibold uppercase tracking-wide opacity-80">
+                {t("Cần bổ sung để xác nhận")}
+              </div>
+              <ul className="mt-1 space-y-1">
+                {ct.canBoSung.map((x) => (
+                  <li key={x.field} className="flex items-center gap-1.5">
+                    <span className="size-1 shrink-0 rounded-full bg-current opacity-70" />
+                    <span className="capitalize">{t(x.nhan)}</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </div>
       )}
 
@@ -162,7 +189,7 @@ export function ProgramCard({
 
       <div className="mt-3 border-t border-border-subtle pt-3">
         <h4 className="text-[11px] font-semibold uppercase tracking-wide text-text-muted">
-          {t("Vì sao đủ điều kiện")}
+          {t("Đối chiếu điều kiện")}
         </h4>
         <ul className="mt-2 space-y-2.5">
           {ct.dieuKien.map((dk, i) => (
@@ -175,11 +202,21 @@ export function ProgramCard({
         <span className="flex items-center gap-1.5 text-[11px] text-text-muted">
           <span className="inline-block h-1 w-12 overflow-hidden rounded-full bg-ink-200 dark:bg-ink-700">
             <span
-              className="block h-full rounded-full bg-brand-500"
+              className={`block h-full rounded-full ${
+                tt === "du"
+                  ? "bg-eligible-500"
+                  : tt === "gan_dat"
+                    ? "bg-caution-500"
+                    : "bg-rose-500"
+              }`}
               style={{ width: `${Math.round(ct.doTinCay * 100)}%` }}
             />
           </span>
-          {t("Độ tin cậy")} {Math.round(ct.doTinCay * 100)}%
+          {tt === "du"
+            ? t("Đủ tiêu chí")
+            : tt === "gan_dat"
+              ? t("Gần đạt tiêu chí")
+              : t("Chưa đạt")}
         </span>
 
         {(() => {
