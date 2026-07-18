@@ -210,7 +210,7 @@ function Dong({ v, daGhim, onGhim }: { v: VanBanGS; daGhim: boolean; onGhim: () 
       onClick={() => v.url && window.open(v.url, "_blank", "noreferrer")}
       className={"border-b border-border-subtle/70 transition-colors " + (v.url ? "cursor-pointer hover:bg-surface-2/60" : "")}
     >
-      <td className="px-2 py-2.5 text-center align-top">
+      <td className="px-2 py-2.5 text-center align-middle">
         <button
           onClick={(e) => { e.stopPropagation(); onGhim(); }}
           aria-label={daGhim ? t("Bỏ ghim") : t("Ghim lên đầu")}
@@ -223,15 +223,15 @@ function Dong({ v, daGhim, onGhim }: { v: VanBanGS; daGhim: boolean; onGhim: () 
           </svg>
         </button>
       </td>
-      <td className="whitespace-nowrap px-4 py-2.5 align-top">
+      <td className="whitespace-nowrap px-4 py-2.5 align-middle">
         <span className={"font-mono text-[11.5px] font-semibold " + (het ? "text-blocked-700 dark:text-blocked-300" : "text-brand-700 dark:text-brand-300")}>
           {v.so_hieu || "—"}
         </span>
       </td>
-      <td className="px-3 py-2.5 align-top text-[12.5px] leading-snug text-text"><span className="line-clamp-2">{v.tieu_de}</span></td>
-      <td className="px-3 py-2.5 align-top text-[11.5px] leading-snug text-text-muted">{v.co_quan}</td>
-      <td className="whitespace-nowrap px-3 py-2.5 text-center align-top text-[11.5px] text-text-muted">{v.nam ?? "—"}</td>
-      <td className="whitespace-nowrap px-4 py-2.5 align-top">
+      <td className="px-3 py-2.5 align-middle text-[12.5px] leading-snug text-text"><span className="line-clamp-2">{v.tieu_de}</span></td>
+      <td className="px-3 py-2.5 align-middle text-[11.5px] leading-snug text-text-muted">{v.co_quan}</td>
+      <td className="whitespace-nowrap px-3 py-2.5 text-center align-middle text-[11.5px] text-text-muted">{v.nam ?? "—"}</td>
+      <td className="whitespace-nowrap px-4 py-2.5 align-middle">
         <span className={
           "inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-medium " +
           (het
