@@ -69,7 +69,8 @@ export default function Page() {
   };
   useEffect(() => {
     const k = typeof window !== "undefined" ? localStorage.getItem("policyradar.khung") : null;
-    if (k === "chat" || k === "luat" || k === "hoso" || k === "giamsat") setKhungRaw(k);
+    // "luat" đã ẩn khỏi nav → không khôi phục từ localStorage nữa (tránh mở lại)
+    if (k === "chat" || k === "hoso" || k === "giamsat") setKhungRaw(k);
   }, []);
   const [dangBan, setDangBan] = useState(false);
   const [treMs, setTreMs] = useState<number | null>(null);

@@ -70,10 +70,8 @@ export function Sidebar({
         <path d="M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14Z" stroke="currentColor" strokeWidth="1.5" />
         <path d="M10 6v4l2.5 2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
       </RailBtn>
-      <RailBtn active={khung === "luat"} onClick={() => onKhung("luat")} label={t("Danh sách luật")}>
-        <path d="M5 4h10v12H5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-        <path d="M8 8h4M8 11h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-      </RailBtn>
+      {/* "Danh sách luật" tạm ẩn — chỉ dùng Giám sát chính sách. Component + route
+          vẫn còn (page.tsx khung==="luat"), bật lại chỉ cần thêm RailBtn/MucNav. */}
       <div className="mt-auto">
         <span className="flex size-8 items-center justify-center rounded-full bg-brand-600 text-[12px] font-semibold text-white" title={t("Doanh nghiệp")}>
           DN
@@ -132,7 +130,7 @@ export function Sidebar({
           <MucNav active={khung === "chat"} onClick={() => onKhung("chat")} nhan={t("Trợ lý tư vấn")} />
           <MucNav active={khung === "hoso"} onClick={() => onKhung("hoso")} nhan={t("Soạn hồ sơ")} />
           <MucNav active={khung === "giamsat"} onClick={() => onKhung("giamsat")} nhan={t("Giám sát chính sách")} />
-          <MucNav active={khung === "luat"} onClick={() => onKhung("luat")} nhan={t("Danh sách luật")} />
+          {/* "Danh sách luật" tạm ẩn — chỉ dùng Giám sát chính sách */}
         </nav>
 
         <div className="mt-4 flex-1 overflow-y-auto px-2 pb-3">
