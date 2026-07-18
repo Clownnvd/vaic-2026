@@ -553,8 +553,11 @@ def chat(r: YeuCau) -> dict:
 
     thieu = [f for f in FIELD_CAN_HOI if getattr(p, f) is None]
 
-    # ── thiếu hồ sơ → HỎI, không đoán. Dùng câu hỏi TỰ NHIÊN của GPT nếu có ──
-    if len(thieu) > 2:
+    # ── CHƯA KHAI GÌ → hỏi (onboarding). Nhưng CHỈ CẦN 1 field là ĐÃ quét được:
+    # vd "có GCN DN KH&CN" ra ngay 2 gói KH&CN chỉ cần GCN (đủ) + các gói khác
+    # (gần đạt, kèm "cần bổ sung"). 1 tiêu chí PHẢI ra gói trong tầm với, đừng
+    # bắt khai đủ bộ mới cho xem. Dùng câu hỏi TỰ NHIÊN của GPT nếu có.
+    if len(thieu) == len(FIELD_CAN_HOI):
         hoi = tra_loi_gpt or (
             "Để quét đúng chính sách bạn đủ điều kiện, cho mình biết thêm: "
             + ", ".join(_nhan(f) for f in thieu[:3])

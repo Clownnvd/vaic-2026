@@ -122,8 +122,9 @@ export function SoanHoSo({ profile, moId }: { profile: Profile; moId?: string })
                         {kq.text || t("Chương trình này chưa gắn biểu mẫu trong kho.")}
                       </p>
                     )}
-                    {kq?.khung?.map((k) => (
-                      <VanBanForm key={k.ma} k={k} />
+                    {kq?.khung?.map((k, i) => (
+                      // Vào từ trợ lý (moId) → mở SẴN form chi tiết văn bản ĐẦU TIÊN
+                      <VanBanForm key={k.ma} k={k} moSan={i === 0 && c.id === moId} />
                     ))}
                   </div>
                 )}
@@ -136,10 +137,11 @@ export function SoanHoSo({ profile, moId }: { profile: Profile; moId?: string })
   );
 }
 
-/** Một văn bản = hàng bấm mở → form điền được. */
-function VanBanForm({ k }: { k: KhungHoSo }) {
+/** Một văn bản = hàng bấm mở → form điền được. moSan=true → bung sẵn form
+ *  (dùng khi vào từ trợ lý: văn bản đầu tiên mở luôn chi tiết, khỏi bấm thêm). */
+function VanBanForm({ k, moSan }: { k: KhungHoSo; moSan?: boolean }) {
   const { t } = useI18n();
-  const [mo, setMo] = useState(false);
+  const [mo, setMo] = useState(!!moSan);
   // giá trị điền được, khởi từ phần code đã điền
   const [gt, setGt] = useState<Record<number, string>>(() =>
     Object.fromEntries(k.o.map((o, i) => [i, o.gia_tri ?? ""])),
@@ -258,19 +260,30 @@ function ONhap({ o, value, onChange }: { o: OHoSo; value: string; onChange: (v: 
   const ng = NGUON_NHAN[o.nguon];
   const goc = o.gia_tri ?? "";
   const daSua = value !== goc;
+  const trong = value.trim() === ""; // ô còn trống → DN tự khai (kể cả ô hệ thống chưa điền được)
   return (
     <div>
       <div className="mb-1 flex items-center justify-between">
         <label className="text-[12px] font-medium text-text">{o.nhan}</label>
-        <span className={"text-[10.5px] " + ng.cls}>
-          {o.nguon === "nguoi" ? t("Doanh nghiệp tự khai") : t(ng.nhan)}
+        <span
+          className={
+            "text-[10.5px] " +
+            (trong ? "font-medium text-caution-700 dark:text-caution-300" : ng.cls)
+          }
+        >
+          {trong || o.nguon === "nguoi" ? t("Doanh nghiệp tự khai") : t(ng.nhan)}
         </span>
       </div>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={o.nguon === "nguoi" ? t("Bạn tự khai ô này…") : "—"}
-        className="w-full rounded-lg border border-border-strong bg-surface px-3 py-2 text-[13.5px] text-text outline-none placeholder:text-text-muted focus:border-brand-500"
+        placeholder={t("Doanh nghiệp tự điền ô này…")}
+        className={
+          "w-full rounded-lg border px-3 py-2 text-[13.5px] text-text outline-none placeholder:text-text-muted focus:border-brand-500 " +
+          (trong
+            ? "border-caution-400 bg-caution-50/40 dark:border-caution-600 dark:bg-caution-500/5"
+            : "border-border-strong bg-surface")
+        }
       />
       {daSua && goc !== "" && (
         <p className="mt-0.5 text-[10.5px] text-text-muted">{t("Gốc hệ thống điền:")} {goc}</p>
