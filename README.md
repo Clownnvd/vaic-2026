@@ -26,7 +26,7 @@ Hai service chạy trên Railway từ repo public. Chi tiết deploy: **[DEPLOY.
 
 ## Vấn đề
 
-Startup, doanh nghiệp FDI và công nghệ cao ở Việt Nam **bỏ lỡ hàng nghìn chính sách ưu đãi và quỹ hỗ trợ mà họ đủ điều kiện** — chỉ vì không biết những chương trình đó tồn tại để mà tìm. Kho pháp luật quốc gia trên vbpl.vn có tới ~**158.822 văn bản** *(theo vbpl.vn, 07/2026)*, sửa đổi và hết hiệu lực liên tục, rải rác nhiều bộ ngành. Hỏi một trợ lý AI thông thường thì nó **bịa ra nghị định không có thật** → doanh nghiệp nộp sai, mất cơ hội, gánh rủi ro pháp lý. Với chính sách, **một con số bịa = một hồ sơ nộp sai.**
+**Startup, doanh nghiệp nhỏ và vừa, doanh nghiệp công nghệ cao và FDI ở Việt Nam** đang **bỏ lỡ hàng nghìn chính sách ưu đãi và quỹ hỗ trợ mà họ ĐỦ ĐIỀU KIỆN** — chỉ vì không biết những chương trình đó tồn tại để mà tìm. Kho pháp luật quốc gia **do Chính phủ Việt Nam quản lý** (vbpl.vn — Cơ sở dữ liệu quốc gia về văn bản pháp luật, Bộ Tư pháp) có tới ~**158.822 văn bản** *(07/2026)*, sửa đổi và hết hiệu lực liên tục, rải rác nhiều bộ ngành. Hỏi một trợ lý AI thông thường thì nó **bịa ra nghị định không có thật** → doanh nghiệp nộp sai, mất cơ hội, gánh rủi ro pháp lý. Với chính sách, **một con số bịa = một hồ sơ nộp sai.**
 
 ## Giải pháp — matcher chạy NGƯỢC
 
@@ -86,7 +86,7 @@ Trong lĩnh vực pháp lý, một chatbot bịa 1 nghị định là mất toà
 
 Chúng tôi **không khoe F1 0.975 mà giấu số OOD 0.395**. Lớp gác load-bearing thật là **lớp số tất định** (không để lọt số bịa nào trên 150 output GPT-4o thật); lớp ngữ nghĩa neural còn yếu ngoài phân phối và **được nói rõ**. Đúng tinh thần: *thiếu căn cứ thì nói thẳng.*
 
-Nền chống-bịa còn ở **tầng dữ liệu**: 7 gói trong kho được **chép NGUYÊN VĂN** từ corpus kèm `doc_id` truy nguồn (giữ cả lỗi chính tả nguồn), đã qua **kiểm chứng đối kháng — 0/7 gói bịa**. File `matcher/kho_mau.py` còn tự ghi lại những chỗ bản cũ từng bịa (ví dụ "chi R&D ≥ 1%" — điều kiện KHÔNG tồn tại trong văn bản, đã gỡ).
+Nền chống-bịa còn ở **tầng dữ liệu — nguồn CHÍNH THỐNG của Chính phủ Việt Nam**: toàn bộ văn bản lấy từ **vbpl.vn (Cơ sở dữ liệu quốc gia về văn bản pháp luật, Bộ Tư pháp)**, license CC-BY-4.0 — **không cào web linh tinh, không nguồn nước ngoài**. 7 gói trong kho được **chép NGUYÊN VĂN** từ corpus kèm `doc_id` truy nguồn (giữ cả lỗi chính tả nguồn), đã qua **kiểm chứng đối kháng — 0/7 gói bịa**. File `matcher/kho_mau.py` còn tự ghi lại những chỗ bản cũ từng bịa (ví dụ "chi R&D ≥ 1%" — điều kiện KHÔNG tồn tại trong văn bản, đã gỡ).
 
 ## Tech stack
 
