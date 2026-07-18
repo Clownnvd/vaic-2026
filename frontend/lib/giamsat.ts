@@ -3,10 +3,13 @@
 const BFF = process.env.NEXT_PUBLIC_BFF_URL ?? "http://127.0.0.1:8000";
 
 export type VanBanGS = {
+  id?: number | string | null; // khoá ổn định để ghim (dấu sao)
   so_hieu: string | null;
   tieu_de: string;
   nam: number | null;
   co_quan: string;
+  tinh?: string; // '' nếu Trung ương
+  mien?: string; // Bắc | Trung | Nam | Trung ương
   url?: string | null;
   nhan: string;
   con_hieu_luc: boolean | null;

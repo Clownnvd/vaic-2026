@@ -18,6 +18,7 @@ Chạy: uv run --python 3.11 --with fastapi --with uvicorn uvicorn bff.main:app 
 
 from __future__ import annotations
 
+import re
 import sys
 import time
 from typing import Any
@@ -285,6 +286,62 @@ def danh_sach_luat(
     return get_index().truy_van(q, doc_type, linh_vuc, co_quan, nam, trang, cs)
 
 
+_MIEN_BAC = {
+    "Hà Nội", "Hải Phòng", "Quảng Ninh", "Bắc Ninh", "Bắc Giang", "Bắc Kạn",
+    "Cao Bằng", "Điện Biên", "Hà Giang", "Hà Nam", "Hải Dương", "Hòa Bình",
+    "Hưng Yên", "Lai Châu", "Lạng Sơn", "Lào Cai", "Nam Định", "Ninh Bình",
+    "Phú Thọ", "Sơn La", "Thái Bình", "Thái Nguyên", "Tuyên Quang", "Vĩnh Phúc",
+    "Yên Bái",
+}
+_MIEN_TRUNG = {
+    "Thanh Hóa", "Nghệ An", "Hà Tĩnh", "Quảng Bình", "Quảng Trị", "Thừa Thiên Huế",
+    "Đà Nẵng", "Quảng Nam", "Quảng Ngãi", "Bình Định", "Phú Yên", "Khánh Hòa",
+    "Ninh Thuận", "Bình Thuận", "Kon Tum", "Gia Lai", "Đắk Lắk", "Đắk Nông",
+    "Lâm Đồng",
+}
+_MIEN_NAM = {
+    "Hồ Chí Minh", "Bà Rịa - Vũng Tàu", "Bình Dương", "Bình Phước", "Đồng Nai",
+    "Tây Ninh", "An Giang", "Bạc Liêu", "Bến Tre", "Cà Mau", "Cần Thơ",
+    "Đồng Tháp", "Hậu Giang", "Kiên Giang", "Long An", "Sóc Trăng", "Tiền Giang",
+    "Trà Vinh", "Vĩnh Long",
+}
+_TINH_MIEN = {
+    **{t: "Bắc" for t in _MIEN_BAC},
+    **{t: "Trung" for t in _MIEN_TRUNG},
+    **{t: "Nam" for t in _MIEN_NAM},
+}
+# cơ quan cấp TRUNG ƯƠNG — không thuộc miền nào
+_TW_RE = re.compile(
+    r"^\s*(Chính phủ|Quốc hội|Bộ |Ngân hàng Nhà nước|Thủ tướng|Văn phòng"
+    r"|[UƯ]ỷ? ?ban Thường vụ|Tòa án|Viện |Kiểm toán|Bảo hiểm xã hội)",
+    re.IGNORECASE,
+)
+
+
+def _dia_ly(co_quan: str | None) -> tuple[str, str]:
+    """(tỉnh, miền) suy từ cơ quan ban hành. TW → ('', 'Trung ương').
+
+    vbpl.vn ghi cơ quan dạng 'UBND Tỉnh X' / 'HĐND Thành phố Y' / 'Chính phủ'.
+    Bóc tên tỉnh rồi tra bảng miền; quận/huyện gộp về TP.HCM; gộp biến thể hoa/thường.
+    """
+    cq = (co_quan or "").strip()
+    if not cq or _TW_RE.match(cq):
+        return "", "Trung ương"
+    m = re.sub(r"^\s*(UBND|HĐND|Ủy ban nhân dân|Hội đồng nhân dân)\s*", "", cq, flags=re.I)
+    m = re.sub(r"^\s*(Tỉnh|Thành phố|TP\.?)\s*", "", m, flags=re.I).strip()
+    low = m.lower()
+    if low.startswith("quận") or low.startswith("huyện"):
+        m = "Hồ Chí Minh"  # quận/huyện đều thuộc TP.HCM trong corpus này
+    elif low == "huế":
+        m = "Thừa Thiên Huế"
+    else:
+        for t in _TINH_MIEN:  # gộp biến thể hoa/thường: "BÌNH ĐỊNH" → "Bình Định"
+            if t.lower() == low:
+                m = t
+                break
+    return m, _TINH_MIEN.get(m, "Khác")
+
+
 @app.get("/giam-sat")
 def giam_sat() -> dict:
     """② — theo dõi hiệu lực: MỘT bảng văn bản kho + trạng thái THẬT (vbpl.vn).
@@ -297,22 +354,27 @@ def giam_sat() -> dict:
     quet = _nap_quet()
     area = {v.item_id: v.linh_vuc for v in get_index().ds}  # item_id → lĩnh vực
     # CHỈ giữ văn bản LIÊN QUAN đề (chính sách DN) — bỏ nội bộ/hành chính.
-    van_ban = [
-        {
+    van_ban = []
+    for r in quet:
+        if r.get("con_hieu_luc") is None:  # có kết luận rõ Còn/Hết
+            continue
+        if not _lien_quan_dn(r.get("tieu_de"), area.get(r.get("item_id"))):
+            continue
+        tinh, mien = _dia_ly(r.get("co_quan"))
+        van_ban.append({
+            "id": r.get("item_id"),  # khoá ổn định cho dấu sao (ghim) ở frontend
             "so_hieu": r.get("so_hieu"),
             "tieu_de": r.get("tieu_de"),
             "nam": r.get("nam"),
             "co_quan": r.get("co_quan"),
+            "tinh": tinh,  # '' nếu TW
+            "mien": mien,  # Bắc | Trung | Nam | Trung ương
             "url": r.get("url"),
             "nhan": r.get("nhan"),
             "con_hieu_luc": r.get("con_hieu_luc"),
-        }
-        for r in quet
-        if r.get("con_hieu_luc") is not None  # có kết luận rõ Còn/Hết
-        and _lien_quan_dn(r.get("tieu_de"), area.get(r.get("item_id")))
-    ]
-    # hết hiệu lực trước, rồi mới nhất trước
-    van_ban.sort(key=lambda x: (x["con_hieu_luc"] is not False, -(x.get("nam") or 0)))
+        })
+    # CÒN hiệu lực lên đầu, HẾT hiệu lực xuống cuối; trong mỗi nhóm mới nhất trước
+    van_ban.sort(key=lambda x: (x["con_hieu_luc"] is False, -(x.get("nam") or 0)))
     n_het = sum(1 for v in van_ban if v["con_hieu_luc"] is False)
 
     return {
