@@ -6,7 +6,7 @@ Luồng 1 lượt chat:
       → bóc hồ sơ vào slot                            (frontend đang làm, sẽ chuyển agent)
       → thiếu slot? → HỎI LẠI, không đoán
       → đủ slot → MATCHER quét ngược (tất định)       (matcher/match)
-      → GUARD kiểm mọi câu khẳng định                 (guard/check)
+      → GUARD lớp số: đối chiếu số với nguồn          (guard/vn_number qua dien_giai; live chỉ chặn SỐ, kiểm định danh chạy offline)
       → trả JSON CÓ CẤU TRÚC (không phải markdown LLM)
 
 Vì sao trả JSON chứ không để LLM viết markdown: kho ghi SỐNG CÒN —

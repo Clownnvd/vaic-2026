@@ -43,4 +43,4 @@ Hai service trên Railway từ cùng repo (monorepo).
 ## Kiểm nhanh sau deploy
 - `GET {BFF}/health` → `{"ok":true,"service":"policyradar-bff","so_chuong_trinh":7}`
 - Mở Frontend → chat "doanh nghiệp sản xuất, 45 lao động, doanh thu 50 tỷ, vốn 20 tỷ, có GCN DN KH&CN, doanh thu KH&CN 45%" → ra 7 chương trình.
-- Trang Giám sát → 949 văn bản đối chiếu vbpl.vn (598 còn / 290 hết / 61 chưa xác định), lọc Miền/Tỉnh + ghim.
+- Trang Giám sát → 949 văn bản đối chiếu vbpl.vn (598 còn / 290 hết hiệu lực toàn bộ / 60 hết một phần / 1 chưa có hiệu lực), lọc Miền/Tỉnh + ghim.
