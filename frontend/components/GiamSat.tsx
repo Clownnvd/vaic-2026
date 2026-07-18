@@ -143,16 +143,16 @@ export function GiamSat() {
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-5xl px-5 py-4">
           <div className="mb-2.5 flex items-center justify-between text-[12px] text-text-muted">
-            <span>
-              {dangTai ? t("Đang đối chiếu vbpl.vn…") : `${loc.length.toLocaleString("vi-VN")} ${t("văn bản")}`}
+            <span className="inline-flex flex-wrap items-baseline gap-x-2">
+              <span>{dangTai ? t("Đang đối chiếu vbpl.vn…") : `${loc.length.toLocaleString("vi-VN")} ${t("văn bản")}`}</span>
               {!dangTai && data && (
-                <span className="ml-2 text-eligible-600 dark:text-eligible-300">· {data.n_con} {t("còn hiệu lực")}</span>
+                <span className="text-eligible-600 dark:text-eligible-300">· {data.n_con} {t("còn hiệu lực")}</span>
               )}
               {!dangTai && data && (
-                <span className="ml-2 text-blocked-600 dark:text-blocked-300">· {data.n_het} {t("đã hết hiệu lực")}</span>
+                <span className="text-blocked-600 dark:text-blocked-300">· {data.n_het} {t("đã hết hiệu lực")}</span>
               )}
               {sao.size > 0 && (
-                <span className="ml-2 text-amber-600 dark:text-amber-400">· {sao.size} {t("đã ghim")}</span>
+                <span className="text-amber-600 dark:text-amber-400">· {sao.size} {t("đã ghim")}</span>
               )}
             </span>
             {soTrang > 1 && <span>{t("Trang")} {trangHt}/{soTrang}</span>}
