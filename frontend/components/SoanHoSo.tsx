@@ -144,6 +144,46 @@ function VanBanForm({ k }: { k: KhungHoSo }) {
   const [gt, setGt] = useState<Record<number, string>>(() =>
     Object.fromEntries(k.o.map((o, i) => [i, o.gia_tri ?? ""])),
   );
+  const [daLuu, setDaLuu] = useState(false);
+  const KEY_NHAP = `policyradar.hoso.${k.ma}`;
+
+  // nạp bản nháp đã lưu (sau mount → tránh lỗi SSR), đè lên phần code điền sẵn
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(KEY_NHAP);
+      if (raw) setGt((cu) => ({ ...cu, ...(JSON.parse(raw) as Record<number, string>) }));
+    } catch {
+      /* localStorage lỗi → dùng bản code điền sẵn */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // sửa ô nào thì xoá dấu "đã lưu"
+  useEffect(() => setDaLuu(false), [gt]);
+
+  function luuNhap() {
+    try {
+      localStorage.setItem(KEY_NHAP, JSON.stringify(gt));
+      setDaLuu(true);
+    } catch {
+      /* bỏ qua nếu không ghi được */
+    }
+  }
+
+  /** Duyệt & tải: xuất bản nháp ra .txt để DN in/nộp — bản nháp chờ duyệt. */
+  function taiVe() {
+    const dong = k.o.map((o, i) => `${o.nhan}: ${gt[i]?.trim() || "…"}`).join("\n");
+    const noiDung =
+      `${k.ma} — ${k.ten}\n` +
+      `Căn cứ: ${k.can_cu}\nNơi nhận: ${k.co_quan_nhan}` +
+      (k.han_nop ? `\nHạn nộp: ${k.han_nop}` : "") +
+      `\n\n${dong}\n\n(Bản nháp do PolicyRadar dựng — chờ doanh nghiệp duyệt trước khi nộp)\n`;
+    const url = URL.createObjectURL(new Blob([noiDung], { type: "text/plain;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${k.ma}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   const day = Object.values(gt).filter((v) => v.trim() !== "").length;
   const tong = k.o.length;
@@ -192,10 +232,16 @@ function VanBanForm({ k }: { k: KhungHoSo }) {
               {t("AI không tự điền — code gợi ý, bạn duyệt")}
             </span>
             <div className="ml-auto flex gap-2">
-              <button className="rounded-lg border border-border-strong px-3 py-1.5 text-[12.5px] font-medium text-text hover:bg-surface-2">
-                {t("Lưu nháp")}
+              <button
+                onClick={luuNhap}
+                className="rounded-lg border border-border-strong px-3 py-1.5 text-[12.5px] font-medium text-text hover:bg-surface-2"
+              >
+                {daLuu ? t("Đã lưu ✓") : t("Lưu nháp")}
               </button>
-              <button className="rounded-lg bg-brand-600 px-3 py-1.5 text-[12.5px] font-medium text-white hover:bg-brand-700">
+              <button
+                onClick={taiVe}
+                className="rounded-lg bg-brand-600 px-3 py-1.5 text-[12.5px] font-medium text-white hover:bg-brand-700"
+              >
                 {t("Duyệt & tải")}
               </button>
             </div>

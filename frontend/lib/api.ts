@@ -81,6 +81,7 @@ export type ApiTraLoi =
       dang: "ket_qua";
       noi_dung: string;
       chuong_trinh: ApiChuongTrinh[];
+      da_quet?: number; // số văn bản corpus THẬT từ backend (không hardcode)
       dien_giai?: ApiDienGiai | null;
       ho_so_moi?: ApiHoSoMoi;
       pii_da_che: string[];

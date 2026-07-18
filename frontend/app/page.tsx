@@ -215,7 +215,7 @@ export default function Page() {
           vaiTro: "tro-ly",
           dang: "ket-qua",
           noiDung: d.noi_dung,
-          daQuet: 2646,
+          daQuet: d.da_quet ?? 2669, // số corpus thật từ backend; fallback = kích thước kho hiện tại
           dienGiai: d.dien_giai
             ? {
                 text: d.dien_giai.text,

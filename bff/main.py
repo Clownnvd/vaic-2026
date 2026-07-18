@@ -636,10 +636,13 @@ def chat(r: YeuCau) -> dict:
         tom_tat += f", {n_gan} chương trình gần đạt (cần bổ sung thông tin)"
     tom_tat += "."
 
+    from matcher.luat_index import get_index
+
     return {
         "dang": "ket_qua",
         "noi_dung": tom_tat,
         "chuong_trinh": the,
+        "da_quet": len(get_index().ds),  # số văn bản corpus THẬT (không hardcode)
         "dien_giai": dg,  # {text, grounded, so_bia, canh_bao} hoặc None
         "ho_so_moi": ho_so,  # đồng bộ hồ sơ GPT trích được về frontend
         "pii_da_che": list(da_che.keys()),
