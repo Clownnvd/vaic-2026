@@ -25,7 +25,7 @@ import {
 } from "@/lib/types";
 
 const LOI_MO_DAU =
-  "Để tìm đúng ưu đãi và quỹ mà bạn đủ điều kiện, cho mình biết vài thông tin về doanh nghiệp: lĩnh vực (nông-lâm-thuỷ sản/công nghiệp-xây dựng hay thương mại-dịch vụ), số lao động tham gia BHXH bình quân năm, tổng doanh thu, tổng nguồn vốn, có Giấy chứng nhận DN KH&CN không, và tỷ lệ doanh thu từ sản phẩm KH&CN.\n\nBạn cứ mô tả bằng một câu tự nhiên — gõ không dấu cũng được.";
+  "Để tìm đúng ưu đãi và quỹ mà bạn đủ điều kiện, cho mình biết vài thông tin về doanh nghiệp: lĩnh vực (nông-lâm-thuỷ sản/công nghiệp-xây dựng hay thương mại-dịch vụ), số lao động tham gia BHXH bình quân năm, tổng doanh thu, tổng nguồn vốn, có Giấy chứng nhận DN KH&CN không, và tỷ lệ doanh thu từ sản phẩm KH&CN.\n\nBạn cứ mô tả bằng một câu tự nhiên — gõ không dấu cũng được.\n\nNgoài tìm gói, mình còn 2 việc ở thanh bên trái: **Giám sát chính sách** (theo dõi văn bản còn/hết hiệu lực, lọc theo miền · tỉnh) và **Soạn hồ sơ** (dựng sẵn biểu mẫu xin tài trợ, điền từ hồ sơ của bạn).";
 
 const GOI_Y = [
   "Bên mình làm phần mềm (công nghiệp) ở Hà Nội, 45 lao động, doanh thu 50 tỷ, vốn 20 tỷ, có giấy chứng nhận DN KH&CN, doanh thu từ sản phẩm KH&CN khoảng 45%",

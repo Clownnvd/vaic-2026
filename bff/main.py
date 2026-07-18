@@ -352,7 +352,9 @@ def giam_sat() -> dict:
     from matcher.luat_index import get_index
 
     quet = _nap_quet()
-    area = {v.item_id: v.linh_vuc for v in get_index().ds}  # item_id → lĩnh vực
+    _ds = get_index().ds
+    area = {v.item_id: v.linh_vuc for v in _ds}  # item_id → lĩnh vực
+    tieu_de_full = {v.item_id: v.tieu_de for v in _ds}  # tiêu đề ĐẦY ĐỦ (scan cắt 80 ký tự)
     # CHỈ giữ văn bản LIÊN QUAN đề (chính sách DN) — bỏ nội bộ/hành chính.
     van_ban = []
     for r in quet:
@@ -361,10 +363,12 @@ def giam_sat() -> dict:
         if not _lien_quan_dn(r.get("tieu_de"), area.get(r.get("item_id"))):
             continue
         tinh, mien = _dia_ly(r.get("co_quan"))
+        _iid = r.get("item_id")
         van_ban.append({
-            "id": r.get("item_id"),  # khoá ổn định cho dấu sao (ghim) ở frontend
+            "id": _iid,  # khoá ổn định cho dấu sao (ghim) ở frontend
             "so_hieu": r.get("so_hieu"),
-            "tieu_de": r.get("tieu_de"),
+            # ưu tiên tiêu đề ĐẦY ĐỦ từ corpus (scan cắt 80 ký tự giữa chữ)
+            "tieu_de": tieu_de_full.get(_iid) or r.get("tieu_de"),
             "nam": r.get("nam"),
             "co_quan": r.get("co_quan"),
             "tinh": tinh,  # '' nếu TW
@@ -634,10 +638,17 @@ def chat(r: YeuCau) -> dict:
 
     n_du = sum(1 for k in kq if k.xac_quyet == "du")
     n_gan = sum(1 for k in kq if k.xac_quyet == "gan_dat")
-    tom_tat = f"Với hồ sơ này, mình tìm thấy {n_du} chương trình bạn đủ điều kiện"
-    if n_gan:
-        tom_tat += f", {n_gan} chương trình gần đạt (cần bổ sung thông tin)"
-    tom_tat += "."
+    if n_du == 0 and n_gan == 0:
+        # tất cả KHÔNG đủ → đừng đáp cụt, chỉ người dùng tới chỗ nêu vì sao
+        tom_tat = (
+            "Với hồ sơ này, hiện chưa có chương trình nào bạn đủ điều kiện. Các thẻ dưới "
+            "nêu ĐÍCH DANH điều kiện còn thiếu ở từng gói — bạn xem để biết cần điều chỉnh gì."
+        )
+    else:
+        tom_tat = f"Với hồ sơ này, mình tìm thấy {n_du} chương trình bạn đủ điều kiện"
+        if n_gan:
+            tom_tat += f", {n_gan} chương trình gần đạt (cần bổ sung thông tin)"
+        tom_tat += ". Gói nào có biểu mẫu, bấm “Điền hồ sơ” trên thẻ để soạn ngay."
 
     from matcher.luat_index import get_index
 

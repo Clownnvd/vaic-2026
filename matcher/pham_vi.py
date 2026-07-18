@@ -115,13 +115,16 @@ def cau_meta_lac_de(cau: str) -> bool:
 
 
 def cau_chuyen_huong() -> str:
-    """Trả lời câu meta/lạc đề — kéo về đúng việc, không đoán chính sách."""
+    """Trả lời câu meta/chào/cảm ơn/lạc đề — giới thiệu 3 việc mình làm, kéo về đúng việc."""
     return (
-        "Mình là **PolicyRadar** — trợ lý tra cứu chính sách, ưu đãi và quỹ hỗ trợ "
-        "cho doanh nghiệp, có căn cứ tới từng điều–khoản.\n\n"
-        "Mình chỉ trả lời trong phạm vi đó, nên câu này mình xin phép không suy đoán. "
-        "Bạn mô tả doanh nghiệp (lĩnh vực, lao động, doanh thu, vốn…) hoặc hỏi về một "
-        "chương trình cụ thể để mình tra giúp nhé."
+        "Mình là **PolicyRadar** — trợ lý chính sách cho doanh nghiệp. Mình giúp bạn 3 việc:\n\n"
+        "**①  Tìm gói bạn đủ điều kiện** — mô tả doanh nghiệp (lĩnh vực, lao động, doanh thu, "
+        "vốn, có GCN KH&CN không…) là mình quét ngược ra danh sách ưu đãi/quỹ, kèm căn cứ điều–khoản.\n"
+        "**②  Giám sát hiệu lực** — theo dõi văn bản còn / hết hiệu lực, lọc theo miền · tỉnh "
+        "(mục *Giám sát chính sách*).\n"
+        "**③  Soạn hồ sơ** — dựng sẵn biểu mẫu xin tài trợ, điền từ hồ sơ của bạn (mục *Soạn hồ sơ*).\n\n"
+        "Bạn cứ mô tả doanh nghiệp bằng một câu (gõ không dấu cũng được), hoặc hỏi về một chương "
+        "trình cụ thể — mình bắt đầu ngay."
     )
 
 
@@ -152,11 +155,11 @@ def cau_tra_cuu_chung(cau: str) -> bool:
 
 
 def cau_moi_tra_cuu() -> str:
-    """Hướng người dùng sang tra cứu luật — không đòi hồ sơ."""
+    """Hướng người dùng sang tra cứu văn bản — mở mục Giám sát chính sách, không đòi hồ sơ."""
     return (
-        "Bạn muốn tra cứu văn bản đúng không? Mình có **kho 2.669 văn bản** (luật, "
-        "nghị định, thông tư) — mở mục **“Danh sách luật”** ở thanh bên để tìm kiếm và "
-        "lọc theo loại / lĩnh vực / cơ quan / năm.\n\n"
+        "Bạn muốn tra cứu văn bản đúng không? Mở mục **“Giám sát chính sách”** ở thanh bên — "
+        "đó là bảng văn bản có **tìm kiếm** + **lọc theo miền · tỉnh · năm · trạng thái hiệu lực**, "
+        "và bạn ghim được văn bản quan tâm.\n\n"
         "Hoặc nói rõ bạn quan tâm **chủ đề gì** (vd: ưu đãi thuế cho doanh nghiệp KH&CN, "
         "hỗ trợ doanh nghiệp nhỏ và vừa…) để mình tra thẳng vào điều–khoản giúp bạn."
     )
@@ -183,8 +186,9 @@ def cau_tu_choi_linh_vuc(linh_vuc: str) -> str:
     return (
         f"Kho chính sách hiện tại của mình **chưa phủ lĩnh vực {linh_vuc}**, nên mình "
         f"không có căn cứ để trả lời — nói thẳng còn hơn đưa chương trình không liên quan.\n\n"
-        f"Hiện mình đi sâu vào: {', '.join(sorted(DANG_PHU))}. "
-        f"Kiến trúc nhân ra được cho lĩnh vực khác khi nạp thêm văn bản."
+        f"Hiện mình phủ sâu: {', '.join(sorted(DANG_PHU))}. Nếu doanh nghiệp bạn thuộc các "
+        f"nhóm này, cứ mô tả hồ sơ (lĩnh vực, lao động, doanh thu, có GCN KH&CN không…) là "
+        f"mình tìm gói ngay."
     )
 
 

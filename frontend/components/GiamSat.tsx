@@ -228,7 +228,7 @@ function Dong({ v, daGhim, onGhim }: { v: VanBanGS; daGhim: boolean; onGhim: () 
           {v.so_hieu || "—"}
         </span>
       </td>
-      <td className="px-3 py-2.5 align-middle text-[12.5px] leading-snug text-text"><span className="line-clamp-2">{v.tieu_de}</span></td>
+      <td className="px-3 py-2.5 align-middle text-[12.5px] leading-snug text-text"><span className="line-clamp-2" title={v.tieu_de}>{v.tieu_de}</span></td>
       <td className="px-3 py-2.5 align-middle text-[11.5px] leading-snug text-text-muted">{v.co_quan}</td>
       <td className="whitespace-nowrap px-3 py-2.5 text-center align-middle text-[11.5px] text-text-muted">{v.nam ?? "—"}</td>
       <td className="whitespace-nowrap px-4 py-2.5 align-middle">
