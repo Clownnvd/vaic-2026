@@ -69,7 +69,7 @@ flowchart LR
 3. **Citation tới điều–khoản–điểm** — bấm mở nguyên văn trích dẫn + link vbpl.vn.
 4. **Guard chống bịa (lớp số)** — số/định danh LLM bịa bị **tô đỏ + hạ cờ "chưa đủ căn cứ"** ngay khi sinh (lớp số mù ngữ nghĩa — chỉ bắt số/định danh).
 5. **Giám sát hiệu lực** (mắt xích ② của đề) — đối chiếu vbpl.vn, phát hiện văn bản hết hiệu lực, lọc theo **Miền/Tỉnh**, ghim văn bản quan tâm.
-6. **Soạn hồ sơ** — từ thẻ gói bấm "Điền hồ sơ" → mở form đúng gói, **điền sẵn phần biết chắc từ hồ sơ DN**, doanh nghiệp tự khai phần còn thiếu; lưu nháp + tải file.
+6. **Soạn hồ sơ** — mỗi gói nhà nước có **bộ biểu mẫu riêng** dựng sẵn: từ thẻ gói bấm "Điền hồ sơ" → mở đúng form của gói đó, **điền sẵn phần biết chắc từ hồ sơ DN**, doanh nghiệp tự khai phần còn thiếu (ô trống được đánh dấu rõ); lưu nháp + tải file. Gói **chưa có biểu mẫu** trong kho thì **ẩn nút** — không hiển thị, không hứa suông.
 7. **Chịu được gõ KHÔNG DẤU** + i18n VI/EN.
 
 ![Giám sát hiệu lực: lọc Miền/Tỉnh + ghim + còn/hết hiệu lực](docs/img/demo-giamsat.png)
