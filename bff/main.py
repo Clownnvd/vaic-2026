@@ -168,6 +168,31 @@ def _nhan(f: str) -> str:
     }[f]
 
 
+# nhãn NGẮN cho thẻ chương trình
+_NHAN_NGAN = {
+    "linh_vuc": "lĩnh vực", "lao_dong_bhxh": "số lao động BHXH",
+    "doanh_thu": "doanh thu năm", "von": "tổng nguồn vốn",
+    "ty_le_dt_khcn": "tỷ lệ DT KH&CN", "co_gcn_khcn": "GCN DN KH&CN",
+    "nu_lam_chu": "nữ làm chủ", "nganh": "ngành", "dia_ban": "địa bàn", "fdi": "vốn FDI",
+}
+# quy mô DNNVV là DẪN XUẤT — không tự khai được, phải khai nguyên liệu của nó
+_NGUYEN_LIEU = {"quy_mo_dnnvv": ("linh_vuc", "lao_dong_bhxh", "doanh_thu")}
+
+
+def _can_bo_sung(can_hoi_them: list[str], p: "Profile") -> list[dict]:
+    """Field NGƯỜI DÙNG cần khai để nâng độ tin cậy → 100%.
+
+    Điều kiện 'thiếu tin' có thể là field dẫn xuất (quy_mo_dnnvv) → nở thành
+    nguyên liệu (lĩnh vực/lao động/doanh thu) và CHỈ giữ cái còn TRỐNG.
+    """
+    fields: list[str] = []
+    for f in can_hoi_them:
+        for x in _NGUYEN_LIEU.get(f, (f,)):
+            if getattr(p, x, None) is None and x not in fields:
+                fields.append(x)
+    return [{"field": x, "nhan": _NHAN_NGAN.get(x, x)} for x in fields]
+
+
 def _hieu_luc_the(ct) -> dict:
     """Trạng thái hiệu lực THẬT (② của đề) — đọc CACHE vbpl.vn, không gọi API.
 
@@ -500,6 +525,7 @@ def chat(r: YeuCau) -> dict:
                 "do_tin_cay": k.diem_phu_hop,
                 "thieu": k.thieu,  # tên ĐÍCH DANH điều kiện chưa đạt
                 "can_hoi_them": k.can_hoi_them,
+                "can_bo_sung": _can_bo_sung(k.can_hoi_them, p),  # field khai để lên 100%
                 "hieu_luc": _hieu_luc_the(k.chuong_trinh),  # ② — trạng thái thật từ vbpl.vn
                 "dieu_kien": [
                     {

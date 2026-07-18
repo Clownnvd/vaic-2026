@@ -217,6 +217,7 @@ export default function Page() {
             doTinCay: c.do_tin_cay,
             duDieuKien: c.du_dieu_kien,
             thieu: c.thieu,
+            canBoSung: c.can_bo_sung,
             hieuLucDaDoiChieu: c.hieu_luc?.da_doi_chieu ?? false,
             hieuLuc: c.hieu_luc
               ? {

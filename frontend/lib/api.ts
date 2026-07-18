@@ -49,6 +49,7 @@ export type ApiChuongTrinh = {
   do_tin_cay: number;
   thieu: string[];
   can_hoi_them: string[];
+  can_bo_sung?: { field: string; nhan: string }[];
   dieu_kien: ApiDieuKien[];
   hieu_luc?: ApiHieuLuc;
 };

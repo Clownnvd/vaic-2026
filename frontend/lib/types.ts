@@ -122,6 +122,8 @@ export type ChuongTrinh = {
   duDieuKien?: boolean;
   /** Tên ĐÍCH DANH điều kiện chưa đạt — "chưa, vì thiếu Y" */
   thieu?: string[];
+  /** Field người dùng cần khai để nâng độ tin cậy → 100% */
+  canBoSung?: { field: string; nhan: string }[];
   /** true nếu hiệu lực đã được đối chiếu với API vbpl.vn */
   hieuLucDaDoiChieu: boolean;
   /** Trạng thái hiệu lực THẬT từ vbpl.vn (② của đề). undefined = chưa có. */

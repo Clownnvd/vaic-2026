@@ -132,6 +132,20 @@ export function ProgramCard({
         </div>
       )}
 
+      {/* Vì sao chưa 100% + khai gì để lên 100% (tất định, từ matcher) */}
+      {ct.doTinCay < 1 && ct.canBoSung && ct.canBoSung.length > 0 && (
+        <div className="mt-1.5 flex items-start gap-1.5 rounded-md border border-caution-200 bg-caution-50/70 px-2.5 py-1.5 text-[11.5px] leading-snug text-caution-800 dark:border-caution-800 dark:bg-caution-500/10 dark:text-caution-200">
+          <svg viewBox="0 0 16 16" className="mt-0.5 size-3.5 shrink-0" fill="none">
+            <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.3" />
+            <path d="M8 7.2v3.4M8 5.2v.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          <span>
+            {t("Độ tin cậy")} {Math.round(ct.doTinCay * 100)}% {t("— chưa xác nhận hết vì thiếu")}{" "}
+            <b>{ct.canBoSung.map((x) => x.nhan).join(", ")}</b>. {t("Bổ sung để lên 100%.")}
+          </span>
+        </div>
+      )}
+
       <p className="mt-2.5 text-[13px] leading-relaxed text-text-muted">{ct.giaTri}</p>
 
       {ct.hanNop && (

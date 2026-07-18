@@ -170,6 +170,8 @@ const EN: Record<string, string> = {
   "Hạn nộp:": "Deadline:",
   "Vì sao đủ điều kiện": "Why eligible",
   "Độ tin cậy": "Confidence",
+  "— chưa xác nhận hết vì thiếu": "— not fully confirmed, missing",
+  "Bổ sung để lên 100%.": "Add it to reach 100%.",
   "Hiệu lực chưa đối chiếu vbpl.vn": "Validity not checked against vbpl.vn",
   "đối chiếu vbpl.vn": "checked against vbpl.vn",
   // citation
