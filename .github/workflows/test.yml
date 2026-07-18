@@ -1,0 +1,42 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      # Bộ test TẤT ĐỊNH, offline (không gọi LLM, không cần GPU/torch).
+      # Mỗi file là script tự chạy + sys.exit(mã lỗi); `set -e` dừng nếu 1 file fail.
+      - name: Run deterministic test suite
+        env:
+          PYTHONPATH: .
+          PYTHONUTF8: "1"
+        run: |
+          set -e
+          for t in \
+            matcher/test_match.py \
+            matcher/test_quy_mo.py \
+            matcher/test_goi_y.py \
+            guard/test_vn_number.py \
+            guard/test_boc_citation.py \
+            guard/test_grounding.py \
+            guard/test_fill.py \
+            gateway/test_client.py \
+            ho_so/test_sinh.py \
+            vn/test_context.py; do
+            echo "::group::$t"
+            python "$t"
+            echo "::endgroup::"
+          done
