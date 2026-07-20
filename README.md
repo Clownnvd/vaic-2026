@@ -51,14 +51,17 @@ Nguyên tắc: **việc nào cần chính xác pháp lý thì CODE làm; việc 
 flowchart LR
     U[Doanh nghiệp] -->|hồ sơ / câu hỏi| FE[Frontend<br/>Next.js]
     FE --> BFF[BFF · FastAPI<br/>cửa duy nhất ra LLM/corpus]
+    BFF --> RT[Truy hồi ngữ nghĩa · FAISS<br/>tìm ĐÚNG văn bản theo nghĩa<br/>chỉ tra cứu, KHÔNG quyết eligibility]
     BFF --> M[Matcher tất định<br/>quét ngược → eligibility<br/>KHÔNG dùng LLM]
     BFF -.->|tùy chọn · USE_LLM| L[LLM · GPT-4o<br/>NGOÀI đường quyết định<br/>chỉ diễn giải + hội thoại]
     L --> G[Guard lớp số<br/>đối chiếu mọi số với nguồn<br/>số bịa → tô đỏ, hạ cờ]
     M --> R[Kết quả + citation<br/>Điều–Khoản]
+    RT --> R
     G --> R
     CR[Cron giám sát vbpl.vn] -->|trạng thái hiệu lực| BFF
 ```
 
+- **Truy hồi ngữ nghĩa (FAISS)** đứng TRƯỚC lõi: gõ *"công ty phần mềm có được miễn thuế không"* vẫn ra đúng nghị định giảm thuế TNDN dù câu không chứa chữ "nghị định" hay "TNDN". Đây là lớp **tra cứu**, đúng nguyên tắc *"RAG chỉ lo tìm/diễn giải tài liệu, KHÔNG quyết định đủ-hay-không"* — việc quyết vẫn là của matcher. Chưa build index thì lớp này **tự lùi về lọc từ khóa**, không chặn app.
 - **Matcher (tất định)** quyết định *đủ / chưa đủ / gần đạt* — không để LLM phán. Mỗi điều kiện có citation riêng.
 - **LLM (GPT-4o, tùy chọn)** chỉ lo hội thoại + diễn giải luật bằng lời; **bị cấm** kết luận eligibility hay sinh số.
 - **Guard** đối chiếu mọi con số LLM sinh với nguồn: số không có căn cứ bị tô đỏ + hạ cờ "chưa đủ căn cứ".
@@ -69,7 +72,8 @@ flowchart LR
 
 | Thành phần | File |
 |---|---|
-| BFF, route `/chat` | [`bff/main.py`](bff/main.py) |
+| BFF, route `/chat` + `/tim` (tra cứu ngữ nghĩa) | [`bff/main.py`](bff/main.py) |
+| Truy hồi ngữ nghĩa FAISS (tìm ĐÚNG văn bản theo nghĩa) | [`retrieval/semantic.py`](retrieval/semantic.py) |
 | Lõi eligibility tất định (quét ngược) | [`matcher/match.py`](matcher/match.py) |
 | Guard số **chạy live** | [`guard/vn_number.py`](guard/vn_number.py) (gọi trong [`bff/dien_giai.py`](bff/dien_giai.py)) |
 | Kho 7 gói verbatim + citation | [`matcher/kho_mau.py`](matcher/kho_mau.py) · [`matcher/schema.py`](matcher/schema.py) |
@@ -122,6 +126,7 @@ Làm ngay trên **[bản LIVE](https://vaic-2026-production.up.railway.app)**:
 |---|---|
 | Frontend | Next.js 16 · React 19 · Tailwind v4 · pnpm |
 | BFF | FastAPI · uvicorn · pyarrow · openai (GPT-4o) |
+| Truy hồi ngữ nghĩa | FAISS (`IndexFlatIP`, cosine) · nhúng `text-embedding-3-small` · 9.436 văn bản — [`retrieval/`](retrieval/) |
 | Lõi tất định | [`matcher/`](matcher/) (Python thuần — eligibility) · [`guard/`](guard/) (lớp số + PhoBERT NLI) |
 | Dữ liệu | corpus vbpl.vn — 2.669 VB (metadata parquet nén; toàn văn verbatim ở kho 7 gói) · cache trạng thái hiệu lực |
 | Hạ tầng | Railway (2 service) · GitHub Actions (CI) |
@@ -150,6 +155,7 @@ Giám sát: **949 văn bản** đã đối chiếu (598 còn hiệu lực / 290 
 frontend/   Next.js — chat, thẻ gói 3 trạng thái, tab Soạn hồ sơ / Giám sát
 bff/        FastAPI — cửa duy nhất ra LLM/corpus; dien_giai (guard số live)
 matcher/    LỚP TẤT ĐỊNH — quét ngược eligibility; kho_mau (7 gói verbatim)
+retrieval/  truy hồi ngữ nghĩa FAISS — tìm đúng văn bản theo nghĩa (tra cứu, không quyết)
 guard/      chống bịa — lớp số (vn_number) + PhoBERT NLI + "4 đòn" eval
 corpus/     parser Điều→Khoản→Điểm; index tra cứu
 ho_so/      dựng bộ biểu mẫu + điền sẵn từ hồ sơ DN
@@ -173,6 +179,14 @@ cd frontend && pnpm install && pnpm dev          # mở http://localhost:3002
 ```
 
 Đặt `OPENAI_API_KEY` (+ `USE_LLM=1`) để bật diễn giải GPT-4o + guard số live. Không có key vẫn chạy đầy đủ lõi tất định.
+
+**Bật tra cứu ngữ nghĩa (tùy chọn):** build FAISS index 1 lần rồi endpoint `/tim` và nhánh tra cứu của `/chat` tự dùng. Chưa build thì tự lùi về lọc từ khóa, không lỗi.
+
+```bash
+python -m retrieval.semantic build          # nhúng 9.436 văn bản → data/faiss/ (cần key, ~1 lần)
+python -m retrieval.semantic search "công ty phần mềm có được miễn thuế không"
+curl "http://localhost:8000/tim?q=ho tro doanh nghiep nho khoi nghiep&k=6"
+```
 
 ## Test & CI
 
@@ -200,6 +214,7 @@ Số thị trường + đối thủ có nguồn thật; đơn giá gắn nhãn *
 - **Kho 7 gói** (cấp trung ương, curate tay) — nền vững để mở rộng, chưa phủ toàn bộ chính sách; "63 tỉnh" ở Giám sát là **thẻ địa lý trên corpus**, chưa phải gói ưu đãi cấp tỉnh.
 - **Guard live mới là lớp số** — chặn số/đơn vị bịa; lớp kiểm định danh (tên/vị trí điều khoản) và lớp NLI ngữ nghĩa hiện chạy **offline khi đánh giá**, chưa nối `/chat`.
 - **Giám sát** là cron hằng ngày, không real-time.
+- **Tra cứu ngữ nghĩa (FAISS)** chạy được local (nhúng `text-embedding-3-small`, cần key + build index 1 lần). Nhúng ở cấp **văn bản** (tiêu đề + tóm tắt + đầu toàn văn), chưa cắt tới cấp **Điều/Khoản** — đủ để tìm đúng văn bản, chưa tối ưu tìm đúng điều. Chưa build/thiếu key thì tự lùi về lọc từ khóa. Trên bản LIVE đang bổ sung index.
 - **Chưa có tín hiệu cầu đo được** (LOI/khảo sát) — mọi đơn giá trong doc KD là giả định, cần validate ở pilot.
 
 ## Đội & liên hệ

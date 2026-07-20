@@ -5,3 +5,7 @@ pyarrow>=17,<21
 openai>=1.40
 pydantic>=2,<3
 truststore>=0.9
+# truy hồi ngữ nghĩa (retrieval/semantic.py) — FAISS + numpy. Chưa build index thì
+# lớp này tự tắt, /tim và /chat tra cứu lùi về lọc từ khóa (không chặn deploy).
+faiss-cpu>=1.8
+numpy>=1.26

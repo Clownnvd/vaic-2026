@@ -253,6 +253,59 @@ def _url_van_ban(doc_id: str | None) -> str | None:
         return None
 
 
+# ── LỚP TRUY HỒI NGỮ NGHĨA (FAISS) ────────────────────────────
+# Đứng TRƯỚC matcher: lo "tìm ĐÚNG văn bản theo NGHĨA câu hỏi", thay lọc từ khóa
+# cứng. KHÔNG quyết eligibility, KHÔNG sinh số — phần đó vẫn của matcher + guard.
+# Có thể tắt: chưa build index / thiếu gói / thiếu key → trả None → caller tự
+# fallback về lọc từ khóa. Không bao giờ làm hỏng /chat.
+_SEM_CACHE: list = []  # [] chưa thử, [None] thử fail, [idx] ok — nhớ để khỏi thử lại
+
+
+def get_semantic():
+    """Nạp FAISS index 1 lần (singleton). None nếu không dùng được."""
+    if not _SEM_CACHE:
+        try:
+            from retrieval.semantic import SemanticIndex
+
+            _SEM_CACHE.append(SemanticIndex("data/faiss"))
+        except Exception as e:  # noqa: BLE001
+            print(f"[semantic] chưa nạp được index (fallback từ khóa): {type(e).__name__}")
+            _SEM_CACHE.append(None)
+    return _SEM_CACHE[0]
+
+
+def _the_ngu_nghia(q: str, k: int = 8) -> list[dict] | None:
+    """Tìm ngữ nghĩa → danh sách thẻ văn bản (đúng shape /luat, thêm 'diem').
+
+    None khi không dùng được (chưa build / thiếu key / lỗi nhúng) → caller
+    fallback lọc từ khóa. Nuốt mọi lỗi: truy hồi hỏng KHÔNG được làm sập /chat.
+    """
+    si = get_semantic()
+    if si is None or not q.strip():
+        return None
+    try:
+        kq = si.search(q, k=k)
+    except Exception as e:  # noqa: BLE001
+        print(f"[semantic] tìm lỗi (fallback từ khóa): {type(e).__name__}")
+        return None
+    return [
+        {
+            "item_id": r.get("item_id"),
+            "so_hieu": r.get("so"),
+            "tieu_de": r.get("title"),
+            "doc_type": r.get("loai"),
+            "linh_vuc": r.get("linh_vuc"),
+            "co_quan": r.get("co_quan"),
+            "ngay_ban_hanh": r.get("ngay"),
+            "nam": r.get("nam"),
+            "tom_tat": (r.get("tom_tat") or "")[:280],
+            "nguon_url": r.get("url"),
+            "diem": r.get("score"),  # cosine 0..1 — độ gần NGHĨA, không phải điểm eligibility
+        }
+        for r in kq
+    ]
+
+
 @app.get("/health")
 def health() -> dict:
     """Landing tĩnh + curl-grep được — V1 là MÁY chấm, phải trả nhanh."""
@@ -284,6 +337,23 @@ def danh_sach_luat(
     from matcher.luat_index import get_index
 
     return get_index().truy_van(q, doc_type, linh_vuc, co_quan, nam, trang, cs)
+
+
+@app.get("/tim")
+def tim_ngu_nghia(q: str = "", k: int = 8) -> dict:
+    """Tra cứu theo NGHĨA câu hỏi (FAISS), không cần trùng từ khóa tiêu đề.
+
+    Khác /luat (lọc chuỗi con): gõ 'công ty phần mềm có được miễn thuế không' vẫn
+    ra nghị định giảm thuế TNDN dù câu không chứa chữ 'nghị định' hay 'TNDN'.
+    Chưa build index / thiếu key → tự lùi về /luat lọc từ khóa (nguon='tu_khoa').
+    """
+    the = _the_ngu_nghia(q, k)
+    if the is None:  # fallback: giữ tra cứu vẫn chạy khi lớp ngữ nghĩa tắt
+        from matcher.luat_index import get_index
+
+        kw = get_index().truy_van(q, cs=k)
+        return {"nguon": "tu_khoa", "q": q, "tong": kw["tong"], "van_ban": kw["van_ban"]}
+    return {"nguon": "ngu_nghia", "q": q, "tong": len(the), "van_ban": the}
 
 
 _MIEN_BAC = {
@@ -525,7 +595,14 @@ def chat(r: YeuCau) -> dict:
             if gpt_yd == "tro_chuyen":
                 return _van_ban(tra_loi_gpt or cau_chuyen_huong(), da_che, t0, ho_so)
             if gpt_yd == "tra_cuu":
-                return _van_ban(tra_loi_gpt or cau_moi_tra_cuu(), da_che, t0, ho_so)
+                # TRA CỨU: kéo đúng văn bản theo NGHĨA (FAISS) + kèm text GPT.
+                # Có index → trả thẻ văn bản; không có → giữ hành vi cũ (mời tra cứu).
+                the = _the_ngu_nghia(cau_an_toan, k=6)
+                r_out = _van_ban(tra_loi_gpt or cau_moi_tra_cuu(), da_che, t0, ho_so)
+                if the:
+                    r_out["dang"] = "tra_cuu"
+                    r_out["van_ban"] = the  # thẻ để frontend render, KHÔNG phán quyết
+                return r_out
             # gpt_yd == "ket_qua" → xuống lõi tất định với ho_so đã gộp
 
     # ── FALLBACK RULE (GPT tắt/lỗi): intent routing cũ trên câu gốc ──
@@ -533,7 +610,12 @@ def chat(r: YeuCau) -> dict:
         if cau_meta_lac_de(cau):
             return _van_ban(cau_chuyen_huong(), da_che, t0, ho_so)
         if cau_tra_cuu_chung(cau):
-            return _van_ban(cau_moi_tra_cuu(), da_che, t0, ho_so)
+            the = _the_ngu_nghia(cau_an_toan, k=6)
+            r_out = _van_ban(cau_moi_tra_cuu(), da_che, t0, ho_so)
+            if the:
+                r_out["dang"] = "tra_cuu"
+                r_out["van_ban"] = the
+            return r_out
 
     p = Profile(**{k: v for k, v in ho_so.items() if k in PROFILE_FIELDS})
 
